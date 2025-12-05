@@ -1,3 +1,17 @@
+:root{
+
+    /* Couleurs palette */
+    --color-beige: hsl(24, 24%, 78%);
+    --color-taupe: hsl(30, 13%, 48%);
+    --color-burgundy: hsl(352, 42%, 32%);
+    --color-navy: hsl(217, 32%, 15%);
+    --color-cream: hsl(42, 38%, 94%);
+    --color-black: hsl(0, 0%, 0%);
+
+}
+@font-face {
+
+}
 * {
     margin: 0;
     padding: 0;
@@ -7,6 +21,57 @@
 body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     line-height: 1.6;
+}
+
+/* Navigation Bar */
+.main-header {
+    background: #fff;
+    border-bottom: 1px solid #e0e0e0;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+.main-nav {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 1rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.nav-logo img {
+    height: 40px;
+    width: auto;
+    display: block;
+}
+
+.nav-menu {
+    display: flex;
+    list-style: none;
+    gap: 2rem;
+    align-items: center;
+    margin: 0;
+    padding: 0;
+}
+
+.nav-menu li {
+    margin: 0;
+}
+
+.nav-menu a {
+    color: var(--color-black);
+    text-decoration: none;
+    font-weight: bold;
+    text-transform: uppercase;
+    font-size: 0.9rem;
+    letter-spacing: 0.5px;
+    transition: color 0.3s;
+}
+
+.nav-menu a:hover {
+    color: var(--color-burgundy);
 }
 
 /* Login & Register Forms */
@@ -29,6 +94,18 @@ body {
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
+.register-logo {
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+.register-logo img {
+    max-width: 200px;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+}
+
 .login-form-wrapper h1,
 .register-form-wrapper h1 {
     margin-bottom: 1.5rem;
@@ -48,12 +125,34 @@ body {
 .form-group input[type="text"],
 .form-group input[type="email"],
 .form-group input[type="password"],
-.form-group input[type="tel"] {
+.form-group input[type="tel"],
+.form-group select {
     width: 100%;
     padding: 0.75rem;
     border: 1px solid #ddd;
     border-radius: 4px;
     font-size: 1rem;
+    font-family: inherit;
+    transition: border-color 0.3s;
+}
+
+.form-group input[type="text"]:focus,
+.form-group input[type="email"]:focus,
+.form-group input[type="password"]:focus,
+.form-group input[type="tel"]:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: #0073aa;
+}
+
+.form-group select {
+    background-color: #fff;
+    cursor: pointer;
+}
+
+.form-group label .required {
+    color: #d32f2f;
+    margin-left: 2px;
 }
 
 .form-group input[type="checkbox"] {
@@ -63,8 +162,8 @@ body {
 .submit-btn {
     width: 100%;
     padding: 0.75rem;
-    background: #0073aa;
-    color: #fff;
+    background: var(--color-burgundy);
+    color: var(--color-cream);
     border: none;
     border-radius: 4px;
     font-size: 1rem;
@@ -73,7 +172,8 @@ body {
 }
 
 .submit-btn:hover {
-    background: #005a87;
+    background: var(--color-taupe);
+    color: var(--color-cream);
 }
 
 .error-message {

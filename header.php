@@ -12,12 +12,12 @@
 
     <header class="main-header">
         <nav class="main-nav">
-            <div class="nav-logo">
-                <a href="<?php echo esc_url(home_url('/')); ?>">
-                    <img src="<?php echo esc_url(get_template_directory_uri() . '/assets/images/logo+ENLACE.svg'); ?>" alt="ENLACE Logo">
-                </a>
-            </div>
             <ul class="nav-menu">
+                <li class="nav-logo-item">
+                    <a href="<?php echo esc_url(home_url('/')); ?>">
+                        <img src="<?php echo esc_url(get_template_directory_uri() . '/assets/images/logo+ENLACE.svg'); ?>" alt="ENLACE Logo" class="nav-logo">
+                    </a>
+                </li>
                 <li><a href="<?php echo esc_url(home_url('/')); ?>">HOME</a></li>
                 <li><a href="#">DÉCOUVRIR</a></li>
                 <li><a href="#">ANNONCES</a></li>

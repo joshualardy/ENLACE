@@ -2,25 +2,41 @@
 get_header();
 ?>
 
-<div class="front-page-content">
-    <h1>Homepage</h1>
+<section class="hero-section">
+    <div class="hero-background"></div>
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+        <p class="hero-tagline">Connecte ton énergie, crée tes opportunités</p>
+        <h1 class="hero-title" id="hero-title-enlace">ENLACE</h1>
+        <a href="<?php echo esc_url(home_url('/signup')); ?>" class="hero-inscription-btn">Inscription</a>
+    </div>
+</section>
 
-    <?php if (is_user_logged_in()) : ?>
-        <div class="user-status logged-in">
-            <p>Welcome, <strong><?= esc_html(wp_get_current_user()->display_name); ?></strong>!</p>
-            <p>You are logged in.</p>
-            <a href="<?= esc_url(wp_logout_url(home_url())); ?>" class="logout-btn">Logout</a>
-        </div>
-    <?php else : ?>
-        <div class="user-status logged-out">
-            <p>You are not logged in.</p>
-            <div class="auth-links">
-                <a href="/login" class="login-btn">Login</a>
-                <a href="/signup" class="register-btn">Sign Up</a>
+<section class="carousel-section">
+    <div class="container-fluid">
+        <div id="mainCarousel" class="carousel slide" data-bs-ride="carousel">
+            <div class="carousel-inner">
+                <div class="carousel-item active">
+                    <div class="carousel-panel"></div>
+                </div>
+                <div class="carousel-item">
+                    <div class="carousel-panel"></div>
+                </div>
+                <div class="carousel-item">
+                    <div class="carousel-panel"></div>
+                </div>
             </div>
+            <button class="carousel-control-prev" type="button" data-bs-target="#mainCarousel" data-bs-slide="prev">
+                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Previous</span>
+            </button>
+            <button class="carousel-control-next" type="button" data-bs-target="#mainCarousel" data-bs-slide="next">
+                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Next</span>
+            </button>
         </div>
-    <?php endif; ?>
-</div>
+    </div>
+</section>
 
 <?php
 get_footer();

@@ -63,6 +63,10 @@ function handle_user_registration()
             if (isset($_POST['genre'])) {
                 update_user_meta($user_id, 'genre', sanitize_text_field($_POST['genre']));
             }
+            if (isset($_POST['register_submit'])) {
+                $service_type = $_POST['register_submit'] === 'offer' ? 'offer' : 'seek';
+                update_user_meta($user_id, 'service_type', $service_type);
+            }
             if (isset($_POST['phone'])) {
                 update_user_meta($user_id, 'phone', sanitize_text_field($_POST['phone']));
             }

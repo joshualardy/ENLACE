@@ -15,12 +15,12 @@
             <ul class="nav-menu">
                 <li class="nav-logo-item">
                     <a href="<?php echo esc_url(home_url('/')); ?>">
-                        <img src="<?php echo esc_url(get_template_directory_uri() . '/assets/images/logo+ENLACE.svg'); ?>" alt="ENLACE Logo" class="nav-logo">
+                        <img src="<?php echo esc_url(get_template_directory_uri() . '/assets/images/Logos/logo+ENLACE.svg'); ?>" alt="ENLACE Logo" class="nav-logo">
                     </a>
                 </li>
                 <li><a href="<?php echo esc_url(home_url('/')); ?>">HOME</a></li>
-                <li><a href="#">DÉCOUVRIR</a></li>
-                <li><a href="#">ANNONCES</a></li>
+                <li><a href="<?php echo esc_url(home_url('/decouvrir')); ?>">DÉCOUVRIR</a></li>
+                <li><a href="<?php echo esc_url(home_url('/annonces')); ?>">ANNONCES</a></li>
                 <?php if (is_user_logged_in()) : ?>
                     <li><a href="<?php echo esc_url(home_url('/profil')); ?>"><?php echo esc_html(wp_get_current_user()->display_name); ?></a></li>
                     <li><a href="<?php echo esc_url(wp_logout_url(home_url())); ?>">DÉCONNEXION</a></li>

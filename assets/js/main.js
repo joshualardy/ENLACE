@@ -102,5 +102,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }, letterDelay);
         });
     }
+
 });
 

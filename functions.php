@@ -19,8 +19,8 @@ add_action('after_setup_theme', 'theme_setup');
 // Enqueue styles and scripts
 function theme_scripts()
 {
-    // Bootstrap CSS
-    wp_enqueue_style('bootstrap-css', 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css', array(), '5.3.0');
+    // Bootstrap CSS (local file)
+    wp_enqueue_style('bootstrap-css', get_template_directory_uri() . '/assets/css/bootstrap.min.css', array(), '5.3.8');
     
     // Theme CSS
     wp_enqueue_style('theme-style', get_template_directory_uri() . '/assets/css/main.css', array('bootstrap-css'), '1.0.0');
@@ -230,3 +230,41 @@ function show_custom_user_column_data($value, $column_name, $user_id)
     return $value;
 }
 add_filter('manage_users_custom_column', 'show_custom_user_column_data', 10, 3);
+
+// Create default pages on theme activation
+function create_default_pages() {
+    // Check if pages already exist
+    $decouvrir_page = get_page_by_path('decouvrir');
+    $annonces_page = get_page_by_path('annonces');
+    
+    // Create Découvrir page
+    if (!$decouvrir_page) {
+        $decouvrir = array(
+            'post_title'    => 'Découvrir',
+            'post_content'  => '',
+            'post_status'   => 'publish',
+            'post_type'     => 'page',
+            'post_name'     => 'decouvrir'
+        );
+        $decouvrir_id = wp_insert_post($decouvrir);
+        if ($decouvrir_id) {
+            update_post_meta($decouvrir_id, '_wp_page_template', 'template-decouvrir.php');
+        }
+    }
+    
+    // Create Annonces page
+    if (!$annonces_page) {
+        $annonces = array(
+            'post_title'    => 'Annonces',
+            'post_content'  => '',
+            'post_status'   => 'publish',
+            'post_type'     => 'page',
+            'post_name'     => 'annonces'
+        );
+        $annonces_id = wp_insert_post($annonces);
+        if ($annonces_id) {
+            update_post_meta($annonces_id, '_wp_page_template', 'template-annonces.php');
+        }
+    }
+}
+add_action('after_switch_theme', 'create_default_pages');

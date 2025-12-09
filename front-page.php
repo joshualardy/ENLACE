@@ -15,27 +15,64 @@ get_header();
 </section>
 
 <section class="carousel-section">
-    <div class="container-fluid">
-        <div id="mainCarousel" class="carousel slide" data-bs-ride="carousel">
-            <div class="carousel-inner">
-                <div class="carousel-item active">
-                    <div class="carousel-panel"></div>
+    <div class="row">
+        <div class="row__inner">
+            <?php
+            // Images du carrousel - à remplacer par vos images
+            $carousel_images = array(
+                'guitare.jpg',
+                'micro.jpg',
+                'piano.jpg',
+                'guitare.jpg',
+                'micro.jpg',
+                'piano.jpg',
+                'guitare.jpg',
+                'micro.jpg',
+                'piano.jpg',
+                'guitare.jpg',
+                'micro.jpg',
+                'piano.jpg',
+                'guitare.jpg',
+                'micro.jpg',
+                'piano.jpg',
+                'guitare.jpg',
+                'micro.jpg',
+                'piano.jpg',
+                'guitare.jpg'
+            );
+            
+            foreach ($carousel_images as $image) :
+                $image_url = get_template_directory_uri() . '/assets/images/' . $image;
+            ?>
+            <div class="tile">
+                <div class="tile__media">
+                    <img class="tile__img" src="<?php echo esc_url($image_url); ?>" alt="" />
                 </div>
-                <div class="carousel-item">
-                    <div class="carousel-panel"></div>
-                </div>
-                <div class="carousel-item">
-                    <div class="carousel-panel"></div>
+                <div class="tile__details">
+                    <div class="tile__title">
+                        Top Gear
+                    </div>
                 </div>
             </div>
-            <button class="carousel-control-prev" type="button" data-bs-target="#mainCarousel" data-bs-slide="prev">
-                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                <span class="visually-hidden">Previous</span>
-            </button>
-            <button class="carousel-control-next" type="button" data-bs-target="#mainCarousel" data-bs-slide="next">
-                <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                <span class="visually-hidden">Next</span>
-            </button>
+            <?php endforeach; ?>
+        </div>
+    </div>
+</section>
+
+<section class="about-section">
+    <div class="container">
+        <div class="row">
+            <div class="col-12 about-left">
+                <h3 class="about-subtitle">L'ESSENTIEL DES CONNEXIONS</h3>
+                <p>Rejoins ENLACE et connecte-toi à celles et ceux qui font bouger la scène : artistes, beatmakers, managers, créatifs...</p>
+                <p>Un espace fluide où tu trouves les bonnes connexions, l'énergie juste et les opportunités qui donnent de l'élan à tes projets.</p>
+            </div>
+            <div class="col-12 about-right">
+                <h3 class="about-subtitle">LÀ OÙ TOUT COMMENCE</h3>
+                <p>ENLACE, c'est l'endroit où les idées, les projets et les opportunités se rencontrent.</p>
+                <p>Un espace simple, urbain, inspiré, pensé pour celles et ceux qui bougent et créent.</p>
+                <p>Ici, tout est fluide, clair, et à portée de main.</p>
+            </div>
         </div>
     </div>
 </section>

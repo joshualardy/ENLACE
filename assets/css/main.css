@@ -85,6 +85,15 @@ html {
     background: #0A0E1A;
 }
 
+html:not(.home) {
+    background-image: url('../images/bckgd Bleu.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    min-height: 100%;
+}
+
 body {
     min-height: 100vh;
     width: 100%;
@@ -96,6 +105,15 @@ body {
     flex-direction: column;
     background: #0A0E1A;
     position: relative;
+}
+
+/* Body background for login/register pages */
+body:not(.home) {
+    background-image: url('../images/bckgd Bleu.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
 }
 
 body.home {
@@ -128,9 +146,13 @@ html.home {
 
 /* Navbar on pages with white background (register, login, etc.) */
 body:not(.home) .main-header {
-    position: relative;
-    background: #0A0E1A;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background: transparent;
     border-bottom: none;
+    z-index: 1000;
 }
 
 body:not(.home) .nav-menu a {
@@ -299,7 +321,42 @@ body:not(.home) .nav-logo {
 
 /* Login & Register Forms */
 .login-container,
-.register-container,
+.register-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    width: 100%;
+    padding: 2rem;
+    padding-top: 120px;
+    padding-bottom: 0;
+    margin: 0;
+    flex: 1;
+    background: transparent;
+    position: relative;
+}
+
+.login-container::before,
+.register-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(10, 14, 26, 0.3);
+    z-index: 0;
+}
+
+.login-container .container,
+.register-container .container {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
 .decouvrir-container,
 .annonces-container {
     display: flex;
@@ -312,6 +369,221 @@ body:not(.home) .nav-logo {
     margin: 0;
     flex: 1;
 }
+
+/* Service/Offering Template Styles */
+.service-container {
+    min-height: 100vh;
+    width: 100%;
+    padding: 0;
+    margin: 0;
+    background-image: url('../images/bckgd Bleu.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    padding-top: 100px;
+}
+
+.service-container .container-fluid {
+    padding: 0;
+    margin: 0;
+}
+
+.service-container .row {
+    margin: 0;
+    min-height: calc(100vh - 100px);
+}
+
+/* Left Panel: Quote Section */
+.service-quote-panel {
+    background: #1A2332;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem;
+    position: relative;
+    min-height: calc(100vh - 100px);
+}
+
+.service-quote-panel::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 30%;
+    background: linear-gradient(to top, rgba(139, 92, 246, 0.2) 0%, transparent 100%);
+    background-image: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 20px,
+        rgba(139, 92, 246, 0.1) 20px,
+        rgba(139, 92, 246, 0.1) 22px
+    );
+}
+
+.service-quote-content {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+}
+
+.service-quote-text {
+    color: #fff;
+    font-style: italic;
+    font-size: 1.5rem;
+    line-height: 1.6;
+    font-family: 'Playfair Display', serif;
+    margin: 0;
+}
+
+/* Right Panel: Form Section */
+.service-form-panel {
+    background: #1E2A3A;
+    border-radius: 12px 0 0 12px;
+    padding: 3rem;
+    display: flex;
+    align-items: flex-start;
+    min-height: calc(100vh - 100px);
+}
+
+.service-form-wrapper {
+    width: 100%;
+    max-width: 600px;
+}
+
+.service-label {
+    color: #fff;
+    font-weight: 500;
+    margin-bottom: 0.75rem;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 0.95rem;
+}
+
+.service-input {
+    background: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    color: #333;
+    width: 100%;
+}
+
+.service-input:focus {
+    background: #fff;
+    border: none;
+    box-shadow: 0 0 0 0.2rem rgba(255, 255, 255, 0.25);
+    color: #333;
+    outline: none;
+}
+
+.service-input::placeholder {
+    color: #999;
+}
+
+/* Photo Section */
+.service-photo-section {
+    text-align: center;
+}
+
+.service-photo-icon {
+    margin: 0 auto 0.5rem;
+    width: 80px;
+    height: 80px;
+}
+
+.service-photo-label {
+    color: #fff;
+    font-size: 0.95rem;
+    display: block;
+    margin-top: 0.5rem;
+}
+
+/* Filters Grid */
+.service-filters-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.service-filter-item {
+    display: flex;
+    align-items: center;
+}
+
+.service-filter-checkbox {
+    display: none;
+}
+
+.service-filter-label {
+    color: #fff;
+    font-size: 0.9rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+.service-filter-star {
+    font-size: 1.2rem;
+    color: #fff;
+}
+
+.service-filter-checkbox:checked + .service-filter-label .service-filter-star {
+    color: #8B5CF6;
+}
+
+/* Submit Button */
+.service-submit-section {
+    margin-top: 2rem;
+    text-align: center;
+}
+
+.service-submit-btn {
+    background: #1A2332;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 0.75rem 2rem;
+    font-size: 1rem;
+    font-weight: 500;
+    text-transform: lowercase;
+    transition: all 0.3s;
+    cursor: pointer;
+    width: 100%;
+    max-width: 200px;
+}
+
+.service-submit-btn:hover {
+    background: #2a3a4f;
+    color: #fff;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .service-quote-panel {
+        min-height: auto;
+        padding: 2rem;
+    }
+
+    .service-form-panel {
+        border-radius: 0;
+        padding: 2rem;
+    }
+
+    .service-filters-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .service-quote-text {
+        font-size: 1.2rem;
+    }
+}
+
 
 /* Register Split Layout */
 .register-split-layout {
@@ -480,32 +752,99 @@ body:not(.home) .nav-logo {
 
 .login-form-wrapper {
     width: 100%;
-    max-width: 400px;
-    background: #fff;
+    background: transparent;
     padding: 2rem;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
-.login-form-wrapper h1 {
-    margin-bottom: 1.5rem;
-    text-align: center;
+.login-logo {
+    margin-bottom: 2rem;
+}
+
+.login-logo-img {
+    height: 50px;
+    width: auto;
+    display: block;
+    margin: 0 auto;
+}
+
+.login-form .form-label {
+    color: #fff;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 0.95rem;
+}
+
+.login-form .form-control {
+    background: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    color: #333;
+    width: 100%;
+}
+
+.login-form .form-control:focus {
+    background: #fff;
+    border: none;
+    box-shadow: 0 0 0 0.2rem rgba(255, 255, 255, 0.25);
+    color: #333;
+    outline: none;
+}
+
+.login-form .form-control::placeholder {
+    color: #999;
+}
+
+.login-form .form-check-label {
+    color: #fff;
+    font-size: 0.9rem;
+}
+
+.login-form .form-check-input {
+    margin-top: 0.3rem;
+}
+
+.btn-login {
+    background: #1A2332;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+    font-weight: 500;
+    text-transform: lowercase;
+    transition: all 0.3s;
+    cursor: pointer;
+}
+
+.btn-login:hover {
+    background: #2a3a4f;
+    color: #fff;
 }
 
 .error-message {
-    background: #f8d7da;
+    background: rgba(248, 215, 218, 0.9);
     color: #721c24;
     padding: 1rem;
-    border-radius: 4px;
+    border-radius: 8px;
     margin-bottom: 1rem;
+    font-size: 0.9rem;
 }
 
 .success-message {
-    background: #d4edda;
+    background: rgba(212, 237, 218, 0.9);
     color: #155724;
     padding: 1rem;
-    border-radius: 4px;
+    border-radius: 8px;
     margin-bottom: 1rem;
+    font-size: 0.9rem;
+}
+
+.success-message a {
+    color: #155724;
+    text-decoration: underline;
 }
 
 .register-link,
@@ -516,12 +855,15 @@ body:not(.home) .nav-logo {
 
 .register-link a,
 .login-link a {
-    color: #0073aa;
+    color: #fff;
     text-decoration: none;
+    opacity: 0.8;
+    transition: opacity 0.3s;
 }
 
 .register-link a:hover,
 .login-link a:hover {
+    opacity: 1;
     text-decoration: underline;
 }
 
@@ -595,7 +937,7 @@ body:not(.home) .nav-logo {
 /* Footer */
 footer {
     width: 100%;
-    background: transparent;
+    background: #0A0E1A;
     margin-top: auto;
     position: relative;
     z-index: 1;
@@ -605,7 +947,7 @@ footer {
 .logo-footer {
     width: 100%;
     height: 100px;
-    background: transparent;
+    background: #0A0E1A;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -620,7 +962,7 @@ footer {
 
 .footer-content {
     width: 100%;
-    background: transparent;
+    background: #0A0E1A;
     position: relative;
     padding: 1.5rem 0;
     border-top: 1px solid rgba(255, 255, 255, 0.2);

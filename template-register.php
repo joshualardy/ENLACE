@@ -7,7 +7,8 @@ get_header();
 ?>
 
 <div class="register-container">
-    <div class="register-split-layout">
+    <div class="container">
+        <div class="register-split-layout">
         <!-- Left Panel: Quote -->
         <div class="register-quote-panel">
             <div class="register-quote">
@@ -145,13 +146,14 @@ get_header();
                     </div>
 
                     <div class="form-buttons">
-                        <button type="submit" name="register_submit" value="offer" class="btn btn-service-offer" onclick="window.location.href='<?php echo home_url('/offering'); ?>'">J'offre mon service</button>
-                        <button type="submit" name="register_submit" value="seek" class="btn btn-service-seek" onclick="window.location.href='<?php echo home_url('/service'); ?>'">Je cherche un service</button>
+                        <button type="submit" name="register_submit" value="offer" class="btn btn-service-offer">J'offre mon service</button>
+                        <button type="submit" name="register_submit" value="seek" class="btn btn-service-seek">Je cherche un service</button>
                     </div>
                 </form>
 
                 <?php } ?>
             </div>
+        </div>
         </div>
     </div>
 </div>

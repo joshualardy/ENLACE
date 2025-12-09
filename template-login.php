@@ -7,46 +7,54 @@ get_header();
 ?>
 
 <div class="login-container">
-    <div class="login-form-wrapper">
-        <h1>Login</h1>
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-5 col-lg-4">
+                <div class="login-form-wrapper">
+                    <div class="login-logo text-center mb-4">
+                        <img src="<?php echo esc_url(get_template_directory_uri() . '/assets/images/Logos/logo_blanc.svg'); ?>" alt="ENLACE Logo" class="login-logo-img">
+                    </div>
+                    <?php
+                    if (isset($_GET['login']) && $_GET['login'] == 'failed') {
+                        echo '<div class="error-message">Nom d\'utilisateur ou mot de passe invalide.</div>';
+                    }
+                    if (isset($_GET['login']) && $_GET['login'] == 'empty') {
+                        echo '<div class="error-message">Veuillez remplir tous les champs.</div>';
+                    }
+                    if (is_user_logged_in()) {
+                        echo '<div class="success-message">Vous êtes déjà connecté. <a href="' . wp_logout_url(home_url()) . '">Se déconnecter</a></div>';
+                    } else {
+                    ?>
 
-        <?php
-        if (isset($_GET['login']) && $_GET['login'] == 'failed') {
-            echo '<div class="error-message">Invalid username or password.</div>';
-        }
-        if (isset($_GET['login']) && $_GET['login'] == 'empty') {
-            echo '<div class="error-message">Please fill in all fields.</div>';
-        }
-        if (is_user_logged_in()) {
-            echo '<div class="success-message">You are already logged in. <a href="' . wp_logout_url(home_url()) . '">Logout</a></div>';
-        } else {
-        ?>
+                        <form method="post" action="<?php echo esc_url($_SERVER['REQUEST_URI']); ?>" class="login-form">
+                            <?php wp_nonce_field('login_action', 'login_nonce'); ?>
 
-            <form method="post" action="<?php echo esc_url($_SERVER['REQUEST_URI']); ?>" class="login-form">
-                <?php wp_nonce_field('login_action', 'login_nonce'); ?>
+                            <div class="mb-3">
+                                <label for="user_login" class="form-label">Nom d'utilisateur ou E-mail</label>
+                                <input type="text" class="form-control" name="log" id="user_login" placeholder="nom d'utilisateur ou email" required>
+                            </div>
 
-                <div class="form-group">
-                    <label for="user_login">Username or Email</label>
-                    <input type="text" name="log" id="user_login" required>
+                            <div class="mb-3">
+                                <label for="user_pass" class="form-label">Mot de passe</label>
+                                <input type="password" class="form-control" name="pwd" id="user_pass" placeholder="mot de passe" required>
+                            </div>
+
+                            <div class="mb-3 form-check">
+                                <input type="checkbox" class="form-check-input" name="rememberme" id="rememberme" value="forever">
+                                <label class="form-check-label" for="rememberme">
+                                    Se souvenir de moi
+                                </label>
+                            </div>
+
+                            <button type="submit" name="login_submit" class="btn btn-login w-100">Connexion</button>
+                        </form>
+
+                        <p class="register-link text-center mt-3">Vous n'avez pas de compte ? <a href="<?php echo esc_url(home_url('/signup')); ?>">S'inscrire</a></p>
+
+                    <?php } ?>
                 </div>
-
-                <div class="form-group">
-                    <label for="user_pass">Password</label>
-                    <input type="password" name="pwd" id="user_pass" required>
-                </div>
-
-                <div class="form-group">
-                    <label>
-                        <input type="checkbox" name="rememberme" value="forever"> Remember me
-                    </label>
-                </div>
-
-                <button type="submit" name="login_submit" class="submit-btn">Login</button>
-            </form>
-
-            <p class="register-link">Don't have an account? <a href="<?php echo esc_url(home_url('/signup')); ?>">Sign up</a></p>
-
-        <?php } ?>
+            </div>
+        </div>
     </div>
 </div>
 

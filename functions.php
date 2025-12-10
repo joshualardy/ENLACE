@@ -8,8 +8,6 @@
 function theme_setup()
 {
     add_theme_support('post-thumbnails');
-    
-    // Register navigation menu
     register_nav_menus(array(
         'primary' => 'Menu Principal',
     ));
@@ -19,19 +17,10 @@ add_action('after_setup_theme', 'theme_setup');
 // Enqueue styles and scripts
 function theme_scripts()
 {
-    // Bootstrap CSS (local file)
     wp_enqueue_style('bootstrap-css', get_template_directory_uri() . '/assets/css/bootstrap.min.css', array(), '5.3.8');
-    
-    // Theme CSS
     wp_enqueue_style('theme-style', get_template_directory_uri() . '/assets/css/main.css', array('bootstrap-css'), '1.0.0');
-    
-    // jQuery (required for Bootstrap)
     wp_enqueue_script('jquery');
-    
-    // Bootstrap JS
     wp_enqueue_script('bootstrap-js', 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js', array('jquery'), '5.3.0', true);
-    
-    // Theme JS
     wp_enqueue_script('theme-script', get_template_directory_uri() . '/assets/js/main.js', array('jquery'), '1.0.0', true);
 }
 add_action('wp_enqueue_scripts', 'theme_scripts');
@@ -44,184 +33,288 @@ function start_registration_session() {
 }
 add_action('init', 'start_registration_session');
 
-// Handle user registration step 1 (store data, don't create user yet)
-function handle_user_registration()
-{
-    if (isset($_POST['register_submit']) && isset($_POST['register_nonce']) && wp_verify_nonce($_POST['register_nonce'], 'register_action')) {
-        $username = sanitize_user($_POST['user_login']);
-        $email = sanitize_email($_POST['user_email']);
-        $password = $_POST['user_pass'];
-        $password_confirm = $_POST['user_pass_confirm'];
-
-        if ($password !== $password_confirm) {
-            wp_redirect(home_url('/signup?registration=error'));
-            exit;
-        }
-
-        // Check if username or email already exists
-        if (username_exists($username) || email_exists($email)) {
-            wp_redirect(home_url('/signup?registration=error'));
-            exit;
-        }
-
-        // Store registration data in session
-        $_SESSION['registration_data'] = array(
-            'user_login' => $username,
-            'user_email' => $email,
-            'user_pass' => $password,
-            'first_name' => isset($_POST['first_name']) ? sanitize_text_field($_POST['first_name']) : '',
-            'last_name' => isset($_POST['last_name']) ? sanitize_text_field($_POST['last_name']) : '',
-            'phone' => isset($_POST['phone']) ? sanitize_text_field($_POST['phone']) : '',
-            'ville' => isset($_POST['ville']) ? sanitize_text_field($_POST['ville']) : '',
-            'service_type' => $_POST['register_submit'] === 'offer' ? 'offer' : 'seek'
-        );
-
-        // Redirect based on service type
-        if ($_POST['register_submit'] === 'offer') {
-            wp_redirect(home_url('/offering-service'));
-            exit;
-        } else {
-            // For "seek" service, create user immediately (old behavior)
-            $user_id = wp_create_user($username, $password, $email);
-            if (!is_wp_error($user_id)) {
-                // Save custom fields as user meta
-                if (isset($_POST['first_name'])) {
-                    update_user_meta($user_id, 'first_name', sanitize_text_field($_POST['first_name']));
-                }
-                if (isset($_POST['last_name'])) {
-                    update_user_meta($user_id, 'last_name', sanitize_text_field($_POST['last_name']));
-                }
-                update_user_meta($user_id, 'service_type', 'seek');
-                if (isset($_POST['phone'])) {
-                    update_user_meta($user_id, 'phone', sanitize_text_field($_POST['phone']));
-                }
-                if (isset($_POST['ville'])) {
-                    update_user_meta($user_id, 'ville', sanitize_text_field($_POST['ville']));
-                }
-
-                // Update display name
-                $first_name = isset($_POST['first_name']) ? sanitize_text_field($_POST['first_name']) : '';
-                $last_name = isset($_POST['last_name']) ? sanitize_text_field($_POST['last_name']) : '';
-                if ($first_name || $last_name) {
-                    wp_update_user(array(
-                        'ID' => $user_id,
-                        'display_name' => trim($first_name . ' ' . $last_name),
-                        'first_name' => $first_name,
-                        'last_name' => $last_name
-                    ));
-                }
-
-                wp_redirect(home_url('/signup?registration=success'));
-                exit;
-            } else {
-                wp_redirect(home_url('/signup?registration=error'));
-                exit;
-            }
+// Helper: Save user meta fields
+function save_user_meta_fields($user_id, $data) {
+    $fields = array('first_name', 'last_name', 'phone', 'ville', 'service_type');
+    foreach ($fields as $field) {
+        if (isset($data[$field]) && !empty($data[$field])) {
+            update_user_meta($user_id, $field, sanitize_text_field($data[$field]));
         }
     }
+}
+
+// Helper: Update user display name
+function update_user_display_name($user_id, $first_name, $last_name) {
+    if ($first_name || $last_name) {
+        wp_update_user(array(
+            'ID' => $user_id,
+            'display_name' => trim($first_name . ' ' . $last_name),
+            'first_name' => $first_name,
+            'last_name' => $last_name
+        ));
+    }
+}
+
+// Helper: Handle profile photo upload
+function handle_profile_photo_upload($user_id) {
+    if (empty($_FILES['profile_photo']['name'])) {
+        return false;
+    }
+
+    require_once(ABSPATH . 'wp-admin/includes/file.php');
+    
+    $uploadedfile = $_FILES['profile_photo'];
+    $upload_overrides = array('test_form' => false);
+    $allowed_types = array('image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp');
+    $file_type = wp_check_filetype($uploadedfile['name']);
+    $mime_type = $uploadedfile['type'];
+    
+    if (!in_array($mime_type, $allowed_types) && !in_array($file_type['type'], $allowed_types)) {
+        return false;
+    }
+    
+    $movefile = wp_handle_upload($uploadedfile, $upload_overrides);
+    
+    if ($movefile && !isset($movefile['error'])) {
+        update_user_meta($user_id, 'profile_photo_url', esc_url_raw($movefile['url']));
+        return true;
+    }
+    
+    return false;
+}
+
+// Helper: Create user and save data
+function create_user_with_meta($username, $password, $email, $meta_data = array()) {
+    $user_id = wp_create_user($username, $password, $email);
+    
+    if (is_wp_error($user_id)) {
+        return false;
+    }
+    
+    save_user_meta_fields($user_id, $meta_data);
+    
+    $first_name = isset($meta_data['first_name']) ? $meta_data['first_name'] : '';
+    $last_name = isset($meta_data['last_name']) ? $meta_data['last_name'] : '';
+    update_user_display_name($user_id, $first_name, $last_name);
+    
+    return $user_id;
+}
+
+// Helper: Auto-login user
+function auto_login_user($user_id) {
+    wp_set_current_user($user_id);
+    wp_set_auth_cookie($user_id);
+}
+
+// Handle user registration step 1
+function handle_user_registration()
+{
+    if (!isset($_POST['register_submit']) || !isset($_POST['register_nonce']) || !wp_verify_nonce($_POST['register_nonce'], 'register_action')) {
+        return;
+    }
+
+    $username = sanitize_user($_POST['user_login']);
+    $email = sanitize_email($_POST['user_email']);
+    $password = $_POST['user_pass'];
+    $password_confirm = $_POST['user_pass_confirm'];
+
+    if ($password !== $password_confirm || username_exists($username) || email_exists($email)) {
+        wp_redirect(home_url('/signup?registration=error'));
+        exit;
+    }
+
+    $registration_data = array(
+        'user_login' => $username,
+        'user_email' => $email,
+        'user_pass' => $password,
+        'first_name' => isset($_POST['first_name']) ? sanitize_text_field($_POST['first_name']) : '',
+        'last_name' => isset($_POST['last_name']) ? sanitize_text_field($_POST['last_name']) : '',
+        'phone' => isset($_POST['phone']) ? sanitize_text_field($_POST['phone']) : '',
+        'ville' => isset($_POST['ville']) ? sanitize_text_field($_POST['ville']) : '',
+        'service_type' => $_POST['register_submit'] === 'offer' ? 'offer' : 'seek'
+    );
+
+    if ($_POST['register_submit'] === 'offer') {
+        $_SESSION['registration_data'] = $registration_data;
+        wp_redirect(home_url('/offering-service'));
+        exit;
+    }
+
+    // For "seek" service, create user immediately
+    $user_id = create_user_with_meta($username, $password, $email, $registration_data);
+    
+    if ($user_id) {
+        auto_login_user($user_id);
+        wp_redirect(home_url('/userprofil'));
+    } else {
+        wp_redirect(home_url('/signup?registration=error'));
+    }
+    exit;
 }
 add_action('template_redirect', 'handle_user_registration');
 
 // Handle final registration after offering-service form completion
 function handle_offering_service_registration()
 {
-    if (isset($_POST['offering_submit']) && isset($_POST['offering_nonce']) && wp_verify_nonce($_POST['offering_nonce'], 'offering_action')) {
-        // Check if we have registration data in session
-        if (!isset($_SESSION['registration_data'])) {
-            wp_redirect(home_url('/signup?registration=error'));
-            exit;
-        }
-
-        $reg_data = $_SESSION['registration_data'];
-        
-        // Create user with data from session
-        $user_id = wp_create_user($reg_data['user_login'], $reg_data['user_pass'], $reg_data['user_email']);
-
-        if (!is_wp_error($user_id)) {
-            // Save custom fields as user meta
-            if (!empty($reg_data['first_name'])) {
-                update_user_meta($user_id, 'first_name', $reg_data['first_name']);
-            }
-            if (!empty($reg_data['last_name'])) {
-                update_user_meta($user_id, 'last_name', $reg_data['last_name']);
-            }
-            if (!empty($reg_data['phone'])) {
-                update_user_meta($user_id, 'phone', $reg_data['phone']);
-            }
-            if (!empty($reg_data['ville'])) {
-                update_user_meta($user_id, 'ville', $reg_data['ville']);
-            }
-            if (!empty($reg_data['service_type'])) {
-                update_user_meta($user_id, 'service_type', $reg_data['service_type']);
-            }
-
-            // Save offering-service form data
-            if (isset($_POST['biographie'])) {
-                update_user_meta($user_id, 'biographie', sanitize_textarea_field($_POST['biographie']));
-            }
-            if (isset($_POST['genre'])) {
-                update_user_meta($user_id, 'genre', sanitize_text_field($_POST['genre']));
-            }
-            if (isset($_POST['filters']) && is_array($_POST['filters'])) {
-                update_user_meta($user_id, 'filters', array_map('sanitize_text_field', $_POST['filters']));
-            }
-
-            // Update display name
-            if ($reg_data['first_name'] || $reg_data['last_name']) {
-                wp_update_user(array(
-                    'ID' => $user_id,
-                    'display_name' => trim($reg_data['first_name'] . ' ' . $reg_data['last_name']),
-                    'first_name' => $reg_data['first_name'],
-                    'last_name' => $reg_data['last_name']
-                ));
-            }
-
-            // Auto-login the user
-            wp_set_current_user($user_id);
-            wp_set_auth_cookie($user_id);
-
-            // Clear session data
-            unset($_SESSION['registration_data']);
-
-            wp_redirect(home_url('/profil'));
-            exit;
-        } else {
-            wp_redirect(home_url('/offering-service?registration=error'));
-            exit;
-        }
+    if (!isset($_POST['offering_submit']) || !isset($_POST['offering_nonce']) || !wp_verify_nonce($_POST['offering_nonce'], 'offering_action')) {
+        return;
     }
+
+    if (!isset($_SESSION['registration_data'])) {
+        wp_redirect(home_url('/signup?registration=error'));
+        exit;
+    }
+
+    $reg_data = $_SESSION['registration_data'];
+    $user_id = create_user_with_meta($reg_data['user_login'], $reg_data['user_pass'], $reg_data['user_email'], $reg_data);
+
+    if (!$user_id) {
+        wp_redirect(home_url('/offering-service?registration=error'));
+        exit;
+    }
+
+    // Handle profile photo upload
+    handle_profile_photo_upload($user_id);
+
+    // Save offering-service form data
+    if (isset($_POST['biographie'])) {
+        update_user_meta($user_id, 'biographie', sanitize_textarea_field($_POST['biographie']));
+    }
+    if (isset($_POST['genre'])) {
+        update_user_meta($user_id, 'genre', sanitize_text_field($_POST['genre']));
+    }
+    if (isset($_POST['filters']) && is_array($_POST['filters'])) {
+        update_user_meta($user_id, 'filters', array_map('sanitize_text_field', $_POST['filters']));
+    }
+
+    auto_login_user($user_id);
+    unset($_SESSION['registration_data']);
+    wp_redirect(home_url('/userprofil'));
+    exit;
 }
 add_action('template_redirect', 'handle_offering_service_registration');
+
+// Handle profile update
+function handle_profile_update()
+{
+    if (!isset($_POST['profile_update_submit']) || !isset($_POST['profile_update_nonce']) || !wp_verify_nonce($_POST['profile_update_nonce'], 'profile_update_action')) {
+        return;
+    }
+
+    if (!is_user_logged_in()) {
+        wp_redirect(home_url('/login'));
+        exit;
+    }
+
+    $user_id = get_current_user_id();
+    $update_data = array('ID' => $user_id);
+    $errors = array();
+
+    // Update first name and last name
+    if (isset($_POST['first_name'])) {
+        $first_name = sanitize_text_field($_POST['first_name']);
+        update_user_meta($user_id, 'first_name', $first_name);
+        $update_data['first_name'] = $first_name;
+    }
+
+    if (isset($_POST['last_name'])) {
+        $last_name = sanitize_text_field($_POST['last_name']);
+        update_user_meta($user_id, 'last_name', $last_name);
+        $update_data['last_name'] = $last_name;
+    }
+
+    // Update display name
+    if (isset($first_name) && isset($last_name)) {
+        $update_data['display_name'] = trim($first_name . ' ' . $last_name);
+    }
+
+    // Update email if provided and different
+    if (isset($_POST['user_email']) && !empty($_POST['user_email'])) {
+        $new_email = sanitize_email($_POST['user_email']);
+        $current_email = wp_get_current_user()->user_email;
+        
+        if ($new_email !== $current_email) {
+            if (email_exists($new_email)) {
+                $errors[] = 'Cet email est déjà utilisé.';
+            } else {
+                $update_data['user_email'] = $new_email;
+            }
+        }
+    }
+
+    // Execute user update
+    if (!empty($update_data)) {
+        $result = wp_update_user($update_data);
+        if (is_wp_error($result)) {
+            $errors[] = 'Erreur lors de la mise à jour des informations.';
+        }
+    }
+
+    // Update custom fields
+    $custom_fields = array('phone', 'ville', 'biographie', 'genre');
+    foreach ($custom_fields as $field) {
+        if (isset($_POST[$field])) {
+            $sanitize_func = $field === 'biographie' ? 'sanitize_textarea_field' : 'sanitize_text_field';
+            update_user_meta($user_id, $field, $sanitize_func($_POST[$field]));
+        }
+    }
+
+    // Handle profile photo upload
+    if (!handle_profile_photo_upload($user_id)) {
+        if (!empty($_FILES['profile_photo']['name'])) {
+            $errors[] = 'Erreur lors de l\'upload de la photo. Format non autorisé.';
+        }
+    }
+
+    // Handle filters update (for offer service type)
+    $service_type = get_user_meta($user_id, 'service_type', true);
+    if ($service_type === 'offer' && isset($_POST['filters']) && is_array($_POST['filters'])) {
+        update_user_meta($user_id, 'filters', array_map('sanitize_text_field', $_POST['filters']));
+    }
+
+    // Redirect with success/error message
+    $redirect_url = home_url('/userprofil');
+    if (empty($errors)) {
+        $redirect_url = add_query_arg('profile_updated', 'success', $redirect_url);
+    } else {
+        $redirect_url = add_query_arg('profile_updated', 'error', $redirect_url);
+    }
+    
+    wp_redirect($redirect_url);
+    exit;
+}
+add_action('template_redirect', 'handle_profile_update');
 
 // Handle user login
 function handle_user_login()
 {
-    if (isset($_POST['login_submit']) && isset($_POST['login_nonce']) && wp_verify_nonce($_POST['login_nonce'], 'login_action')) {
-        $username = sanitize_user($_POST['log']);
-        $password = $_POST['pwd'];
-        $remember = isset($_POST['rememberme']) ? true : false;
-
-        if (empty($username) || empty($password)) {
-            wp_redirect(home_url('/login?login=empty'));
-            exit;
-        }
-
-        $creds = array(
-            'user_login'    => $username,
-            'user_password' => $password,
-            'remember'      => $remember
-        );
-
-        $user = wp_signon($creds, false);
-
-        if (!is_wp_error($user)) {
-            wp_redirect(home_url());
-            exit;
-        } else {
-            wp_redirect(home_url('/login?login=failed'));
-            exit;
-        }
+    if (!isset($_POST['login_submit']) || !isset($_POST['login_nonce']) || !wp_verify_nonce($_POST['login_nonce'], 'login_action')) {
+        return;
     }
+
+    $username = sanitize_user($_POST['log']);
+    $password = $_POST['pwd'];
+    $remember = isset($_POST['rememberme']);
+
+    if (empty($username) || empty($password)) {
+        wp_redirect(home_url('/login?login=empty'));
+        exit;
+    }
+
+    $creds = array(
+        'user_login'    => $username,
+        'user_password' => $password,
+        'remember'      => $remember
+    );
+
+    $user = wp_signon($creds, false);
+
+    if (!is_wp_error($user)) {
+        wp_redirect(home_url('/userprofil'));
+    } else {
+        wp_redirect(home_url('/login?login=failed'));
+    }
+    exit;
 }
 add_action('template_redirect', 'handle_user_login');
 
@@ -229,16 +322,82 @@ add_action('template_redirect', 'handle_user_login');
 function redirect_after_login($redirect_to, $request, $user)
 {
     if (!is_wp_error($user)) {
-        return home_url();
+        return home_url('/userprofil');
     }
     return $redirect_to;
 }
 add_filter('login_redirect', 'redirect_after_login', 10, 3);
 
-// Helper function to get user custom field
-function get_user_custom_field($user_id, $field_name)
+// Get complete user profile data
+function get_user_profile_data($user_id = null)
 {
-    return get_user_meta($user_id, $field_name, true);
+    if (!$user_id) {
+        if (!is_user_logged_in()) {
+            return false;
+        }
+        $user_id = get_current_user_id();
+    }
+
+    $user = get_userdata($user_id);
+    if (!$user) {
+        return false;
+    }
+
+    // Get custom fields
+    $first_name = get_user_meta($user_id, 'first_name', true);
+    $last_name = get_user_meta($user_id, 'last_name', true);
+    $phone = get_user_meta($user_id, 'phone', true);
+    $ville = get_user_meta($user_id, 'ville', true);
+    $service_type = get_user_meta($user_id, 'service_type', true);
+    $profile_photo_url = get_user_meta($user_id, 'profile_photo_url', true);
+    $biographie = get_user_meta($user_id, 'biographie', true);
+    $genre = get_user_meta($user_id, 'genre', true);
+    $filters = get_user_meta($user_id, 'filters', true);
+
+    // Build full name
+    $full_name = trim($first_name . ' ' . $last_name);
+    if (empty($full_name)) {
+        $full_name = $user->display_name;
+    }
+
+    // Map filter values to labels
+    $filter_labels_map = array(
+        'beatmaker' => 'Beatmaker / Producteur',
+        'chanteur' => 'Chanteur / Chanteuse',
+        'organisateur' => 'Organisateur d\'événements',
+        'dj' => 'DJ',
+        'ingenieur' => 'Ingénieur son',
+        'compositeur' => 'Compositeur',
+        'musicien' => 'Musicien'
+    );
+
+    $filters_labels = array();
+    if (is_array($filters) && !empty($filters)) {
+        foreach ($filters as $filter) {
+            if (isset($filter_labels_map[$filter])) {
+                $filters_labels[] = $filter_labels_map[$filter];
+            }
+        }
+    }
+
+    return array(
+        'id' => $user_id,
+        'username' => $user->user_login,
+        'email' => $user->user_email,
+        'display_name' => $user->display_name,
+        'registered_date' => date_i18n('d/m/Y', strtotime($user->user_registered)),
+        'first_name' => $first_name,
+        'last_name' => $last_name,
+        'full_name' => $full_name,
+        'phone' => $phone,
+        'ville' => $ville,
+        'service_type' => $service_type ? $service_type : 'seek',
+        'profile_photo_url' => $profile_photo_url,
+        'biographie' => $biographie,
+        'genre' => $genre,
+        'filters' => $filters,
+        'filters_labels' => $filters_labels,
+    );
 }
 
 // Add custom fields to user profile in admin
@@ -283,14 +442,11 @@ function save_custom_user_profile_fields($user_id)
         return false;
     }
 
-    if (isset($_POST['genre'])) {
-        update_user_meta($user_id, 'genre', sanitize_text_field($_POST['genre']));
-    }
-    if (isset($_POST['phone'])) {
-        update_user_meta($user_id, 'phone', sanitize_text_field($_POST['phone']));
-    }
-    if (isset($_POST['ville'])) {
-        update_user_meta($user_id, 'ville', sanitize_text_field($_POST['ville']));
+    $fields = array('genre', 'phone', 'ville');
+    foreach ($fields as $field) {
+        if (isset($_POST[$field])) {
+            update_user_meta($user_id, $field, sanitize_text_field($_POST[$field]));
+        }
     }
 }
 add_action('personal_options_update', 'save_custom_user_profile_fields');
@@ -309,20 +465,20 @@ add_filter('manage_users_columns', 'add_custom_user_columns');
 // Display custom column data in users list
 function show_custom_user_column_data($value, $column_name, $user_id)
 {
-    if ($column_name == 'genre') {
-        $genre = get_user_meta($user_id, 'genre', true);
-        $genres = array(
-            'homme' => 'Homme',
-            'femme' => 'Femme',
-            'autre' => 'Autre'
-        );
-        return isset($genres[$genre]) ? $genres[$genre] : ($genre ?: '—');
-    }
-    if ($column_name == 'phone') {
-        return get_user_meta($user_id, 'phone', true) ?: '—';
-    }
-    if ($column_name == 'ville') {
-        return get_user_meta($user_id, 'ville', true) ?: '—';
+    $genres = array(
+        'homme' => 'Homme',
+        'femme' => 'Femme',
+        'autre' => 'Autre'
+    );
+
+    switch ($column_name) {
+        case 'genre':
+            $genre = get_user_meta($user_id, 'genre', true);
+            return isset($genres[$genre]) ? $genres[$genre] : ($genre ?: '—');
+        case 'phone':
+            return get_user_meta($user_id, 'phone', true) ?: '—';
+        case 'ville':
+            return get_user_meta($user_id, 'ville', true) ?: '—';
     }
     return $value;
 }
@@ -330,37 +486,29 @@ add_filter('manage_users_custom_column', 'show_custom_user_column_data', 10, 3);
 
 // Create default pages on theme activation
 function create_default_pages() {
-    // Check if pages already exist
-    $decouvrir_page = get_page_by_path('decouvrir');
-    $annonces_page = get_page_by_path('annonces');
-    
-    // Create Découvrir page
-    if (!$decouvrir_page) {
-        $decouvrir = array(
-            'post_title'    => 'Découvrir',
-            'post_content'  => '',
-            'post_status'   => 'publish',
-            'post_type'     => 'page',
-            'post_name'     => 'decouvrir'
-        );
-        $decouvrir_id = wp_insert_post($decouvrir);
-        if ($decouvrir_id) {
-            update_post_meta($decouvrir_id, '_wp_page_template', 'template-decouvrir.php');
-        }
-    }
-    
-    // Create Annonces page
-    if (!$annonces_page) {
-        $annonces = array(
-            'post_title'    => 'Annonces',
-            'post_content'  => '',
-            'post_status'   => 'publish',
-            'post_type'     => 'page',
-            'post_name'     => 'annonces'
-        );
-        $annonces_id = wp_insert_post($annonces);
-        if ($annonces_id) {
-            update_post_meta($annonces_id, '_wp_page_template', 'template-annonces.php');
+    $pages = array(
+        'decouvrir' => array(
+            'title' => 'Découvrir',
+            'template' => 'template-decouvrir.php'
+        ),
+        'annonces' => array(
+            'title' => 'Annonces',
+            'template' => 'template-annonces.php'
+        )
+    );
+
+    foreach ($pages as $slug => $page_data) {
+        if (!get_page_by_path($slug)) {
+            $page_id = wp_insert_post(array(
+                'post_title'    => $page_data['title'],
+                'post_content'  => '',
+                'post_status'   => 'publish',
+                'post_type'     => 'page',
+                'post_name'     => $slug
+            ));
+            if ($page_id) {
+                update_post_meta($page_id, '_wp_page_template', $page_data['template']);
+            }
         }
     }
 }

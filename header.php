@@ -22,7 +22,7 @@
                 <li><a href="<?php echo esc_url(home_url('/decouvrir')); ?>">DÉCOUVRIR</a></li>
                 <li><a href="<?php echo esc_url(home_url('/annonces')); ?>">ANNONCES</a></li>
                 <?php if (is_user_logged_in()) : ?>
-                    <li><a href="<?php echo esc_url(home_url('/profil')); ?>"><?php echo esc_html(wp_get_current_user()->display_name); ?></a></li>
+                    <li><a href="<?php echo esc_url(home_url('/userprofil')); ?>"><?php echo esc_html(wp_get_current_user()->display_name); ?></a></li>
                     <li><a href="<?php echo esc_url(wp_logout_url(home_url())); ?>">DÉCONNEXION</a></li>
                 <?php else : ?>
                     <li><a href="<?php echo esc_url(home_url('/login')); ?>">CONNEXION</a></li>

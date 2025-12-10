@@ -9,7 +9,7 @@
                 <a href='<?php echo esc_url(home_url('/decouvrir')); ?>'>Découvrir</a>
                 <a href='<?php echo esc_url(home_url('/annonces')); ?>'>Annonces</a>
                 <?php if (is_user_logged_in()) : ?>
-                    <a href='<?php echo esc_url(home_url('/profil')); ?>'><?php echo esc_html(wp_get_current_user()->display_name); ?></a>
+                    <a href='<?php echo esc_url(home_url('/userprofil')); ?>'><?php echo esc_html(wp_get_current_user()->display_name); ?></a>
                     <a href='<?php echo esc_url(wp_logout_url(home_url())); ?>'>Déconnexion</a>
                 <?php else : ?>
                     <a href='<?php echo esc_url(home_url('/login')); ?>'>Connexion</a>

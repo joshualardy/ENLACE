@@ -36,19 +36,24 @@ if (isset($_GET['registration']) && $_GET['registration'] == 'error') {
             <!-- Right Panel: Form Section (3/5 width) -->
             <div class="col-md-7 service-form-panel">
                 <div class="service-form-wrapper">
-                    <form method="post" action="<?php echo esc_url($_SERVER['REQUEST_URI']); ?>" class="service-form">
+                    <form method="post" action="<?php echo esc_url($_SERVER['REQUEST_URI']); ?>" class="service-form" enctype="multipart/form-data">
                         <?php wp_nonce_field('offering_action', 'offering_nonce'); ?>
 
                         <!-- Photo Upload Section -->
                         <div class="service-photo-section mb-4">
-                            <div class="service-photo-icon">
-                                <svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <circle cx="40" cy="40" r="40" fill="#1A2332"/>
-                                    <circle cx="40" cy="32" r="12" fill="#fff" opacity="0.3"/>
-                                    <path d="M25 55C25 50 30 45 40 45C50 45 55 50 55 55V60H25V55Z" fill="#fff" opacity="0.3"/>
-                                </svg>
+                            <div class="service-photo-upload-wrapper">
+                                <input type="file" name="profile_photo" id="profile_photo" accept="image/*" class="service-photo-input" style="display: none;">
+                                <label for="profile_photo" class="service-photo-label-wrapper">
+                                    <div class="service-photo-preview" id="photo-preview">
+                                        <svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg" class="service-photo-icon">
+                                            <circle cx="40" cy="40" r="40" fill="#1A2332"/>
+                                            <circle cx="40" cy="32" r="12" fill="#fff" opacity="0.3"/>
+                                            <path d="M25 55C25 50 30 45 40 45C50 45 55 50 55 55V60H25V55Z" fill="#fff" opacity="0.3"/>
+                                        </svg>
+                                    </div>
+                                    <span class="service-photo-label">Photo</span>
+                                </label>
                             </div>
-                            <label class="service-photo-label">Photo</label>
                         </div>
 
                         <!-- Biographie Field -->

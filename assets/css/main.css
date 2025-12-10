@@ -2555,3 +2555,452 @@ footer {
     }
 }
 
+/* ============================================
+   ANNOUNCEMENTS PAGE STYLES
+   ============================================ */
+
+.annonces-page {
+    min-height: 100vh;
+    background: #0A0E1A;
+    padding: 120px 0 80px;
+    color: #fff;
+}
+
+.annonces-page .container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 2rem;
+}
+
+.annonces-page-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 3rem;
+    font-weight: 400;
+    text-align: center;
+    color: #fff;
+    margin-bottom: 3rem;
+    letter-spacing: 0.05em;
+}
+
+.annonces-actions {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.btn-add-annonce {
+    background: #1E2A3A;
+    color: #fff;
+    border: 2px solid #fff;
+    padding: 12px 32px;
+    font-size: 1rem;
+    font-weight: 500;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-add-annonce:hover {
+    background: #fff;
+    color: #0A0E1A;
+}
+
+/* Announcements Grid */
+.annonces-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+    margin-top: 2rem;
+}
+
+.annonce-card {
+    background: #1A2332;
+    border-radius: 12px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    display: flex;
+    flex-direction: column;
+}
+
+.annonce-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.annonce-card-image {
+    width: 100%;
+    height: 200px;
+    background: #2A3441;
+    overflow: hidden;
+    position: relative;
+}
+
+.annonce-card-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.annonce-card-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #6B7280;
+}
+
+.annonce-card-content {
+    padding: 1.5rem;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.annonce-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+}
+
+.annonce-card-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #fff;
+    margin: 0;
+    flex: 1;
+    line-height: 1.4;
+}
+
+.annonce-bookmark-btn {
+    background: none;
+    border: none;
+    color: #6B7280;
+    cursor: pointer;
+    padding: 0.5rem;
+    margin-left: 1rem;
+    transition: color 0.3s ease;
+    flex-shrink: 0;
+}
+
+.annonce-bookmark-btn:hover {
+    color: #fff;
+}
+
+.annonce-card-description {
+    color: #9CA3AF;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    margin-bottom: 1rem;
+    flex: 1;
+}
+
+.annonce-card-location {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #6B7280;
+    font-size: 0.9rem;
+    margin-top: auto;
+}
+
+.annonce-card-location svg {
+    flex-shrink: 0;
+}
+
+/* Add Announcement Form */
+.add-annonce-form-wrapper {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    overflow-y: auto;
+}
+
+.add-annonce-form-container {
+    background: #1A2332;
+    border-radius: 12px;
+    max-width: 600px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+}
+
+.add-annonce-form-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem;
+    border-bottom: 1px solid #2A3441;
+}
+
+.add-annonce-form-header h2 {
+    color: #fff;
+    font-size: 1.5rem;
+    margin: 0;
+}
+
+.btn-close-form {
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 2rem;
+    cursor: pointer;
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.3s ease;
+}
+
+.btn-close-form:hover {
+    color: #9CA3AF;
+}
+
+.add-annonce-form {
+    padding: 1.5rem;
+}
+
+.add-annonce-form .form-label {
+    color: #fff;
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+.add-annonce-form .form-control {
+    background: #2A3441;
+    border: 1px solid #3A4451;
+    color: #fff;
+    border-radius: 8px;
+    padding: 0.75rem;
+}
+
+.add-annonce-form .form-control:focus {
+    background: #2A3441;
+    border-color: #fff;
+    color: #fff;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
+}
+
+.add-annonce-form .form-control::placeholder {
+    color: #6B7280;
+}
+
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+.btn-submit-annonce {
+    background: #fff;
+    color: #0A0E1A;
+    border: none;
+    padding: 0.75rem 2rem;
+    border-radius: 8px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.3s ease;
+    flex: 1;
+}
+
+.btn-submit-annonce:hover {
+    background: #E5E7EB;
+}
+
+.btn-cancel-annonce {
+    background: transparent;
+    color: #fff;
+    border: 1px solid #fff;
+    padding: 0.75rem 2rem;
+    border-radius: 8px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    flex: 1;
+}
+
+.btn-cancel-annonce:hover {
+    background: #fff;
+    color: #0A0E1A;
+}
+
+/* Announcement Modal */
+.annonce-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.9);
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    overflow-y: auto;
+}
+
+.annonce-modal-content {
+    background: #1A2332;
+    border-radius: 12px;
+    max-width: 900px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+    animation: modalFadeIn 0.3s ease;
+}
+
+@keyframes modalFadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.annonce-modal-close {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: rgba(0, 0, 0, 0.5);
+    border: none;
+    color: #fff;
+    font-size: 2rem;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    transition: background 0.3s ease;
+}
+
+.annonce-modal-close:hover {
+    background: rgba(0, 0, 0, 0.7);
+}
+
+.annonce-modal-body {
+    padding: 2rem;
+}
+
+.annonce-modal-image {
+    width: 100%;
+    height: 400px;
+    background: #2A3441;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 2rem;
+}
+
+.annonce-modal-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.annonce-modal-image-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #6B7280;
+}
+
+.annonce-modal-details {
+    color: #fff;
+}
+
+.annonce-modal-title {
+    font-size: 2rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: #fff;
+}
+
+.annonce-modal-description {
+    font-size: 1.1rem;
+    line-height: 1.8;
+    color: #E5E7EB;
+    margin-bottom: 1.5rem;
+}
+
+.annonce-modal-location {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: #9CA3AF;
+    font-size: 1rem;
+}
+
+.annonce-modal-location svg {
+    flex-shrink: 0;
+}
+
+.no-annonces {
+    text-align: center;
+    padding: 4rem 2rem;
+    color: #9CA3AF;
+}
+
+.no-annonces p {
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+}
+
+/* Responsive */
+@media (max-width: 992px) {
+    .annonces-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.5rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .annonces-page {
+        padding: 100px 0 60px;
+    }
+
+    .annonces-page-title {
+        font-size: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .annonces-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+
+    .annonce-modal-content {
+        max-width: 100%;
+        margin: 1rem;
+    }
+
+    .annonce-modal-image {
+        height: 250px;
+    }
+
+    .annonce-modal-title {
+        font-size: 1.5rem;
+    }
+}
+

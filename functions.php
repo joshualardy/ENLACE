@@ -69,9 +69,9 @@ function display_registration_error_message() {
 function check_registration_session($required_service_type = null) {
     if (!isset($_SESSION['registration_data'])) {
         wp_redirect(home_url('/signup'));
-        exit;
-    }
-    
+            exit;
+        }
+
     if ($required_service_type !== null && 
         (!isset($_SESSION['registration_data']['service_type']) || 
          $_SESSION['registration_data']['service_type'] !== $required_service_type)) {
@@ -92,14 +92,14 @@ function save_user_meta_fields($user_id, $data) {
 
 // Helper: Update user display name
 function update_user_display_name($user_id, $first_name, $last_name) {
-    if ($first_name || $last_name) {
-        wp_update_user(array(
-            'ID' => $user_id,
-            'display_name' => trim($first_name . ' ' . $last_name),
-            'first_name' => $first_name,
-            'last_name' => $last_name
-        ));
-    }
+            if ($first_name || $last_name) {
+                wp_update_user(array(
+                    'ID' => $user_id,
+                    'display_name' => trim($first_name . ' ' . $last_name),
+                    'first_name' => $first_name,
+                    'last_name' => $last_name
+                ));
+            }
 }
 
 // Helper: Handle profile photo upload with server-side validation
@@ -184,9 +184,9 @@ function handle_user_registration()
     $password_confirm = $_POST['user_pass_confirm'];
 
     if ($password !== $password_confirm || username_exists($username) || email_exists($email)) {
-        wp_redirect(home_url('/signup?registration=error'));
-        exit;
-    }
+            wp_redirect(home_url('/signup?registration=error'));
+            exit;
+        }
 
     $registration_data = array(
         'user_login' => $username,
@@ -327,26 +327,26 @@ function handle_user_login()
         return;
     }
 
-    $username = sanitize_user($_POST['log']);
-    $password = $_POST['pwd'];
+        $username = sanitize_user($_POST['log']);
+        $password = $_POST['pwd'];
     $remember = isset($_POST['rememberme']);
 
-    if (empty($username) || empty($password)) {
+        if (empty($username) || empty($password)) {
         wp_safe_redirect(home_url('/login?login=empty'));
-        exit;
-    }
+            exit;
+        }
 
-    $creds = array(
-        'user_login'    => $username,
-        'user_password' => $password,
-        'remember'      => $remember
-    );
+        $creds = array(
+            'user_login'    => $username,
+            'user_password' => $password,
+            'remember'      => $remember
+        );
 
-    $user = wp_signon($creds, false);
+        $user = wp_signon($creds, false);
 
-    if (!is_wp_error($user)) {
+        if (!is_wp_error($user)) {
         wp_safe_redirect(home_url('/userprofil'));
-    } else {
+        } else {
         wp_safe_redirect(home_url('/login?login=failed'));
     }
     exit;
@@ -620,13 +620,173 @@ function show_custom_user_column_data($value, $column_name, $user_id)
             $genre = get_user_meta($user_id, 'genre', true);
             return isset($genres[$genre]) ? $genres[$genre] : ($genre ?: '—');
         case 'phone':
-            return get_user_meta($user_id, 'phone', true) ?: '—';
+        return get_user_meta($user_id, 'phone', true) ?: '—';
         case 'ville':
             return get_user_meta($user_id, 'ville', true) ?: '—';
     }
     return $value;
 }
 add_filter('manage_users_custom_column', 'show_custom_user_column_data', 10, 3);
+
+// Register Custom Post Type for Announcements
+function register_annonces_post_type() {
+    $labels = array(
+        'name'                  => 'Annonces',
+        'singular_name'         => 'Annonce',
+        'menu_name'             => 'Annonces',
+        'add_new'               => 'Ajouter une annonce',
+        'add_new_item'          => 'Ajouter une nouvelle annonce',
+        'edit_item'             => 'Modifier l\'annonce',
+        'new_item'              => 'Nouvelle annonce',
+        'view_item'             => 'Voir l\'annonce',
+        'search_items'          => 'Rechercher des annonces',
+        'not_found'             => 'Aucune annonce trouvée',
+        'not_found_in_trash'    => 'Aucune annonce trouvée dans la corbeille',
+    );
+
+    $args = array(
+        'label'                 => 'Annonces',
+        'description'           => 'Annonces pour offrir ou chercher des services',
+        'labels'                => $labels,
+        'supports'              => array('title', 'editor', 'thumbnail', 'author'),
+        'public'                => true,
+        'publicly_queryable'    => true,
+        'show_ui'               => true,
+        'show_in_menu'          => true,
+        'menu_icon'             => 'dashicons-megaphone',
+        'query_var'             => true,
+        'rewrite'               => array('slug' => 'annonces'),
+        'capability_type'       => 'post',
+        'has_archive'           => false,
+        'hierarchical'          => false,
+        'menu_position'         => 5,
+        'show_in_rest'          => false,
+    );
+
+    register_post_type('annonce', $args);
+}
+add_action('init', 'register_annonces_post_type');
+
+// Add custom meta fields for announcements
+function add_annonce_meta_boxes() {
+    add_meta_box(
+        'annonce_details',
+        'Détails de l\'annonce',
+        'annonce_details_callback',
+        'annonce',
+        'normal',
+        'high'
+    );
+}
+add_action('add_meta_boxes', 'add_annonce_meta_boxes');
+
+function annonce_details_callback($post) {
+    wp_nonce_field('save_annonce_details', 'annonce_details_nonce');
+    
+    $localisation = get_post_meta($post->ID, '_annonce_localisation', true);
+    $service_type = get_post_meta($post->ID, '_annonce_service_type', true);
+    
+    echo '<table class="form-table">';
+    echo '<tr><th><label for="annonce_localisation">Localisation</label></th>';
+    echo '<td><input type="text" id="annonce_localisation" name="annonce_localisation" value="' . esc_attr($localisation) . '" class="regular-text" /></td></tr>';
+    echo '<tr><th><label for="annonce_service_type">Type de service</label></th>';
+    echo '<td><select id="annonce_service_type" name="annonce_service_type">';
+    echo '<option value="offer"' . selected($service_type, 'offer', false) . '>J\'offre un service</option>';
+    echo '<option value="seek"' . selected($service_type, 'seek', false) . '>Je cherche un service</option>';
+    echo '</select></td></tr>';
+    echo '</table>';
+}
+
+function save_annonce_details($post_id) {
+    if (!isset($_POST['annonce_details_nonce']) || !wp_verify_nonce($_POST['annonce_details_nonce'], 'save_annonce_details')) {
+        return;
+    }
+
+    if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
+        return;
+    }
+
+    if (isset($_POST['annonce_localisation'])) {
+        update_post_meta($post_id, '_annonce_localisation', sanitize_text_field($_POST['annonce_localisation']));
+    }
+
+    if (isset($_POST['annonce_service_type'])) {
+        update_post_meta($post_id, '_annonce_service_type', sanitize_text_field($_POST['annonce_service_type']));
+    }
+}
+add_action('save_post', 'save_annonce_details');
+
+// Handle announcement creation from frontend
+function handle_annonce_creation() {
+    if (!isset($_POST['create_annonce_submit']) || !isset($_POST['create_annonce_nonce']) || !wp_verify_nonce($_POST['create_annonce_nonce'], 'create_annonce_action')) {
+        return;
+    }
+
+    if (!is_user_logged_in()) {
+        wp_safe_redirect(home_url('/annonces?error=not_logged_in'));
+        exit;
+    }
+
+    $title = isset($_POST['annonce_title']) ? sanitize_text_field($_POST['annonce_title']) : '';
+    $content = isset($_POST['annonce_content']) ? sanitize_textarea_field($_POST['annonce_content']) : '';
+    $localisation = isset($_POST['annonce_localisation']) ? sanitize_text_field($_POST['annonce_localisation']) : '';
+    $service_type = isset($_POST['annonce_service_type']) ? sanitize_text_field($_POST['annonce_service_type']) : 'offer';
+
+    if (empty($title) || empty($content)) {
+        wp_safe_redirect(home_url('/annonces?error=missing_fields'));
+        exit;
+    }
+
+    $post_data = array(
+        'post_title'    => $title,
+        'post_content'  => $content,
+        'post_status'   => 'publish',
+        'post_type'     => 'annonce',
+        'post_author'   => get_current_user_id(),
+    );
+
+    $post_id = wp_insert_post($post_data);
+
+    if ($post_id && !is_wp_error($post_id)) {
+        if (!empty($localisation)) {
+            update_post_meta($post_id, '_annonce_localisation', $localisation);
+        }
+        update_post_meta($post_id, '_annonce_service_type', $service_type);
+
+        // Handle featured image upload
+        if (!empty($_FILES['annonce_image']['name'])) {
+            require_once(ABSPATH . 'wp-admin/includes/file.php');
+            require_once(ABSPATH . 'wp-admin/includes/image.php');
+            require_once(ABSPATH . 'wp-admin/includes/media.php');
+
+            $uploadedfile = $_FILES['annonce_image'];
+            $upload_overrides = array('test_form' => false);
+            $movefile = wp_handle_upload($uploadedfile, $upload_overrides);
+
+            if ($movefile && !isset($movefile['error'])) {
+                $filename = $movefile['file'];
+                $wp_filetype = wp_check_filetype($filename, null);
+                $attachment = array(
+                    'post_mime_type' => $wp_filetype['type'],
+                    'post_title' => sanitize_file_name(pathinfo($filename, PATHINFO_FILENAME)),
+                    'post_content' => '',
+                    'post_status' => 'inherit'
+                );
+                $attach_id = wp_insert_attachment($attachment, $filename, $post_id);
+                $attach_data = wp_generate_attachment_metadata($attach_id, $filename);
+                wp_update_attachment_metadata($attach_id, $attach_data);
+                set_post_thumbnail($post_id, $attach_id);
+            }
+        }
+
+        wp_safe_redirect(home_url('/annonces?success=annonce_created'));
+        exit;
+    } else {
+        wp_safe_redirect(home_url('/annonces?error=creation_failed'));
+        exit;
+    }
+}
+add_action('template_redirect', 'handle_annonce_creation');
 
 // Create default pages on theme activation
 function create_default_pages() {

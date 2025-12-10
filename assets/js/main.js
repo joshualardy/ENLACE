@@ -437,3 +437,130 @@ document.addEventListener('DOMContentLoaded', function() {
 
 });
 
+// Announcements Page Functionality
+document.addEventListener('DOMContentLoaded', function() {
+    // Add Announcement Form Toggle
+    const addAnnonceBtn = document.getElementById('add-annonce-btn');
+    const addAnnonceFormWrapper = document.getElementById('add-annonce-form-wrapper');
+    const closeAnnonceForm = document.getElementById('close-annonce-form');
+    const cancelAnnonceForm = document.getElementById('cancel-annonce-form');
+
+    if (addAnnonceBtn && addAnnonceFormWrapper) {
+        addAnnonceBtn.addEventListener('click', function() {
+            addAnnonceFormWrapper.style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        });
+    }
+
+    if (closeAnnonceForm && addAnnonceFormWrapper) {
+        closeAnnonceForm.addEventListener('click', function() {
+            addAnnonceFormWrapper.style.display = 'none';
+            document.body.style.overflow = '';
+        });
+    }
+
+    if (cancelAnnonceForm && addAnnonceFormWrapper) {
+        cancelAnnonceForm.addEventListener('click', function() {
+            addAnnonceFormWrapper.style.display = 'none';
+            document.body.style.overflow = '';
+        });
+    }
+
+    // Announcement Modal
+    const annonceCards = document.querySelectorAll('.annonce-card');
+    const annonceModalOverlay = document.getElementById('annonce-modal-overlay');
+    const annonceModalBody = document.getElementById('annonce-modal-body');
+    const closeAnnonceModal = document.getElementById('close-annonce-modal');
+
+    // Load announcement details
+    function loadAnnonceDetails(annonceId) {
+        const card = document.querySelector(`.annonce-card[data-annonce-id="${annonceId}"]`);
+        if (!card) return;
+
+        const title = card.querySelector('.annonce-card-title')?.textContent || '';
+        const description = card.querySelector('.annonce-card-description')?.textContent || '';
+        const location = card.querySelector('.annonce-card-location span')?.textContent || '';
+        const image = card.querySelector('.annonce-card-image img')?.src || '';
+        const imagePlaceholder = card.querySelector('.annonce-card-placeholder');
+
+        let imageHtml = '';
+        if (image) {
+            imageHtml = `<img src="${image}" alt="${title}">`;
+        } else if (imagePlaceholder) {
+            imageHtml = '<div class="annonce-modal-image-placeholder"><svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 16L8.586 11.414C9.367 10.633 10.633 10.633 11.414 11.414L16 16M14 14L15.586 12.414C16.367 11.633 17.633 11.633 18.414 12.414L22 16M18 8V6C18 4.895 17.105 4 16 4H8C6.895 4 6 4.895 6 6V18C6 19.105 6.895 20 8 20H16C17.105 20 18 19.105 18 18V16M18 8H20C21.105 8 22 8.895 22 10V18C22 19.105 21.105 20 20 20H12C10.895 20 10 19.105 10 18V10C10 8.895 10.895 8 12 8H14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>';
+        }
+
+        const modalContent = `
+            <div class="annonce-modal-image">
+                ${imageHtml}
+            </div>
+            <div class="annonce-modal-details">
+                <h2 class="annonce-modal-title">${title}</h2>
+                <p class="annonce-modal-description">${description}</p>
+                ${location ? `<div class="annonce-modal-location">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M21 10C21 17 12 23 12 23C12 23 3 17 3 10C3 7.61305 3.94821 5.32387 5.63604 3.63604C7.32387 1.94821 9.61305 1 12 1C14.3869 1 16.6761 1.94821 18.364 3.63604C20.0518 5.32387 21 7.61305 21 10Z" stroke="currentColor" stroke-width="1.5"/>
+                        <circle cx="12" cy="10" r="3" stroke="currentColor" stroke-width="1.5"/>
+                    </svg>
+                    <span>${location}</span>
+                </div>` : ''}
+            </div>
+        `;
+
+        if (annonceModalBody) {
+            annonceModalBody.innerHTML = modalContent;
+        }
+    }
+
+    // Open modal when clicking on a card
+    annonceCards.forEach(function(card) {
+        card.addEventListener('click', function(e) {
+            if (e.target.closest('.annonce-bookmark-btn')) {
+                return;
+            }
+            
+            const annonceId = card.getAttribute('data-annonce-id');
+            if (annonceId && annonceModalOverlay) {
+                loadAnnonceDetails(annonceId);
+                annonceModalOverlay.style.display = 'flex';
+                document.body.style.overflow = 'hidden';
+            }
+        });
+    });
+
+    // Close modal
+    if (closeAnnonceModal && annonceModalOverlay) {
+        closeAnnonceModal.addEventListener('click', function() {
+            annonceModalOverlay.style.display = 'none';
+            document.body.style.overflow = '';
+        });
+    }
+
+    // Close modal when clicking on overlay
+    if (annonceModalOverlay) {
+        annonceModalOverlay.addEventListener('click', function(e) {
+            if (e.target === annonceModalOverlay) {
+                annonceModalOverlay.style.display = 'none';
+                document.body.style.overflow = '';
+            }
+        });
+    }
+
+    // Close modal with Escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && annonceModalOverlay && annonceModalOverlay.style.display === 'flex') {
+            annonceModalOverlay.style.display = 'none';
+            document.body.style.overflow = '';
+        }
+    });
+
+    // Bookmark functionality (placeholder)
+    const bookmarkButtons = document.querySelectorAll('.annonce-bookmark-btn');
+    bookmarkButtons.forEach(function(btn) {
+        btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            console.log('Bookmark clicked for annonce:', btn.getAttribute('data-annonce-id'));
+        });
+    });
+});
+

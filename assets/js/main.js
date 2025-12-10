@@ -136,6 +136,8 @@ document.addEventListener('DOMContentLoaded', function() {
             const reader = new FileReader();
             reader.onload = function(e) {
                 photoPreview.innerHTML = '<img src="' + e.target.result + '" alt="Photo de profil" class="' + previewClass + '">';
+                // Add class to indicate image is loaded
+                photoPreview.classList.add('has-image');
             };
             reader.readAsDataURL(file);
         });
@@ -143,6 +145,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Initialize photo preview for offering-service form
     initPhotoPreview('profile_photo', 'photo-preview', 'service-photo-preview-img');
+    
+    // Initialize photo preview for seeking-service form
+    initPhotoPreview('seeking_profile_photo', 'seeking-photo-preview', 'seeking-photo-preview-img');
 
     // Profile edit form functionality
     const editBtn = document.getElementById('edit-profile-btn');
@@ -209,6 +214,205 @@ document.addEventListener('DOMContentLoaded', function() {
             reader.readAsDataURL(file);
         });
     }
+
+    // Add production form toggle
+    const addProductionBtn = document.getElementById('add-production-btn');
+    const cancelAddProduction = document.getElementById('cancel-add-production');
+    const addProductionFormWrapper = document.getElementById('add-production-form-wrapper');
+
+    if (addProductionBtn && addProductionFormWrapper) {
+        addProductionBtn.addEventListener('click', function() {
+            const isHidden = addProductionFormWrapper.style.display === 'none' || addProductionFormWrapper.style.display === '';
+            addProductionFormWrapper.style.display = isHidden ? 'block' : 'none';
+            if (isHidden) {
+                addProductionFormWrapper.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        });
+    }
+
+    if (cancelAddProduction && addProductionFormWrapper) {
+        cancelAddProduction.addEventListener('click', function() {
+            addProductionFormWrapper.style.display = 'none';
+        });
+    }
+
+    // Contact Modal
+    const contactBtn = document.getElementById('contact-btn');
+    const contactModal = document.getElementById('contact-modal');
+    const contactModalOverlay = document.getElementById('contact-modal-overlay');
+    const contactModalClose = document.getElementById('contact-modal-close');
+
+    function openContactModal() {
+        if (contactModal) {
+            contactModal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+    }
+
+    function closeContactModal() {
+        if (contactModal) {
+            contactModal.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+    }
+
+    if (contactBtn) {
+        contactBtn.addEventListener('click', openContactModal);
+    }
+
+    if (contactModalOverlay) {
+        contactModalOverlay.addEventListener('click', closeContactModal);
+    }
+
+    if (contactModalClose) {
+        contactModalClose.addEventListener('click', closeContactModal);
+    }
+
+    // Close modal on Escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && contactModal && contactModal.classList.contains('active')) {
+            closeContactModal();
+        }
+    });
+
+    // Form validation and error highlighting for service registration forms
+    function highlightFormErrors() {
+        if (typeof formErrors !== 'undefined' && formErrors.length > 0) {
+            formErrors.forEach(function(fieldName) {
+                const field = document.getElementById(fieldName);
+                const errorMsg = document.getElementById(fieldName + '-error');
+                
+                if (field) {
+                    field.classList.add('is-invalid');
+                    field.focus();
+                }
+                
+                if (errorMsg) {
+                    errorMsg.style.display = 'block';
+                }
+            });
+        }
+    }
+
+    // Highlight errors on page load
+    highlightFormErrors();
+
+    // Form submission handlers with spinner
+    const offeringForm = document.querySelector('.service-form');
+    const seekingForm = document.querySelector('.seeking-form');
+    
+    function setupFormSubmission(form, submitBtnId) {
+        if (!form) return;
+        
+        const submitBtn = document.getElementById(submitBtnId);
+        if (!submitBtn) return;
+        
+        form.addEventListener('submit', function(e) {
+            // Client-side validation
+            let isValid = true;
+            const errors = [];
+            
+            // Validate biographie
+            const biographie = form.querySelector('#biographie');
+            if (biographie && (!biographie.value || biographie.value.trim() === '')) {
+                biographie.classList.add('is-invalid');
+                const errorMsg = document.getElementById('biographie-error');
+                if (errorMsg) errorMsg.style.display = 'block';
+                isValid = false;
+                errors.push('biographie');
+            } else if (biographie) {
+                biographie.classList.remove('is-invalid');
+                const errorMsg = document.getElementById('biographie-error');
+                if (errorMsg) errorMsg.style.display = 'none';
+            }
+            
+            // Validate genre
+            const genre = form.querySelector('#genre');
+            if (genre && (!genre.value || genre.value.trim() === '')) {
+                genre.classList.add('is-invalid');
+                const errorMsg = document.getElementById('genre-error');
+                if (errorMsg) errorMsg.style.display = 'block';
+                isValid = false;
+                errors.push('genre');
+            } else if (genre) {
+                genre.classList.remove('is-invalid');
+                const errorMsg = document.getElementById('genre-error');
+                if (errorMsg) errorMsg.style.display = 'none';
+            }
+            
+            // Validate filters/music genres
+            const filters = form.querySelectorAll('input[name="filters[]"]:checked');
+            const musicGenres = form.querySelectorAll('input[name="music_genres[]"]:checked');
+            
+            if (filters.length > 0) {
+                // Offering service - validate filters
+                const errorMsg = document.getElementById('filters-error');
+                if (errorMsg) errorMsg.style.display = 'none';
+            } else if (musicGenres.length > 0) {
+                // Seeking service - validate music genres
+                const errorMsg = document.getElementById('music_genres-error');
+                if (errorMsg) errorMsg.style.display = 'none';
+            } else {
+                // No filters/genres selected
+                const filterErrorMsg = document.getElementById('filters-error');
+                const genreErrorMsg = document.getElementById('music_genres-error');
+                if (filterErrorMsg) filterErrorMsg.style.display = 'block';
+                if (genreErrorMsg) genreErrorMsg.style.display = 'block';
+                isValid = false;
+                errors.push(filters.length === 0 ? 'filters' : 'music_genres');
+            }
+            
+            if (!isValid) {
+                e.preventDefault();
+                // Scroll to first error
+                if (errors.length > 0) {
+                    const firstErrorField = document.getElementById(errors[0]);
+                    if (firstErrorField) {
+                        firstErrorField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                }
+                return false;
+            }
+            
+            // Show spinner and disable button
+            const btnText = submitBtn.querySelector('.btn-text');
+            const spinner = submitBtn.querySelector('.spinner-border');
+            
+            if (btnText) btnText.textContent = 'Traitement...';
+            if (spinner) spinner.classList.remove('d-none');
+            submitBtn.disabled = true;
+        });
+    }
+    
+    setupFormSubmission(offeringForm, 'offering-submit-btn');
+    setupFormSubmission(seekingForm, 'seeking-submit-btn');
+    
+    // Remove error highlighting on input
+    function setupFieldValidation(fieldId, errorId) {
+        const field = document.getElementById(fieldId);
+        if (field) {
+            field.addEventListener('input', function() {
+                this.classList.remove('is-invalid');
+                const errorMsg = document.getElementById(errorId);
+                if (errorMsg) errorMsg.style.display = 'none';
+            });
+        }
+    }
+    
+    // Setup validation for all fields
+    setupFieldValidation('biographie', 'biographie-error');
+    setupFieldValidation('genre', 'genre-error');
+    
+    // Setup validation for checkboxes
+    const filterCheckboxes = document.querySelectorAll('input[name="filters[]"], input[name="music_genres[]"]');
+    filterCheckboxes.forEach(function(checkbox) {
+        checkbox.addEventListener('change', function() {
+            const filterErrorMsg = document.getElementById('filters-error');
+            const genreErrorMsg = document.getElementById('music_genres-error');
+            if (filterErrorMsg) filterErrorMsg.style.display = 'none';
+            if (genreErrorMsg) genreErrorMsg.style.display = 'none';
+        });
+    });
 
 });
 

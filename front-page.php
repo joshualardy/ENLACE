@@ -74,7 +74,7 @@ get_header();
                 <p>Ici, tout est fluide, clair, et à portée de main.</p>
             </div>
         </div>
-    </div>
+</div>
 </section>
 
 <?php

@@ -19,49 +19,49 @@ get_header();
 
         <!-- Right Panel: Form -->
         <div class="register-form-panel">
-            <div class="register-form-wrapper">
-                <?php
-                if (isset($_GET['registration']) && $_GET['registration'] == 'success') {
+    <div class="register-form-wrapper">
+        <?php
+        if (isset($_GET['registration']) && $_GET['registration'] == 'success') {
                     echo '<div class="success-message">Inscription réussie ! Vous pouvez maintenant vous connecter.</div>';
-                }
-                if (isset($_GET['registration']) && $_GET['registration'] == 'error') {
+        }
+        if (isset($_GET['registration']) && $_GET['registration'] == 'error') {
                     echo '<div class="error-message">L\'inscription a échoué. Veuillez réessayer.</div>';
-                }
-                if (is_user_logged_in()) {
+        }
+        if (is_user_logged_in()) {
                     echo '<div class="success-message">Vous êtes déjà connecté. <a href="' . wp_logout_url(home_url()) . '">Se déconnecter</a></div>';
-                } else {
-                ?>
+        } else {
+        ?>
 
-                <form method="post" action="<?php echo esc_url($_SERVER['REQUEST_URI']); ?>" class="register-form">
-                    <?php wp_nonce_field('register_action', 'register_nonce'); ?>
+            <form method="post" action="<?php echo esc_url($_SERVER['REQUEST_URI']); ?>" class="register-form">
+                <?php wp_nonce_field('register_action', 'register_nonce'); ?>
 
                     <div class="form-row">
                         <div class="mb-3">
                             <label for="last_name" class="form-label">Nom <span class="required">*</span></label>
                             <input type="text" class="form-control" name="last_name" id="last_name" placeholder="Value" required>
                         </div>
-                    </div>
+                </div>
 
                     <div class="form-row">
                         <div class="mb-3">
                             <label for="first_name" class="form-label">Prénom <span class="required">*</span></label>
                             <input type="text" class="form-control" name="first_name" id="first_name" placeholder="Value" required>
                         </div>
-                    </div>
+                </div>
 
                     <div class="form-row">
                         <div class="mb-3">
                             <label for="user_login" class="form-label">Nom d'utilisateur <span class="required">*</span></label>
                             <input type="text" class="form-control" name="user_login" id="user_login" placeholder="Value" required>
                         </div>
-                    </div>
+                </div>
 
                     <div class="form-row">
                         <div class="mb-3">
                             <label for="user_email" class="form-label">Email <span class="required">*</span></label>
                             <input type="email" class="form-control" name="user_email" id="user_email" placeholder="Value" required>
                         </div>
-                    </div>
+                </div>
 
                     <div class="form-row form-row-split">
                         <div class="mb-3">
@@ -72,7 +72,7 @@ get_header();
                             <label for="user_pass_confirm" class="form-label">Confirmer le mot de passe <span class="required">*</span></label>
                             <input type="password" class="form-control" name="user_pass_confirm" id="user_pass_confirm" placeholder="Value" required>
                         </div>
-                    </div>
+                </div>
 
                     <div class="form-row form-row-split">
                         <div class="mb-3">
@@ -142,16 +142,16 @@ get_header();
                                 <option value="Gent (9000)">Gent (9000)</option>
                                 <option value="Brugge (8000)">Brugge (8000)</option>
                             </datalist>
-                        </div>
-                    </div>
+                </div>
+                </div>
 
                     <div class="form-buttons">
                         <button type="submit" name="register_submit" value="offer" class="btn btn-service-offer">J'offre mon service</button>
                         <button type="submit" name="register_submit" value="seek" class="btn btn-service-seek">Je cherche un service</button>
-                    </div>
-                </form>
+                </div>
+            </form>
 
-                <?php } ?>
+        <?php } ?>
             </div>
         </div>
         </div>

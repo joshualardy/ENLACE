@@ -33,6 +33,51 @@ function start_registration_session() {
 }
 add_action('init', 'start_registration_session');
 
+// Helper: Get error messages for registration forms
+function get_registration_error_messages() {
+    return array(
+        'session_expired' => 'Votre session a expiré. Veuillez recommencer l\'inscription.',
+        'user_creation_failed' => 'Erreur lors de la création du compte. Veuillez réessayer.',
+        'photo_too_large' => 'La photo est trop grande. Taille maximum : 5MB.',
+        'photo_invalid_type' => 'Format de photo non autorisé. Formats acceptés : JPEG, PNG, GIF, WebP.'
+    );
+}
+
+// Helper: Display registration error messages
+function display_registration_error_message() {
+    if (!isset($_GET['registration']) || $_GET['registration'] !== 'error') {
+        return;
+    }
+    
+    $error_messages = get_registration_error_messages();
+    $message = isset($_GET['message']) && isset($error_messages[$_GET['message']]) 
+        ? $error_messages[$_GET['message']] 
+        : 'L\'inscription a échoué. Veuillez vérifier tous les champs requis.';
+    
+    $error_fields = isset($_GET['fields']) ? explode(',', $_GET['fields']) : array();
+    echo '<div class="error-message fixed">' . esc_html($message) . '</div>';
+    
+    // Store error fields for JavaScript to highlight
+    if (!empty($error_fields)) {
+        echo '<script>var formErrors = ' . json_encode($error_fields) . ';</script>';
+    }
+}
+
+// Helper: Check session and redirect if needed
+function check_registration_session($required_service_type = null) {
+    if (!isset($_SESSION['registration_data'])) {
+        wp_redirect(home_url('/signup'));
+        exit;
+    }
+    
+    if ($required_service_type !== null && 
+        (!isset($_SESSION['registration_data']['service_type']) || 
+         $_SESSION['registration_data']['service_type'] !== $required_service_type)) {
+        wp_redirect(home_url('/signup'));
+        exit;
+    }
+}
+
 // Helper: Save user meta fields
 function save_user_meta_fields($user_id, $data) {
     $fields = array('first_name', 'last_name', 'phone', 'ville', 'service_type');
@@ -55,24 +100,33 @@ function update_user_display_name($user_id, $first_name, $last_name) {
     }
 }
 
-// Helper: Handle profile photo upload
+// Helper: Handle profile photo upload with server-side validation
 function handle_profile_photo_upload($user_id) {
     if (empty($_FILES['profile_photo']['name'])) {
-        return false;
+        return false; // No file uploaded (optional field)
     }
 
     require_once(ABSPATH . 'wp-admin/includes/file.php');
     
     $uploadedfile = $_FILES['profile_photo'];
+    
+    // Validate file size (max 5MB)
+    $max_size = 5 * 1024 * 1024; // 5MB in bytes
+    if ($uploadedfile['size'] > $max_size) {
+        return 'size_error';
+    }
+    
+    // Validate file type
     $upload_overrides = array('test_form' => false);
     $allowed_types = array('image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp');
     $file_type = wp_check_filetype($uploadedfile['name']);
     $mime_type = $uploadedfile['type'];
     
     if (!in_array($mime_type, $allowed_types) && !in_array($file_type['type'], $allowed_types)) {
-        return false;
+        return 'type_error';
     }
     
+    // Handle upload
     $movefile = wp_handle_upload($uploadedfile, $upload_overrides);
     
     if ($movefile && !isset($movefile['error'])) {
@@ -140,28 +194,53 @@ function handle_user_registration()
         exit;
     }
 
-    // For "seek" service, create user immediately
-    $user_id = create_user_with_meta($username, $password, $email, $registration_data);
-    
-    if ($user_id) {
-        auto_login_user($user_id);
-        wp_redirect(home_url('/userprofil'));
-    } else {
-        wp_redirect(home_url('/signup?registration=error'));
+    // For "seek" service, store in session and redirect to seeking-service form
+    if ($_POST['register_submit'] === 'seek') {
+        $_SESSION['registration_data'] = $registration_data;
+        wp_redirect(home_url('/seeking-service'));
+        exit;
     }
-    exit;
 }
 add_action('template_redirect', 'handle_user_registration');
 
-// Handle final registration after offering-service form completion
-function handle_offering_service_registration()
+// Generic function to handle service registration (both offering and seeking)
+function handle_service_registration($service_type, $nonce_action, $nonce_name, $submit_name, $redirect_page)
 {
-    if (!isset($_POST['offering_submit']) || !isset($_POST['offering_nonce']) || !wp_verify_nonce($_POST['offering_nonce'], 'offering_action')) {
+    if (!isset($_POST[$submit_name]) || !isset($_POST[$nonce_name]) || !wp_verify_nonce($_POST[$nonce_name], $nonce_action)) {
         return;
     }
 
     if (!isset($_SESSION['registration_data'])) {
-        wp_redirect(home_url('/signup?registration=error'));
+        wp_redirect(home_url('/signup?registration=error&message=session_expired'));
+        exit;
+    }
+
+    // Validate required fields
+    $errors = array();
+    
+    if (empty($_POST['biographie']) || trim($_POST['biographie']) === '') {
+        $errors[] = 'biographie';
+    }
+    
+    if (empty($_POST['genre']) || trim($_POST['genre']) === '') {
+        $errors[] = 'genre';
+    }
+    
+    // Validate filters/music genres based on service type
+    if ($service_type === 'offer') {
+        if (empty($_POST['filters']) || !is_array($_POST['filters']) || count($_POST['filters']) === 0) {
+            $errors[] = 'filters';
+        }
+    } else {
+        if (empty($_POST['music_genres']) || !is_array($_POST['music_genres']) || count($_POST['music_genres']) === 0) {
+            $errors[] = 'music_genres';
+        }
+    }
+    
+    // If validation errors, redirect back with error message
+    if (!empty($errors)) {
+        $error_params = 'registration=error&fields=' . implode(',', $errors);
+        wp_redirect(home_url($redirect_page . '?' . $error_params));
         exit;
     }
 
@@ -169,30 +248,54 @@ function handle_offering_service_registration()
     $user_id = create_user_with_meta($reg_data['user_login'], $reg_data['user_pass'], $reg_data['user_email'], $reg_data);
 
     if (!$user_id) {
-        wp_redirect(home_url('/offering-service?registration=error'));
+        wp_redirect(home_url($redirect_page . '?registration=error&message=user_creation_failed'));
         exit;
     }
 
-    // Handle profile photo upload
-    handle_profile_photo_upload($user_id);
+    // Handle profile photo upload with validation
+    $photo_result = handle_profile_photo_upload($user_id);
+    if ($photo_result === 'size_error') {
+        wp_redirect(home_url($redirect_page . '?registration=error&message=photo_too_large'));
+        exit;
+    } elseif ($photo_result === 'type_error') {
+        wp_redirect(home_url($redirect_page . '?registration=error&message=photo_invalid_type'));
+        exit;
+    }
 
-    // Save offering-service form data
+    // Save form data
     if (isset($_POST['biographie'])) {
         update_user_meta($user_id, 'biographie', sanitize_textarea_field($_POST['biographie']));
     }
     if (isset($_POST['genre'])) {
         update_user_meta($user_id, 'genre', sanitize_text_field($_POST['genre']));
     }
-    if (isset($_POST['filters']) && is_array($_POST['filters'])) {
+    
+    // Save filters or music genres based on service type
+    if ($service_type === 'offer' && isset($_POST['filters']) && is_array($_POST['filters'])) {
         update_user_meta($user_id, 'filters', array_map('sanitize_text_field', $_POST['filters']));
+    } elseif ($service_type === 'seek' && isset($_POST['music_genres']) && is_array($_POST['music_genres'])) {
+        update_user_meta($user_id, 'music_genres', array_map('sanitize_text_field', $_POST['music_genres']));
     }
 
     auto_login_user($user_id);
     unset($_SESSION['registration_data']);
-    wp_redirect(home_url('/userprofil'));
+    wp_redirect(home_url('/userprofil?registration=success'));
     exit;
 }
+
+// Handle final registration after offering-service form completion
+function handle_offering_service_registration()
+{
+    handle_service_registration('offer', 'offering_action', 'offering_nonce', 'offering_submit', '/offering-service');
+}
 add_action('template_redirect', 'handle_offering_service_registration');
+
+// Handle final registration after seeking-service form completion
+function handle_seeking_service_registration()
+{
+    handle_service_registration('seek', 'seeking_action', 'seeking_nonce', 'seeking_submit', '/seeking-service');
+}
+add_action('template_redirect', 'handle_seeking_service_registration');
 
 // Handle profile update
 function handle_profile_update()
@@ -202,7 +305,7 @@ function handle_profile_update()
     }
 
     if (!is_user_logged_in()) {
-        wp_redirect(home_url('/login'));
+        wp_safe_redirect(home_url('/login'));
         exit;
     }
 
@@ -288,7 +391,13 @@ add_action('template_redirect', 'handle_profile_update');
 // Handle user login
 function handle_user_login()
 {
-    if (!isset($_POST['login_submit']) || !isset($_POST['login_nonce']) || !wp_verify_nonce($_POST['login_nonce'], 'login_action')) {
+    // Ne s'exécuter que si le formulaire est soumis
+    if (!isset($_POST['login_submit']) || !isset($_POST['login_nonce'])) {
+        return;
+    }
+    
+    // Vérifier le nonce
+    if (!wp_verify_nonce($_POST['login_nonce'], 'login_action')) {
         return;
     }
 
@@ -297,7 +406,7 @@ function handle_user_login()
     $remember = isset($_POST['rememberme']);
 
     if (empty($username) || empty($password)) {
-        wp_redirect(home_url('/login?login=empty'));
+        wp_safe_redirect(home_url('/login?login=empty'));
         exit;
     }
 
@@ -310,23 +419,126 @@ function handle_user_login()
     $user = wp_signon($creds, false);
 
     if (!is_wp_error($user)) {
-        wp_redirect(home_url('/userprofil'));
+        wp_safe_redirect(home_url('/userprofil'));
     } else {
-        wp_redirect(home_url('/login?login=failed'));
+        wp_safe_redirect(home_url('/login?login=failed'));
     }
     exit;
 }
 add_action('template_redirect', 'handle_user_login');
 
-// Redirect after login
+// Redirect after login (only for WordPress default login, not our custom form)
 function redirect_after_login($redirect_to, $request, $user)
 {
-    if (!is_wp_error($user)) {
+    // Ne rediriger que si ce n'est pas déjà une redirection personnalisée
+    if (!is_wp_error($user) && empty($redirect_to)) {
         return home_url('/userprofil');
     }
     return $redirect_to;
 }
 add_filter('login_redirect', 'redirect_after_login', 10, 3);
+
+// Get user productions
+function get_user_productions($user_id = null) {
+    if (!$user_id) {
+        if (!is_user_logged_in()) {
+            return array();
+        }
+        $user_id = get_current_user_id();
+    }
+    
+    $productions = get_user_meta($user_id, 'productions', true);
+    
+    if (!is_array($productions)) {
+        return array();
+    }
+    
+    return $productions;
+}
+
+// Add production to user
+function add_user_production($user_id, $production_data) {
+    $productions = get_user_productions($user_id);
+    
+    $new_production = array(
+        'id' => uniqid('prod_'),
+        'title' => sanitize_text_field($production_data['title']),
+        'genre' => sanitize_text_field($production_data['genre']),
+        'description' => sanitize_textarea_field($production_data['description']),
+        'rating' => isset($production_data['rating']) ? intval($production_data['rating']) : 5,
+        'created_at' => current_time('mysql')
+    );
+    
+    $productions[] = $new_production;
+    
+    update_user_meta($user_id, 'productions', $productions);
+    
+    return $new_production['id'];
+}
+
+// Delete production
+function delete_user_production($user_id, $production_id) {
+    $productions = get_user_productions($user_id);
+    
+    $productions = array_filter($productions, function($prod) use ($production_id) {
+        return $prod['id'] !== $production_id;
+    });
+    
+    update_user_meta($user_id, 'productions', array_values($productions));
+    
+    return true;
+}
+
+// Handle production add/delete
+function handle_production_action() {
+    // Ne s'exécuter que si le formulaire est soumis
+    if (!isset($_POST['production_action']) || !isset($_POST['production_nonce'])) {
+        return;
+    }
+    
+    // Vérifier le nonce d'abord
+    if (!wp_verify_nonce($_POST['production_nonce'], 'production_action')) {
+        return;
+    }
+    
+    // Vérifier si l'utilisateur est connecté
+    if (!is_user_logged_in()) {
+        wp_safe_redirect(home_url('/login'));
+        exit;
+    }
+    
+    $user_id = get_current_user_id();
+    
+    // Vérifier que l'utilisateur offre un service (seuls ceux qui offrent peuvent avoir des productions)
+    $service_type = get_user_meta($user_id, 'service_type', true);
+    if ($service_type !== 'offer') {
+        wp_safe_redirect(home_url('/userprofil?production_error=unauthorized'));
+        exit;
+    }
+    
+    $action = $_POST['production_action'];
+    
+    if ($action === 'add') {
+        if (isset($_POST['production_title']) && isset($_POST['production_genre']) && isset($_POST['production_description'])) {
+            add_user_production($user_id, array(
+                'title' => $_POST['production_title'],
+                'genre' => $_POST['production_genre'],
+                'description' => $_POST['production_description'],
+                'rating' => isset($_POST['production_rating']) ? $_POST['production_rating'] : 5
+            ));
+            
+            wp_redirect(home_url('/userprofil?production_added=success'));
+        } else {
+            wp_redirect(home_url('/userprofil?production_added=error'));
+        }
+    } elseif ($action === 'delete' && isset($_POST['production_id'])) {
+        delete_user_production($user_id, sanitize_text_field($_POST['production_id']));
+        wp_redirect(home_url('/userprofil?production_deleted=success'));
+    }
+    
+    exit;
+}
+add_action('template_redirect', 'handle_production_action');
 
 // Get complete user profile data
 function get_user_profile_data($user_id = null)
@@ -353,6 +565,7 @@ function get_user_profile_data($user_id = null)
     $biographie = get_user_meta($user_id, 'biographie', true);
     $genre = get_user_meta($user_id, 'genre', true);
     $filters = get_user_meta($user_id, 'filters', true);
+    $music_genres = get_user_meta($user_id, 'music_genres', true);
 
     // Build full name
     $full_name = trim($first_name . ' ' . $last_name);
@@ -380,6 +593,9 @@ function get_user_profile_data($user_id = null)
         }
     }
 
+    // Get productions
+    $productions = get_user_productions($user_id);
+
     return array(
         'id' => $user_id,
         'username' => $user->user_login,
@@ -397,6 +613,8 @@ function get_user_profile_data($user_id = null)
         'genre' => $genre,
         'filters' => $filters,
         'filters_labels' => $filters_labels,
+        'music_genres' => is_array($music_genres) ? $music_genres : array(),
+        'productions' => $productions,
     );
 }
 

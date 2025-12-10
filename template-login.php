@@ -3,6 +3,13 @@
 /**
  * Template Name: Login Template
  */
+
+// Éviter les redirections en boucle
+if (is_user_logged_in() && !isset($_POST['login_submit'])) {
+    wp_safe_redirect(home_url('/userprofil'));
+    exit;
+}
+
 get_header();
 ?>
 

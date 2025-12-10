@@ -297,9 +297,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // Highlight errors on page load
     highlightFormErrors();
 
-    // Form submission handlers with spinner
+    // Form submission handler with spinner
     const offeringForm = document.querySelector('.service-form');
-    const seekingForm = document.querySelector('.seeking-form');
+    const seekingForm = document.querySelector('.service-form'); // Same class, will be detected by button ID
     
     function setupFormSubmission(form, submitBtnId) {
         if (!form) return;
@@ -315,6 +315,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // Validate biographie
             const biographie = form.querySelector('#biographie');
             if (biographie && (!biographie.value || biographie.value.trim() === '')) {
+                e.preventDefault();
                 biographie.classList.add('is-invalid');
                 const errorMsg = document.getElementById('biographie-error');
                 if (errorMsg) errorMsg.style.display = 'block';
@@ -329,6 +330,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // Validate genre
             const genre = form.querySelector('#genre');
             if (genre && (!genre.value || genre.value.trim() === '')) {
+                e.preventDefault();
                 genre.classList.add('is-invalid');
                 const errorMsg = document.getElementById('genre-error');
                 if (errorMsg) errorMsg.style.display = 'block';
@@ -340,30 +342,41 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (errorMsg) errorMsg.style.display = 'none';
             }
             
-            // Validate filters/music genres
+            // Validate filters/music genres based on form type
             const filters = form.querySelectorAll('input[name="filters[]"]:checked');
             const musicGenres = form.querySelectorAll('input[name="music_genres[]"]:checked');
             
-            if (filters.length > 0) {
+            // Determine form type by checking which checkboxes exist
+            const hasFiltersInputs = form.querySelector('input[name="filters[]"]') !== null;
+            const hasMusicGenresInputs = form.querySelector('input[name="music_genres[]"]') !== null;
+            
+            if (hasFiltersInputs) {
                 // Offering service - validate filters
-                const errorMsg = document.getElementById('filters-error');
-                if (errorMsg) errorMsg.style.display = 'none';
-            } else if (musicGenres.length > 0) {
+                if (filters.length === 0) {
+                    e.preventDefault();
+                    const errorMsg = document.getElementById('filters-error');
+                    if (errorMsg) errorMsg.style.display = 'block';
+                    isValid = false;
+                    errors.push('filters');
+                } else {
+                    const errorMsg = document.getElementById('filters-error');
+                    if (errorMsg) errorMsg.style.display = 'none';
+                }
+            } else if (hasMusicGenresInputs) {
                 // Seeking service - validate music genres
-                const errorMsg = document.getElementById('music_genres-error');
-                if (errorMsg) errorMsg.style.display = 'none';
-            } else {
-                // No filters/genres selected
-                const filterErrorMsg = document.getElementById('filters-error');
-                const genreErrorMsg = document.getElementById('music_genres-error');
-                if (filterErrorMsg) filterErrorMsg.style.display = 'block';
-                if (genreErrorMsg) genreErrorMsg.style.display = 'block';
-                isValid = false;
-                errors.push(filters.length === 0 ? 'filters' : 'music_genres');
+                if (musicGenres.length === 0) {
+                    e.preventDefault();
+                    const errorMsg = document.getElementById('music_genres-error');
+                    if (errorMsg) errorMsg.style.display = 'block';
+                    isValid = false;
+                    errors.push('music_genres');
+                } else {
+                    const errorMsg = document.getElementById('music_genres-error');
+                    if (errorMsg) errorMsg.style.display = 'none';
+                }
             }
             
             if (!isValid) {
-                e.preventDefault();
                 // Scroll to first error
                 if (errors.length > 0) {
                     const firstErrorField = document.getElementById(errors[0]);
@@ -374,18 +387,26 @@ document.addEventListener('DOMContentLoaded', function() {
                 return false;
             }
             
-            // Show spinner and disable button
+            // Show spinner and disable button only if validation passes
             const btnText = submitBtn.querySelector('.btn-text');
             const spinner = submitBtn.querySelector('.spinner-border');
             
             if (btnText) btnText.textContent = 'Traitement...';
             if (spinner) spinner.classList.remove('d-none');
-            submitBtn.disabled = true;
+            
+            // Don't disable the button - let it submit naturally
+            // The form will submit and the page will reload/redirect
         });
     }
     
-    setupFormSubmission(offeringForm, 'offering-submit-btn');
-    setupFormSubmission(seekingForm, 'seeking-submit-btn');
+    // Setup form submission for both offering and seeking forms
+    if (offeringForm) {
+        setupFormSubmission(offeringForm, 'offering-submit-btn');
+    }
+    
+    if (seekingForm) {
+        setupFormSubmission(seekingForm, 'seeking-submit-btn');
+    }
     
     // Remove error highlighting on input
     function setupFieldValidation(fieldId, errorId) {

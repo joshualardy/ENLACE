@@ -177,6 +177,37 @@ if (isset($_GET['profile_updated'])) {
                             </div>
                         <?php endif; ?>
                         
+                        <!-- Music Genres (only for seek service type) -->
+                        <?php if ($profile_data['service_type'] === 'seek') : ?>
+                            <div class="mb-3">
+                                <label class="form-label profile-edit-label">Genres musicaux préférés</label>
+                                <div class="profile-edit-filters-grid">
+<?php
+                                    $available_music_genres = array(
+                                        'Pop' => 'Pop',
+                                        'Rock' => 'Rock',
+                                        'Electro / House / Techno' => 'Electro / House / Techno',
+                                        'Classique' => 'Classique',
+                                        'Jazz' => 'Jazz',
+                                        'Metal' => 'Metal',
+                                        'Reggaeton / Afro' => 'Reggaeton / Afro',
+                                        'Autre' => 'Autre'
+                                    );
+                                    $current_music_genres = is_array($profile_data['music_genres']) ? $profile_data['music_genres'] : array();
+                                    ?>
+                                    <?php foreach ($available_music_genres as $value => $label) : ?>
+                                        <div class="profile-edit-filter-item">
+                                            <input type="checkbox" class="profile-edit-filter-checkbox" name="music_genres[]" id="edit_music_genre_<?php echo esc_attr($value); ?>" value="<?php echo esc_attr($value); ?>" <?php checked(in_array($value, $current_music_genres)); ?>>
+                                            <label for="edit_music_genre_<?php echo esc_attr($value); ?>" class="profile-edit-filter-label">
+                                                <span class="profile-edit-filter-star">☆</span>
+                                                <?php echo esc_html($label); ?>
+                                            </label>
+                                        </div>
+                                    <?php endforeach; ?>
+                                </div>
+                            </div>
+                        <?php endif; ?>
+                        
                         <div class="profile-edit-form-actions">
                             <button type="submit" name="profile_update_submit" class="btn profile-edit-submit-btn">Enregistrer les modifications</button>
                             <button type="button" class="btn profile-edit-cancel-btn" id="cancel-edit-form">Annuler</button>
@@ -317,6 +348,7 @@ if (isset($_GET['profile_updated'])) {
                             </div>
                         </div>
                     <?php endif; ?>
+                    
                 </div>
             </div>
             

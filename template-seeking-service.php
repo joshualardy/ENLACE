@@ -4,6 +4,100 @@
  * Template Name: Seeking Service Template
  */
 
+// Process form submission BEFORE header
+if (isset($_POST['seeking_submit'])) {
+    // Ensure session is started
+    if (!session_id()) {
+        session_start();
+    }
+    
+    // Verify nonce
+    if (!isset($_POST['seeking_nonce'])) {
+        wp_die('Erreur: Nonce manquant. Veuillez réessayer.');
+    }
+    
+    if (!wp_verify_nonce($_POST['seeking_nonce'], 'seeking_action')) {
+        wp_safe_redirect(home_url('/seeking-service?registration=error&message=nonce_failed'));
+        exit;
+    }
+    
+    // Check session
+    if (!isset($_SESSION['registration_data'])) {
+        wp_safe_redirect(home_url('/signup?registration=error&message=session_expired'));
+        exit;
+    }
+
+    // Validate required fields
+    $errors = array();
+    
+    if (empty($_POST['biographie']) || trim($_POST['biographie']) === '') {
+        $errors[] = 'biographie';
+    }
+    
+    if (empty($_POST['genre']) || trim($_POST['genre']) === '') {
+        $errors[] = 'genre';
+    }
+    
+    if (empty($_POST['music_genres']) || !is_array($_POST['music_genres']) || count($_POST['music_genres']) === 0) {
+        $errors[] = 'music_genres';
+    }
+    
+    // If validation errors, redirect back with error message
+    if (!empty($errors)) {
+        $error_params = 'registration=error&fields=' . implode(',', $errors);
+        wp_safe_redirect(home_url('/seeking-service?' . $error_params));
+        exit;
+    }
+
+    $reg_data = $_SESSION['registration_data'];
+    
+    // Check if user already exists
+    if (username_exists($reg_data['user_login']) || email_exists($reg_data['user_email'])) {
+        wp_safe_redirect(home_url('/seeking-service?registration=error&message=user_already_exists'));
+        exit;
+    }
+    
+    $user_id = create_user_with_meta($reg_data['user_login'], $reg_data['user_pass'], $reg_data['user_email'], $reg_data);
+
+    if (!$user_id) {
+        wp_safe_redirect(home_url('/seeking-service?registration=error&message=user_creation_failed'));
+        exit;
+    }
+
+    // Handle profile photo upload
+    $photo_result = handle_profile_photo_upload($user_id);
+    if ($photo_result === 'size_error') {
+        wp_safe_redirect(home_url('/seeking-service?registration=error&message=photo_too_large'));
+        exit;
+    } elseif ($photo_result === 'type_error') {
+        wp_safe_redirect(home_url('/seeking-service?registration=error&message=photo_invalid_type'));
+        exit;
+    }
+
+    // Save form data
+    if (isset($_POST['biographie'])) {
+        update_user_meta($user_id, 'biographie', sanitize_textarea_field($_POST['biographie']));
+    }
+    if (isset($_POST['genre'])) {
+        update_user_meta($user_id, 'genre', sanitize_text_field($_POST['genre']));
+    }
+    
+    if (isset($_POST['music_genres']) && is_array($_POST['music_genres'])) {
+        update_user_meta($user_id, 'music_genres', array_map('sanitize_text_field', $_POST['music_genres']));
+    }
+
+    // Auto-login user
+    wp_set_current_user($user_id);
+    wp_set_auth_cookie($user_id, true);
+    
+    // Clear session data
+    unset($_SESSION['registration_data']);
+    
+    // Redirect to profile
+    wp_safe_redirect(home_url('/userprofil?registration=success'));
+    exit;
+}
+
 get_header();
 
 // Check if user has registration data in session and correct service type
@@ -13,112 +107,114 @@ check_registration_session('seek');
 display_registration_error_message();
 ?>
 
-<div class="seeking-service-container">
+<div class="service-container">
     <div class="container-fluid">
-        <div class="row g-0 min-vh-100">
-            <!-- Left Panel: Quote Section -->
-            <div class="col-lg-5 seeking-quote-panel d-flex align-items-end justify-content-center">
-                <div class="seeking-quote-content">
-                    <p class="seeking-quote-text">La bonne rencontre peut changer tout un projet</p>
+        <div class="row g-0">
+            <!-- Left Panel: Quote Section (2/5 width) -->
+            <div class="col-md-5 service-quote-panel">
+                <div class="service-quote-content">
+                    <p class="service-quote-text">La bonne rencontre peut changer tout un projet</p>
                 </div>
             </div>
 
-            <!-- Right Panel: Form Section -->
-            <div class="col-lg-7 seeking-form-panel d-flex align-items-center justify-content-center">
-                <div class="seeking-form-wrapper">
-                    <form method="post" action="<?php echo esc_url($_SERVER['REQUEST_URI']); ?>" class="seeking-form" enctype="multipart/form-data">
+            <!-- Right Panel: Form Section (3/5 width) -->
+            <div class="col-md-7 service-form-panel">
+                <div class="service-form-wrapper">
+                    <form method="post" action="<?php echo esc_url($_SERVER['REQUEST_URI']); ?>" class="service-form" enctype="multipart/form-data" novalidate>
                         <?php wp_nonce_field('seeking_action', 'seeking_nonce'); ?>
 
                         <!-- Photo Upload Section -->
-                        <div class="seeking-photo-section mb-4 text-center">
-                            <input type="file" name="profile_photo" id="seeking_profile_photo" accept="image/*" class="d-none">
-                            <label for="seeking_profile_photo" class="seeking-photo-label">
-                                <div class="seeking-photo-preview" id="seeking-photo-preview">
-                                    <div class="seeking-photo-placeholder">
-                                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="seeking-photo-upload-icon">
-                                            <path d="M12 15C13.6569 15 15 13.6569 15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15Z" fill="currentColor"/>
-                                            <path fill-rule="evenodd" clip-rule="evenodd" d="M1 12C1 5.92487 5.92487 1 12 1C18.0751 1 23 5.92487 23 12C23 18.0751 18.0751 23 12 23C5.92487 23 1 18.0751 1 12ZM12 3C7.02944 3 3 7.02944 3 12C3 16.9706 7.02944 21 12 21C16.9706 21 21 16.9706 21 12C21 7.02944 16.9706 3 12 3ZM12 7C9.79086 7 8 8.79086 8 11C8 13.2091 9.79086 15 12 15C14.2091 15 16 13.2091 16 11C16 8.79086 14.2091 7 12 7Z" fill="currentColor"/>
-                                        </svg>
-                                        <span class="seeking-photo-upload-text">Ajouter une photo</span>
+                        <div class="service-photo-section mb-4">
+                            <div class="service-photo-upload-wrapper">
+                                <input type="file" name="profile_photo" id="seeking_profile_photo" accept="image/*" class="service-photo-input" style="display: none;">
+                                <label for="seeking_profile_photo" class="service-photo-label-wrapper">
+                                    <div class="service-photo-preview" id="seeking-photo-preview">
+                                        <div class="service-photo-placeholder">
+                                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="service-photo-upload-icon">
+                                                <path d="M12 15C13.6569 15 15 13.6569 15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15Z" fill="currentColor"/>
+                                                <path fill-rule="evenodd" clip-rule="evenodd" d="M1 12C1 5.92487 5.92487 1 12 1C18.0751 1 23 5.92487 23 12C23 18.0751 18.0751 23 12 23C5.92487 23 1 18.0751 1 12ZM12 3C7.02944 3 3 7.02944 3 12C3 16.9706 7.02944 21 12 21C16.9706 21 21 16.9706 21 12C21 7.02944 16.9706 3 12 3ZM12 7C9.79086 7 8 8.79086 8 11C8 13.2091 9.79086 15 12 15C14.2091 15 16 13.2091 16 11C16 8.79086 14.2091 7 12 7Z" fill="currentColor"/>
+                                            </svg>
+                                            <span class="service-photo-upload-text">Ajouter une photo</span>
+                                        </div>
                                     </div>
-                                </div>
-                                <span class="seeking-photo-text">Photo de profil (optionnel)</span>
-                            </label>
+                                    <span class="service-photo-label">Photo de profil (optionnel)</span>
+                                </label>
+                            </div>
                         </div>
 
                         <!-- Biographie Field -->
                         <div class="mb-4">
-                            <label for="biographie" class="form-label seeking-label">Biographie <span class="required">*</span></label>
-                            <textarea class="form-control seeking-input" name="biographie" id="biographie" rows="4" placeholder="Value" required></textarea>
+                            <label for="biographie" class="form-label service-label">Biographie <span class="required">*</span></label>
+                            <textarea class="form-control service-input" name="biographie" id="biographie" rows="4" placeholder="Value" required></textarea>
                             <div class="error-message field-error" id="biographie-error" style="display: none;">Ce champ est requis.</div>
                         </div>
 
                         <!-- Genre Field -->
                         <div class="mb-4">
-                            <label for="genre" class="form-label seeking-label">Genre <span class="required">*</span></label>
-                            <input type="text" class="form-control seeking-input" name="genre" id="genre" placeholder="Value" required>
+                            <label for="genre" class="form-label service-label">Genre <span class="required">*</span></label>
+                            <input type="text" class="form-control service-input" name="genre" id="genre" placeholder="Value" required>
                             <div class="error-message field-error" id="genre-error" style="display: none;">Ce champ est requis.</div>
                         </div>
 
-                        <!-- Filtres Section -->
+                        <!-- Music Genres Section -->
                         <div class="mb-4">
-                            <label class="form-label seeking-label">Filtres <span class="required">*</span></label>
+                            <label class="form-label service-label">Filtres <span class="required">*</span></label>
                             
-                            <!-- Music Genres Grid -->
-                            <div class="seeking-filters-grid">
-                                <div class="seeking-filter-item">
-                                    <input type="checkbox" class="form-check-input seeking-filter-checkbox" name="music_genres[]" id="genre-pop" value="Pop" aria-label="Pop">
-                                    <label for="genre-pop" class="form-check-label seeking-filter-label">
-                                        <span class="seeking-filter-star">★</span>
+                            <!-- Music Genres Options Grid -->
+                            <div class="service-filters-grid">
+                                <div class="service-filter-item">
+                                    <input type="checkbox" class="service-filter-checkbox" name="music_genres[]" id="genre-pop" value="Pop" aria-label="Pop">
+                                    <label for="genre-pop" class="service-filter-label">
+                                        <span class="service-filter-star">☆</span>
                                         Pop
                                     </label>
                                 </div>
-                                <div class="seeking-filter-item">
-                                    <input type="checkbox" class="form-check-input seeking-filter-checkbox" name="music_genres[]" id="genre-rock" value="Rock">
-                                    <label for="genre-rock" class="form-check-label seeking-filter-label">
-                                        <span class="seeking-filter-star">★</span>
+                                <div class="service-filter-item">
+                                    <input type="checkbox" class="service-filter-checkbox" name="music_genres[]" id="genre-rock" value="Rock">
+                                    <label for="genre-rock" class="service-filter-label">
+                                        <span class="service-filter-star">☆</span>
                                         Rock
                                     </label>
                                 </div>
-                                <div class="seeking-filter-item">
-                                    <input type="checkbox" class="form-check-input seeking-filter-checkbox" name="music_genres[]" id="genre-electro" value="Electro / House / Techno">
-                                    <label for="genre-electro" class="form-check-label seeking-filter-label">
-                                        <span class="seeking-filter-star">★</span>
-                                        Électro / House / Techno
+                                <div class="service-filter-item">
+                                    <input type="checkbox" class="service-filter-checkbox" name="music_genres[]" id="genre-electro" value="Electro / House / Techno">
+                                    <label for="genre-electro" class="service-filter-label">
+                                        <span class="service-filter-star">☆</span>
+                                        Electro / House / Techno
                                     </label>
                                 </div>
-                                <div class="seeking-filter-item">
-                                    <input type="checkbox" class="form-check-input seeking-filter-checkbox" name="music_genres[]" id="genre-classique" value="Classique">
-                                    <label for="genre-classique" class="form-check-label seeking-filter-label">
-                                        <span class="seeking-filter-star">★</span>
+                                <div class="service-filter-item">
+                                    <input type="checkbox" class="service-filter-checkbox" name="music_genres[]" id="genre-classique" value="Classique">
+                                    <label for="genre-classique" class="service-filter-label">
+                                        <span class="service-filter-star">☆</span>
                                         Classique
                                     </label>
                                 </div>
-                                <div class="seeking-filter-item">
-                                    <input type="checkbox" class="form-check-input seeking-filter-checkbox" name="music_genres[]" id="genre-jazz" value="Jazz">
-                                    <label for="genre-jazz" class="form-check-label seeking-filter-label">
-                                        <span class="seeking-filter-star">★</span>
+                                <div class="service-filter-item">
+                                    <input type="checkbox" class="service-filter-checkbox" name="music_genres[]" id="genre-jazz" value="Jazz">
+                                    <label for="genre-jazz" class="service-filter-label">
+                                        <span class="service-filter-star">☆</span>
                                         Jazz
                                     </label>
                                 </div>
-                                <div class="seeking-filter-item">
-                                    <input type="checkbox" class="form-check-input seeking-filter-checkbox" name="music_genres[]" id="genre-metal" value="Metal">
-                                    <label for="genre-metal" class="form-check-label seeking-filter-label">
-                                        <span class="seeking-filter-star">★</span>
+                                <div class="service-filter-item">
+                                    <input type="checkbox" class="service-filter-checkbox" name="music_genres[]" id="genre-metal" value="Metal">
+                                    <label for="genre-metal" class="service-filter-label">
+                                        <span class="service-filter-star">☆</span>
                                         Metal
                                     </label>
                                 </div>
-                                <div class="seeking-filter-item">
-                                    <input type="checkbox" class="form-check-input seeking-filter-checkbox" name="music_genres[]" id="genre-reggaeton" value="Reggaeton / Afro">
-                                    <label for="genre-reggaeton" class="form-check-label seeking-filter-label">
-                                        <span class="seeking-filter-star">★</span>
+                                <div class="service-filter-item">
+                                    <input type="checkbox" class="service-filter-checkbox" name="music_genres[]" id="genre-reggaeton" value="Reggaeton / Afro">
+                                    <label for="genre-reggaeton" class="service-filter-label">
+                                        <span class="service-filter-star">☆</span>
                                         Reggaeton / Afro
                                     </label>
                                 </div>
-                                <div class="seeking-filter-item">
-                                    <input type="checkbox" class="form-check-input seeking-filter-checkbox" name="music_genres[]" id="genre-autre" value="Autre">
-                                    <label for="genre-autre" class="form-check-label seeking-filter-label">
-                                        <span class="seeking-filter-star">★</span>
+                                <div class="service-filter-item">
+                                    <input type="checkbox" class="service-filter-checkbox" name="music_genres[]" id="genre-autre" value="Autre">
+                                    <label for="genre-autre" class="service-filter-label">
+                                        <span class="service-filter-star">☆</span>
                                         Autre
                                     </label>
                                 </div>
@@ -129,8 +225,8 @@ display_registration_error_message();
                         <div class="error-message field-error" id="music_genres-error" style="display: none;">Veuillez sélectionner au moins un genre musical.</div>
 
                         <!-- Submit Button -->
-                        <div class="seeking-submit-section text-center">
-                            <button type="submit" name="seeking_submit" class="btn seeking-submit-btn" id="seeking-submit-btn">
+                        <div class="service-submit-section">
+                            <button type="submit" name="seeking_submit" class="btn service-submit-btn" id="seeking-submit-btn">
                                 <span class="btn-text">suivant</span>
                                 <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
                             </button>

@@ -38,6 +38,8 @@ function get_registration_error_messages() {
     return array(
         'session_expired' => 'Votre session a expiré. Veuillez recommencer l\'inscription.',
         'user_creation_failed' => 'Erreur lors de la création du compte. Veuillez réessayer.',
+        'user_already_exists' => 'Un compte avec ce nom d\'utilisateur ou cet email existe déjà.',
+        'nonce_failed' => 'Erreur de sécurité. Veuillez réessayer.',
         'photo_too_large' => 'La photo est trop grande. Taille maximum : 5MB.',
         'photo_invalid_type' => 'Format de photo non autorisé. Formats acceptés : JPEG, PNG, GIF, WebP.'
     );
@@ -139,6 +141,15 @@ function handle_profile_photo_upload($user_id) {
 
 // Helper: Create user and save data
 function create_user_with_meta($username, $password, $email, $meta_data = array()) {
+    // Check if user already exists
+    if (username_exists($username)) {
+        return false;
+    }
+    
+    if (email_exists($email)) {
+        return false;
+    }
+    
     $user_id = wp_create_user($username, $password, $email);
     
     if (is_wp_error($user_id)) {
@@ -188,114 +199,19 @@ function handle_user_registration()
         'service_type' => $_POST['register_submit'] === 'offer' ? 'offer' : 'seek'
     );
 
+    $_SESSION['registration_data'] = $registration_data;
+    
     if ($_POST['register_submit'] === 'offer') {
-        $_SESSION['registration_data'] = $registration_data;
         wp_redirect(home_url('/offering-service'));
-        exit;
-    }
-
-    // For "seek" service, store in session and redirect to seeking-service form
-    if ($_POST['register_submit'] === 'seek') {
-        $_SESSION['registration_data'] = $registration_data;
+    } else {
         wp_redirect(home_url('/seeking-service'));
-        exit;
     }
+    exit;
 }
 add_action('template_redirect', 'handle_user_registration');
 
-// Generic function to handle service registration (both offering and seeking)
-function handle_service_registration($service_type, $nonce_action, $nonce_name, $submit_name, $redirect_page)
-{
-    if (!isset($_POST[$submit_name]) || !isset($_POST[$nonce_name]) || !wp_verify_nonce($_POST[$nonce_name], $nonce_action)) {
-        return;
-    }
-
-    if (!isset($_SESSION['registration_data'])) {
-        wp_redirect(home_url('/signup?registration=error&message=session_expired'));
-        exit;
-    }
-
-    // Validate required fields
-    $errors = array();
-    
-    if (empty($_POST['biographie']) || trim($_POST['biographie']) === '') {
-        $errors[] = 'biographie';
-    }
-    
-    if (empty($_POST['genre']) || trim($_POST['genre']) === '') {
-        $errors[] = 'genre';
-    }
-    
-    // Validate filters/music genres based on service type
-    if ($service_type === 'offer') {
-        if (empty($_POST['filters']) || !is_array($_POST['filters']) || count($_POST['filters']) === 0) {
-            $errors[] = 'filters';
-        }
-    } else {
-        if (empty($_POST['music_genres']) || !is_array($_POST['music_genres']) || count($_POST['music_genres']) === 0) {
-            $errors[] = 'music_genres';
-        }
-    }
-    
-    // If validation errors, redirect back with error message
-    if (!empty($errors)) {
-        $error_params = 'registration=error&fields=' . implode(',', $errors);
-        wp_redirect(home_url($redirect_page . '?' . $error_params));
-        exit;
-    }
-
-    $reg_data = $_SESSION['registration_data'];
-    $user_id = create_user_with_meta($reg_data['user_login'], $reg_data['user_pass'], $reg_data['user_email'], $reg_data);
-
-    if (!$user_id) {
-        wp_redirect(home_url($redirect_page . '?registration=error&message=user_creation_failed'));
-        exit;
-    }
-
-    // Handle profile photo upload with validation
-    $photo_result = handle_profile_photo_upload($user_id);
-    if ($photo_result === 'size_error') {
-        wp_redirect(home_url($redirect_page . '?registration=error&message=photo_too_large'));
-        exit;
-    } elseif ($photo_result === 'type_error') {
-        wp_redirect(home_url($redirect_page . '?registration=error&message=photo_invalid_type'));
-        exit;
-    }
-
-    // Save form data
-    if (isset($_POST['biographie'])) {
-        update_user_meta($user_id, 'biographie', sanitize_textarea_field($_POST['biographie']));
-    }
-    if (isset($_POST['genre'])) {
-        update_user_meta($user_id, 'genre', sanitize_text_field($_POST['genre']));
-    }
-    
-    // Save filters or music genres based on service type
-    if ($service_type === 'offer' && isset($_POST['filters']) && is_array($_POST['filters'])) {
-        update_user_meta($user_id, 'filters', array_map('sanitize_text_field', $_POST['filters']));
-    } elseif ($service_type === 'seek' && isset($_POST['music_genres']) && is_array($_POST['music_genres'])) {
-        update_user_meta($user_id, 'music_genres', array_map('sanitize_text_field', $_POST['music_genres']));
-    }
-
-    auto_login_user($user_id);
-    unset($_SESSION['registration_data']);
-    wp_redirect(home_url('/userprofil?registration=success'));
-    exit;
-}
-
-// Handle final registration after offering-service form completion
-function handle_offering_service_registration()
-{
-    handle_service_registration('offer', 'offering_action', 'offering_nonce', 'offering_submit', '/offering-service');
-}
-add_action('template_redirect', 'handle_offering_service_registration');
-
-// Handle final registration after seeking-service form completion
-function handle_seeking_service_registration()
-{
-    handle_service_registration('seek', 'seeking_action', 'seeking_nonce', 'seeking_submit', '/seeking-service');
-}
-add_action('template_redirect', 'handle_seeking_service_registration');
+// Note: Form processing is now handled directly in template-offering-service.php
+// to avoid timing issues with template_redirect hook.
 
 // Handle profile update
 function handle_profile_update()
@@ -369,10 +285,20 @@ function handle_profile_update()
         }
     }
 
-    // Handle filters update (for offer service type)
+    // Handle filters/music genres update based on service type
     $service_type = get_user_meta($user_id, 'service_type', true);
-    if ($service_type === 'offer' && isset($_POST['filters']) && is_array($_POST['filters'])) {
-        update_user_meta($user_id, 'filters', array_map('sanitize_text_field', $_POST['filters']));
+    if ($service_type === 'offer') {
+        if (isset($_POST['filters']) && is_array($_POST['filters'])) {
+            update_user_meta($user_id, 'filters', array_map('sanitize_text_field', $_POST['filters']));
+        } else {
+            update_user_meta($user_id, 'filters', array());
+        }
+    } elseif ($service_type === 'seek') {
+        if (isset($_POST['music_genres']) && is_array($_POST['music_genres'])) {
+            update_user_meta($user_id, 'music_genres', array_map('sanitize_text_field', $_POST['music_genres']));
+        } else {
+            update_user_meta($user_id, 'music_genres', array());
+        }
     }
 
     // Redirect with success/error message
@@ -607,7 +533,7 @@ function get_user_profile_data($user_id = null)
         'full_name' => $full_name,
         'phone' => $phone,
         'ville' => $ville,
-        'service_type' => $service_type ? $service_type : 'seek',
+        'service_type' => $service_type ? $service_type : 'offer',
         'profile_photo_url' => $profile_photo_url,
         'biographie' => $biographie,
         'genre' => $genre,

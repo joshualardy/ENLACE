@@ -4,6 +4,100 @@
  * Template Name: Offering Service Template
  */
 
+// Process form submission BEFORE header
+if (isset($_POST['offering_submit'])) {
+    // Ensure session is started
+    if (!session_id()) {
+        session_start();
+    }
+    
+    // Verify nonce
+    if (!isset($_POST['offering_nonce'])) {
+        wp_die('Erreur: Nonce manquant. Veuillez réessayer.');
+    }
+    
+    if (!wp_verify_nonce($_POST['offering_nonce'], 'offering_action')) {
+        wp_safe_redirect(home_url('/offering-service?registration=error&message=nonce_failed'));
+        exit;
+    }
+    
+    // Check session
+    if (!isset($_SESSION['registration_data'])) {
+        wp_safe_redirect(home_url('/signup?registration=error&message=session_expired'));
+        exit;
+    }
+
+    // Validate required fields
+    $errors = array();
+    
+    if (empty($_POST['biographie']) || trim($_POST['biographie']) === '') {
+        $errors[] = 'biographie';
+    }
+    
+    if (empty($_POST['genre']) || trim($_POST['genre']) === '') {
+        $errors[] = 'genre';
+    }
+    
+    if (empty($_POST['filters']) || !is_array($_POST['filters']) || count($_POST['filters']) === 0) {
+        $errors[] = 'filters';
+    }
+    
+    // If validation errors, redirect back with error message
+    if (!empty($errors)) {
+        $error_params = 'registration=error&fields=' . implode(',', $errors);
+        wp_safe_redirect(home_url('/offering-service?' . $error_params));
+        exit;
+    }
+
+    $reg_data = $_SESSION['registration_data'];
+    
+    // Check if user already exists
+    if (username_exists($reg_data['user_login']) || email_exists($reg_data['user_email'])) {
+        wp_safe_redirect(home_url('/offering-service?registration=error&message=user_already_exists'));
+        exit;
+    }
+    
+    $user_id = create_user_with_meta($reg_data['user_login'], $reg_data['user_pass'], $reg_data['user_email'], $reg_data);
+
+    if (!$user_id) {
+        wp_safe_redirect(home_url('/offering-service?registration=error&message=user_creation_failed'));
+        exit;
+    }
+
+    // Handle profile photo upload
+    $photo_result = handle_profile_photo_upload($user_id);
+    if ($photo_result === 'size_error') {
+        wp_safe_redirect(home_url('/offering-service?registration=error&message=photo_too_large'));
+        exit;
+    } elseif ($photo_result === 'type_error') {
+        wp_safe_redirect(home_url('/offering-service?registration=error&message=photo_invalid_type'));
+        exit;
+    }
+
+    // Save form data
+    if (isset($_POST['biographie'])) {
+        update_user_meta($user_id, 'biographie', sanitize_textarea_field($_POST['biographie']));
+    }
+    if (isset($_POST['genre'])) {
+        update_user_meta($user_id, 'genre', sanitize_text_field($_POST['genre']));
+    }
+    
+    if (isset($_POST['filters']) && is_array($_POST['filters'])) {
+        update_user_meta($user_id, 'filters', array_map('sanitize_text_field', $_POST['filters']));
+    }
+
+    // Auto-login user
+    wp_set_current_user($user_id);
+    wp_set_auth_cookie($user_id, true);
+    
+    // Clear session data
+    unset($_SESSION['registration_data']);
+    
+    // Redirect to profile
+    wp_safe_redirect(home_url('/userprofil?registration=success'));
+    exit;
+}
+
 get_header();
 
 // Check if user has registration data in session
@@ -26,7 +120,7 @@ display_registration_error_message();
             <!-- Right Panel: Form Section (3/5 width) -->
             <div class="col-md-7 service-form-panel">
                 <div class="service-form-wrapper">
-                    <form method="post" action="<?php echo esc_url($_SERVER['REQUEST_URI']); ?>" class="service-form" enctype="multipart/form-data">
+                    <form method="post" action="<?php echo esc_url($_SERVER['REQUEST_URI']); ?>" class="service-form" enctype="multipart/form-data" novalidate>
                         <?php wp_nonce_field('offering_action', 'offering_nonce'); ?>
 
                         <!-- Photo Upload Section -->

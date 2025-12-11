@@ -101,17 +101,20 @@ $annonces_query = new WP_Query($args);
             </div>
         <?php endif; ?>
 
-        <!-- Announcements Grid -->
-        <div class="annonces-grid" id="annonces-grid">
+        <!-- Announcements Grid - Bootstrap -->
+        <div class="row g-4" id="annonces-grid">
             <?php if ($annonces_query->have_posts()) : ?>
                 <?php while ($annonces_query->have_posts()) : $annonces_query->the_post(); 
                     $localisation = get_post_meta(get_the_ID(), '_annonce_localisation', true);
                     $service_type = get_post_meta(get_the_ID(), '_annonce_service_type', true);
                     $thumbnail_url = get_the_post_thumbnail_url(get_the_ID(), 'medium');
-                    $author = get_userdata(get_the_author_meta('ID'));
+                    $author_id = get_the_author_meta('ID');
+                    $author = get_userdata($author_id);
                     $author_name = $author ? $author->display_name : 'Utilisateur';
+                    $author_profile_url = home_url('/userprofil?user_id=' . $author_id);
                 ?>
-                    <div class="annonce-card" data-annonce-id="<?php echo get_the_ID(); ?>">
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card annonce-card h-100" data-annonce-id="<?php echo get_the_ID(); ?>" data-author-id="<?php echo esc_attr($author_id); ?>" data-author-name="<?php echo esc_attr($author_name); ?>" data-author-url="<?php echo esc_url($author_profile_url); ?>">
                         <div class="annonce-card-image">
                             <?php if ($thumbnail_url) : ?>
                                 <img src="<?php echo esc_url($thumbnail_url); ?>" alt="<?php echo esc_attr(get_the_title()); ?>">
@@ -133,6 +136,12 @@ $annonces_query = new WP_Query($args);
                                 </button>
                             </div>
                             <p class="annonce-card-description"><?php echo esc_html(wp_trim_words(get_the_content(), 20)); ?></p>
+                            <div class="annonce-card-author">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M20 21V19C20 17.9391 19.5786 16.9217 18.8284 16.1716C18.0783 15.4214 17.0609 15 16 15H8C6.93913 15 5.92172 15.4214 5.17157 16.1716C4.42143 16.9217 4 17.9391 4 19V21M16 7C16 9.20914 14.2091 11 12 11C9.79086 11 8 9.20914 8 7C8 4.79086 9.79086 3 12 3C14.2091 3 16 4.79086 16 7Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                                <span><?php echo esc_html($author_name); ?></span>
+                            </div>
                             <?php if ($localisation) : ?>
                                 <div class="annonce-card-location">
                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -142,6 +151,7 @@ $annonces_query = new WP_Query($args);
                                     <span><?php echo esc_html($localisation); ?></span>
                                 </div>
                             <?php endif; ?>
+                        </div>
                         </div>
                     </div>
                 <?php endwhile; 

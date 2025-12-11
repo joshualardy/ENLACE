@@ -145,73 +145,93 @@ display_registration_error_message();
                         <!-- Biographie Field -->
                         <div class="mb-4">
                             <label for="biographie" class="form-label service-label">Biographie <span class="required">*</span></label>
-                            <textarea class="form-control service-input" name="biographie" id="biographie" rows="4" placeholder="Value" required></textarea>
+                            <textarea class="form-control service-input" name="biographie" id="biographie" rows="4" placeholder="Parlez-nous de vous, de votre parcours et de vos compétences..." required></textarea>
                             <div class="error-message field-error" id="biographie-error" style="display: none;">Ce champ est requis.</div>
                         </div>
 
                         <!-- Genre Field -->
                         <div class="mb-4">
                             <label for="genre" class="form-label service-label">Genre <span class="required">*</span></label>
-                            <input type="text" class="form-control service-input" name="genre" id="genre" placeholder="Value" required>
+                            <select class="form-select service-input" name="genre" id="genre" required>
+                                <option value="">Sélectionnez votre genre</option>
+                                <option value="homme">Homme</option>
+                                <option value="femme">Femme</option>
+                                <option value="autre">Autre</option>
+                            </select>
                             <div class="error-message field-error" id="genre-error" style="display: none;">Ce champ est requis.</div>
                         </div>
 
                         <!-- Filtres Section -->
                         <div class="mb-4">
-                            <label class="form-label service-label">Filtres <span class="required">*</span></label>
+                            <label class="form-label service-label mb-3">Filtres <span class="required">*</span></label>
                             
-                            <!-- Filter Options Grid -->
-                            <div class="service-filters-grid">
-                                <div class="service-filter-item">
-                                    <input type="checkbox" class="service-filter-checkbox" name="filters[]" id="filter-beatmaker" value="beatmaker" aria-label="Beatmaker / Producteur">
-                                    <label for="filter-beatmaker" class="service-filter-label">
-                                        <span class="service-filter-star">☆</span>
-                                        Beatmaker / Producteur
-                                    </label>
+                            <!-- Filter Options Grid - Bootstrap -->
+                            <div class="row g-3">
+                                <div class="col-md-6 col-lg-4">
+                                    <div class="form-check service-filter-checkbox-wrapper">
+                                        <input type="checkbox" class="form-check-input service-filter-checkbox" name="filters[]" id="filter-beatmaker" value="beatmaker">
+                                        <label for="filter-beatmaker" class="form-check-label service-filter-label">
+                                            <span class="service-filter-star">☆</span>
+                                            Beatmaker / Producteur
+                                        </label>
+                                    </div>
                                 </div>
-                                <div class="service-filter-item">
-                                    <input type="checkbox" class="service-filter-checkbox" name="filters[]" id="filter-chanteur" value="chanteur">
-                                    <label for="filter-chanteur" class="service-filter-label">
-                                        <span class="service-filter-star">☆</span>
-                                        Chanteur / Chanteuse
-                                    </label>
+                                <div class="col-md-6 col-lg-4">
+                                    <div class="form-check service-filter-checkbox-wrapper">
+                                        <input type="checkbox" class="form-check-input service-filter-checkbox" name="filters[]" id="filter-chanteur" value="chanteur">
+                                        <label for="filter-chanteur" class="form-check-label service-filter-label">
+                                            <span class="service-filter-star">☆</span>
+                                            Chanteur / Chanteuse
+                                        </label>
+                                    </div>
                                 </div>
-                                <div class="service-filter-item">
-                                    <input type="checkbox" class="service-filter-checkbox" name="filters[]" id="filter-organisateur" value="organisateur">
-                                    <label for="filter-organisateur" class="service-filter-label">
-                                        <span class="service-filter-star">☆</span>
-                                        Organisateur d'événements
-                                    </label>
+                                <div class="col-md-6 col-lg-4">
+                                    <div class="form-check service-filter-checkbox-wrapper">
+                                        <input type="checkbox" class="form-check-input service-filter-checkbox" name="filters[]" id="filter-organisateur" value="organisateur">
+                                        <label for="filter-organisateur" class="form-check-label service-filter-label">
+                                            <span class="service-filter-star">☆</span>
+                                            Organisateur d'événements
+                                        </label>
+                                    </div>
                                 </div>
-                                <div class="service-filter-item">
-                                    <input type="checkbox" class="service-filter-checkbox" name="filters[]" id="filter-dj" value="dj">
-                                    <label for="filter-dj" class="service-filter-label">
-                                        <span class="service-filter-star">☆</span>
-                                        DJ
-                                    </label>
+                                <div class="col-md-6 col-lg-4">
+                                    <div class="form-check service-filter-checkbox-wrapper">
+                                        <input type="checkbox" class="form-check-input service-filter-checkbox" name="filters[]" id="filter-dj" value="dj">
+                                        <label for="filter-dj" class="form-check-label service-filter-label">
+                                            <span class="service-filter-star">☆</span>
+                                            DJ
+                                        </label>
+                                    </div>
                                 </div>
-                                <div class="service-filter-item">
-                                    <input type="checkbox" class="service-filter-checkbox" name="filters[]" id="filter-ingenieur" value="ingenieur">
-                                    <label for="filter-ingenieur" class="service-filter-label">
-                                        <span class="service-filter-star">☆</span>
-                                        Ingénieur son
-                                    </label>
+                                <div class="col-md-6 col-lg-4">
+                                    <div class="form-check service-filter-checkbox-wrapper">
+                                        <input type="checkbox" class="form-check-input service-filter-checkbox" name="filters[]" id="filter-ingenieur" value="ingenieur">
+                                        <label for="filter-ingenieur" class="form-check-label service-filter-label">
+                                            <span class="service-filter-star">☆</span>
+                                            Ingénieur son
+                                        </label>
+                                    </div>
                                 </div>
-                                <div class="service-filter-item">
-                                    <input type="checkbox" class="service-filter-checkbox" name="filters[]" id="filter-compositeur" value="compositeur">
-                                    <label for="filter-compositeur" class="service-filter-label">
-                                        <span class="service-filter-star">☆</span>
-                                        Compositeur
-                                    </label>
+                                <div class="col-md-6 col-lg-4">
+                                    <div class="form-check service-filter-checkbox-wrapper">
+                                        <input type="checkbox" class="form-check-input service-filter-checkbox" name="filters[]" id="filter-compositeur" value="compositeur">
+                                        <label for="filter-compositeur" class="form-check-label service-filter-label">
+                                            <span class="service-filter-star">☆</span>
+                                            Compositeur
+                                        </label>
+                                    </div>
                                 </div>
-                                <div class="service-filter-item">
-                                    <input type="checkbox" class="service-filter-checkbox" name="filters[]" id="filter-musicien" value="musicien">
-                                    <label for="filter-musicien" class="service-filter-label">
-                                        <span class="service-filter-star">☆</span>
-                                        Musicien
-                                    </label>
+                                <div class="col-md-6 col-lg-4">
+                                    <div class="form-check service-filter-checkbox-wrapper">
+                                        <input type="checkbox" class="form-check-input service-filter-checkbox" name="filters[]" id="filter-musicien" value="musicien">
+                                        <label for="filter-musicien" class="form-check-label service-filter-label">
+                                            <span class="service-filter-star">☆</span>
+                                            Musicien
+                                        </label>
+                                    </div>
                                 </div>
                             </div>
+                            <div class="error-message field-error mt-2" id="filters-error" style="display: none;">Veuillez sélectionner au moins un service.</div>
                         </div>
 
                         <!-- Error message for filters -->

@@ -22,66 +22,90 @@ get_header();
     <div class="register-form-wrapper">
         <?php
         if (isset($_GET['registration']) && $_GET['registration'] == 'success') {
-                    echo '<div class="success-message">Inscription réussie ! Vous pouvez maintenant vous connecter.</div>';
+            echo '<div class="alert alert-success alert-dismissible fade show" role="alert">';
+            echo '<strong>Succès !</strong> Inscription réussie ! Vous pouvez maintenant vous connecter.';
+            echo '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>';
+            echo '</div>';
         }
         if (isset($_GET['registration']) && $_GET['registration'] == 'error') {
-                    echo '<div class="error-message">L\'inscription a échoué. Veuillez réessayer.</div>';
+            echo '<div class="alert alert-danger alert-dismissible fade show" role="alert">';
+            echo '<strong>Erreur :</strong> L\'inscription a échoué. Veuillez réessayer.';
+            echo '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>';
+            echo '</div>';
         }
         if (is_user_logged_in()) {
-                    echo '<div class="success-message">Vous êtes déjà connecté. <a href="' . wp_logout_url(home_url()) . '">Se déconnecter</a></div>';
+            echo '<div class="alert alert-info alert-dismissible fade show" role="alert">';
+            echo 'Vous êtes déjà connecté. <a href="' . wp_logout_url(home_url()) . '" class="alert-link">Se déconnecter</a>';
+            echo '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>';
+            echo '</div>';
         } else {
         ?>
 
             <form method="post" action="<?php echo esc_url($_SERVER['REQUEST_URI']); ?>" class="register-form">
                 <?php wp_nonce_field('register_action', 'register_nonce'); ?>
 
-                    <div class="form-row">
-                        <div class="mb-3">
-                            <label for="last_name" class="form-label">Nom <span class="required">*</span></label>
-                            <input type="text" class="form-control" name="last_name" id="last_name" placeholder="Value" required>
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <div class="mb-3">
+                                <label for="last_name" class="form-label">Nom <span class="required">*</span></label>
+                                <input type="text" class="form-control" name="last_name" id="last_name" placeholder="Votre nom" required>
+                            </div>
                         </div>
-                </div>
+                    </div>
 
-                    <div class="form-row">
-                        <div class="mb-3">
-                            <label for="first_name" class="form-label">Prénom <span class="required">*</span></label>
-                            <input type="text" class="form-control" name="first_name" id="first_name" placeholder="Value" required>
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <div class="mb-3">
+                                <label for="first_name" class="form-label">Prénom <span class="required">*</span></label>
+                                <input type="text" class="form-control" name="first_name" id="first_name" placeholder="Votre prénom" required>
+                            </div>
                         </div>
-                </div>
+                    </div>
 
-                    <div class="form-row">
-                        <div class="mb-3">
-                            <label for="user_login" class="form-label">Nom d'utilisateur <span class="required">*</span></label>
-                            <input type="text" class="form-control" name="user_login" id="user_login" placeholder="Value" required>
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <div class="mb-3">
+                                <label for="user_login" class="form-label">Nom d'utilisateur <span class="required">*</span></label>
+                                <input type="text" class="form-control" name="user_login" id="user_login" placeholder="Choisissez un nom d'utilisateur" required>
+                            </div>
                         </div>
-                </div>
+                    </div>
 
-                    <div class="form-row">
-                        <div class="mb-3">
-                            <label for="user_email" class="form-label">Email <span class="required">*</span></label>
-                            <input type="email" class="form-control" name="user_email" id="user_email" placeholder="Value" required>
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <div class="mb-3">
+                                <label for="user_email" class="form-label">Email <span class="required">*</span></label>
+                                <input type="email" class="form-control" name="user_email" id="user_email" placeholder="votre.email@exemple.com" required>
+                            </div>
                         </div>
-                </div>
+                    </div>
 
-                    <div class="form-row form-row-split">
-                        <div class="mb-3">
-                            <label for="user_pass" class="form-label">Mot de passe <span class="required">*</span></label>
-                            <input type="password" class="form-control" name="user_pass" id="user_pass" placeholder="Value" required>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="user_pass" class="form-label">Mot de passe <span class="required">*</span></label>
+                                <input type="password" class="form-control" name="user_pass" id="user_pass" placeholder="••••••••" required>
+                            </div>
                         </div>
-                        <div class="mb-3">
-                            <label for="user_pass_confirm" class="form-label">Confirmer le mot de passe <span class="required">*</span></label>
-                            <input type="password" class="form-control" name="user_pass_confirm" id="user_pass_confirm" placeholder="Value" required>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="user_pass_confirm" class="form-label">Confirmer le mot de passe <span class="required">*</span></label>
+                                <input type="password" class="form-control" name="user_pass_confirm" id="user_pass_confirm" placeholder="••••••••" required>
+                            </div>
                         </div>
-                </div>
+                    </div>
 
-                    <div class="form-row form-row-split">
-                        <div class="mb-3">
-                            <label for="phone" class="form-label">N° de téléphone <span class="required">*</span></label>
-                            <input type="tel" class="form-control" name="phone" id="phone" placeholder="Value" required>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="phone" class="form-label">N° de téléphone <span class="required">*</span></label>
+                                <input type="tel" class="form-control" name="phone" id="phone" placeholder="+32 XXX XX XX XX" required>
+                            </div>
                         </div>
-                        <div class="mb-3">
-                            <label for="ville" class="form-label">Ville <span class="required">*</span></label>
-                            <input type="text" class="form-control" name="ville" id="ville" list="belgian-cities" autocomplete="off" placeholder="Value" required>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="ville" class="form-label">Ville <span class="required">*</span></label>
+                                <input type="text" class="form-control" name="ville" id="ville" list="belgian-cities" autocomplete="off" placeholder="Sélectionnez votre ville" required>
                             <datalist id="belgian-cities">
                                 <option value="Bruxelles (1000)">Bruxelles (1000)</option>
                                 <option value="Anvers (2000)">Anvers (2000)</option>

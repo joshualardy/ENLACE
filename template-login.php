@@ -23,13 +23,22 @@ get_header();
                     </div>
                     <?php
                     if (isset($_GET['login']) && $_GET['login'] == 'failed') {
-                        echo '<div class="error-message">Nom d\'utilisateur ou mot de passe invalide.</div>';
+                        echo '<div class="alert alert-danger alert-dismissible fade show" role="alert">';
+                        echo '<strong>Erreur :</strong> Nom d\'utilisateur ou mot de passe invalide.';
+                        echo '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>';
+                        echo '</div>';
                     }
                     if (isset($_GET['login']) && $_GET['login'] == 'empty') {
-                        echo '<div class="error-message">Veuillez remplir tous les champs.</div>';
+                        echo '<div class="alert alert-warning alert-dismissible fade show" role="alert">';
+                        echo '<strong>Attention :</strong> Veuillez remplir tous les champs.';
+                        echo '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>';
+                        echo '</div>';
                     }
                     if (is_user_logged_in()) {
-                        echo '<div class="success-message">Vous êtes déjà connecté. <a href="' . wp_logout_url(home_url()) . '">Se déconnecter</a></div>';
+                        echo '<div class="alert alert-info alert-dismissible fade show" role="alert">';
+                        echo 'Vous êtes déjà connecté. <a href="' . wp_logout_url(home_url()) . '" class="alert-link">Se déconnecter</a>';
+                        echo '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>';
+                        echo '</div>';
                     } else {
                     ?>
 

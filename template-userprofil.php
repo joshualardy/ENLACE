@@ -3,16 +3,29 @@
  * Template Name: User Profil
  */
 
-// Check if user is logged in
-if (!is_user_logged_in()) {
-    wp_redirect(home_url('/login'));
-    exit;
-}
-
 get_header();
 
+// Get user profile data - check if user_id is provided in URL
+$profile_user_id = null;
+if (isset($_GET['user_id']) && is_numeric($_GET['user_id'])) {
+    $profile_user_id = intval($_GET['user_id']);
+    // Verify user exists
+    $user = get_userdata($profile_user_id);
+    if (!$user) {
+        // If viewing another user's profile and user doesn't exist, redirect to home
+        wp_redirect(home_url());
+        exit;
+    }
+} else {
+    // If no user_id provided, check if user is logged in
+    if (!is_user_logged_in()) {
+        wp_redirect(home_url('/login'));
+        exit;
+    }
+}
+
 // Get user profile data
-$profile_data = get_user_profile_data();
+$profile_data = get_user_profile_data($profile_user_id);
 
 if (!$profile_data) {
     echo '<div class="container"><p>Erreur lors du chargement du profil.</p></div>';

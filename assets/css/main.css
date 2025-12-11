@@ -1,13 +1,90 @@
-:root{
-
-    /* Couleurs palette */
+:root {
+    /* ============================================
+       PALETTE DE COULEURS - SYSTÈME SÉMANTIQUE
+       ============================================ */
+    
+    /* Couleurs de base */
     --color-beige: hsl(24, 24%, 78%);
     --color-taupe: hsl(30, 13%, 48%);
     --color-burgundy: hsl(352, 42%, 32%);
     --color-navy: hsl(217, 32%, 15%);
     --color-cream: hsl(42, 38%, 94%);
     --color-black: hsl(0, 0%, 0%);
-
+    
+    /* Système sémantique - Couleurs primaires */
+    --color-primary: var(--color-burgundy);        /* Accent principal (boutons, liens actifs) */
+    --color-primary-dark: hsl(352, 42%, 25%);     /* Hover states, états actifs */
+    --color-primary-light: hsl(352, 42%, 40%);    /* États hover légers */
+    
+    /* Couleurs secondaires */
+    --color-secondary: var(--color-taupe);         /* Éléments secondaires */
+    --color-secondary-dark: hsl(30, 13%, 40%);
+    --color-secondary-light: hsl(30, 13%, 55%);
+    
+    /* Arrière-plans */
+    --bg-primary: var(--color-navy);               /* Fond principal (dark) */
+    --bg-secondary: #1A2332;                       /* Fond secondaire (cards, panels) */
+    --bg-tertiary: var(--color-beige);             /* Fond tertiaire (light accents) */
+    --bg-light: var(--color-cream);                /* Fond clair */
+    --bg-overlay: rgba(10, 14, 26, 0.85);          /* Overlays, modals */
+    
+    /* Texte */
+    --text-primary: #FFFFFF;                       /* Texte principal sur fond sombre */
+    --text-secondary: #E5E7EB;                     /* Texte secondaire */
+    --text-muted: #9CA3AF;                         /* Texte atténué */
+    --text-dark: var(--color-navy);                 /* Texte sur fond clair */
+    --text-accent: var(--color-burgundy);          /* Texte accent */
+    
+    /* Bordures */
+    --border-color: rgba(255, 255, 255, 0.1);    /* Bordures subtiles */
+    --border-color-light: rgba(255, 255, 255, 0.2);
+    --border-color-dark: rgba(0, 0, 0, 0.2);
+    
+    /* États */
+    --color-success: #10B981;                      /* Succès */
+    --color-error: #EF4444;                        /* Erreurs */
+    --color-warning: #F59E0B;                      /* Avertissements */
+    --color-info: #3B82F6;                          /* Informations */
+    
+    /* Espacements (système 8px) */
+    --spacing-xs: 0.25rem;    /* 4px */
+    --spacing-sm: 0.5rem;     /* 8px */
+    --spacing-md: 1rem;        /* 16px */
+    --spacing-lg: 1.5rem;      /* 24px */
+    --spacing-xl: 2rem;        /* 32px */
+    --spacing-xxl: 3rem;       /* 48px */
+    --spacing-xxxl: 4rem;      /* 64px */
+    
+    /* Rayons de bordure */
+    --radius-sm: 0.375rem;     /* 6px */
+    --radius-md: 0.5rem;       /* 8px */
+    --radius-lg: 0.75rem;      /* 12px */
+    --radius-xl: 1rem;          /* 16px */
+    --radius-full: 9999px;      /* Rond complet */
+    
+    /* Ombres */
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    
+    /* Transitions */
+    --transition-fast: 150ms ease;
+    --transition-base: 300ms ease;
+    --transition-slow: 500ms ease;
+    
+    /* Typographie */
+    --font-heading: 'Playfair Display SC', serif;
+    --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --font-accent: 'Fugaz One', sans-serif;
+    
+    /* Breakpoints Bootstrap (pour référence) */
+    --bp-xs: 0;
+    --bp-sm: 576px;
+    --bp-md: 768px;
+    --bp-lg: 992px;
+    --bp-xl: 1200px;
+    --bp-xxl: 1400px;
 }
 /* Font Face Declarations */
 @font-face {
@@ -133,7 +210,9 @@ html.home {
     min-height: calc(100vh - 200px);
 }
 
-/* Navigation Bar */
+/* ============================================
+   NAVIGATION - Bootstrap Optimized
+   ============================================ */
 .main-header {
     background: transparent;
     position: absolute;
@@ -144,46 +223,14 @@ html.home {
     padding: 0;
 }
 
-/* Navbar on pages with white background (register, login, etc.) */
-body:not(.home) .main-header {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    background: transparent;
-    border-bottom: none;
-    z-index: 1000;
+.main-header .navbar {
+    padding: var(--spacing-md) var(--spacing-xl);
+    background: transparent !important;
 }
 
-body:not(.home) .nav-menu a {
-    color: #fff;
-}
-
-body:not(.home) .nav-logo {
-    filter: brightness(0) invert(1);
-}
-
-.main-nav {
-    position: relative;
-    z-index: 2;
-    width: 100%;
-    margin: 0;
-    padding: 1.5rem 4rem;
-}
-
-.nav-menu {
-    display: flex;
-    list-style: none;
-    gap: 0;
-    align-items: center;
-    margin: 0;
+.main-header .navbar-brand {
     padding: 0;
-    width: 100%;
-    justify-content: space-between;
-}
-
-.nav-logo-item {
-    flex-shrink: 0;
+    margin-right: var(--spacing-xl);
 }
 
 .nav-logo {
@@ -191,25 +238,86 @@ body:not(.home) .nav-logo {
     width: auto;
     display: block;
     filter: brightness(0) invert(1);
+    transition: opacity var(--transition-base);
 }
 
-.nav-menu li {
-    margin: 0;
+.nav-logo:hover {
+    opacity: 0.8;
 }
 
-.nav-menu a {
-    color: #fff;
-    text-decoration: none;
-    font-family: 'Playfair Display SC', serif;
+.main-header .navbar-nav {
+    gap: var(--spacing-md);
+}
+
+.main-header .nav-link {
+    color: var(--text-primary) !important;
+    font-family: var(--font-heading);
     font-weight: 400;
     text-transform: uppercase;
     font-size: 1rem;
     letter-spacing: 0.05em;
-    transition: opacity 0.3s;
+    padding: var(--spacing-sm) var(--spacing-md) !important;
+    transition: opacity var(--transition-base);
+    position: relative;
 }
 
-.nav-menu a:hover {
+.main-header .nav-link:hover,
+.main-header .nav-link:focus {
     opacity: 0.8;
+    color: var(--text-primary) !important;
+}
+
+.main-header .nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 2px;
+    background: var(--color-primary);
+    transition: width var(--transition-base);
+}
+
+.main-header .nav-link:hover::after {
+    width: 80%;
+}
+
+.main-header .navbar-toggler {
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    padding: var(--spacing-sm) var(--spacing-md);
+}
+
+.main-header .navbar-toggler:focus {
+    box-shadow: 0 0 0 0.2rem rgba(255, 255, 255, 0.25);
+}
+
+.main-header .navbar-toggler-icon {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255, 255, 255, 1%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+}
+
+/* Responsive Navigation */
+@media (max-width: 991.98px) {
+    .main-header .navbar {
+        padding: var(--spacing-md);
+    }
+    
+    .main-header .navbar-collapse {
+        background: var(--bg-overlay);
+        border-radius: var(--radius-md);
+        padding: var(--spacing-md);
+        margin-top: var(--spacing-md);
+        backdrop-filter: blur(10px);
+    }
+    
+    .main-header .nav-link {
+        padding: var(--spacing-sm) 0 !important;
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .main-header .nav-link:last-child {
+        border-bottom: none;
+    }
 }
 
 /* Hero Section */
@@ -272,54 +380,60 @@ body:not(.home) .nav-logo {
 }
 
 .hero-tagline {
-    color: #fff;
+    color: var(--text-primary);
     font-size: 1.2rem;
     font-weight: 300;
     margin: 0;
     opacity: 0.95;
     letter-spacing: 0.5px;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-family: var(--font-body);
     text-align: left;
     width: auto;
 }
 
 .hero-title {
-    color: #fff;
+    color: var(--text-primary);
     font-size: 23vw;
     font-weight: 900;
     text-transform: uppercase;
     letter-spacing: 0.02em;
-    margin: 2rem 0 0 0;
+    margin: var(--spacing-xl) 0 0 0;
     line-height: 0.85;
     text-shadow: 2px 2px 10px rgba(0, 0, 0, 0.5);
-    font-family: 'Playfair Display SC', serif;
+    font-family: var(--font-heading);
     width: 100%;
     display: block;
     text-align: center;
 }
 
 .hero-inscription-btn {
-    padding: 0.7rem 1.5rem;
-    background: #e8e8e8;
-    color: #1a1a1a;
+    padding: var(--spacing-sm) var(--spacing-lg);
+    background: var(--color-cream);
+    color: var(--text-dark);
     text-decoration: none;
-    border-radius: 25px;
+    border-radius: var(--radius-full);
     font-weight: 600;
     font-size: 0.9rem;
-    font-family: 'Playfair Display SC', serif;
+    font-family: var(--font-heading);
     text-transform: uppercase;
-    transition: all 0.3s;
+    transition: all var(--transition-base);
     z-index: 3;
     width: auto;
     flex-shrink: 0;
+    box-shadow: var(--shadow-sm);
 }
 
 .hero-inscription-btn:hover {
-    background: #f5f5f5;
-    transform: translateY(-1px);
+    background: var(--bg-light);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+    color: var(--text-dark);
 }
 
 /* Login & Register Forms */
+/* ============================================
+   LOGIN & REGISTER CONTAINERS
+   ============================================ */
 .login-container,
 .register-container {
     display: flex;
@@ -327,9 +441,9 @@ body:not(.home) .nav-logo {
     align-items: center;
     min-height: 100vh;
     width: 100%;
-    padding: 2rem;
+    padding: var(--spacing-xl);
     padding-top: 100px;
-    padding-bottom: 2rem;
+    padding-bottom: var(--spacing-xl);
     margin: 0;
     flex: 1;
     background: transparent;
@@ -384,13 +498,15 @@ body:not(.home) .nav-logo {
     min-height: calc(100vh - 100px);
 }
 
-/* Left Panel: Quote Section */
+/* ============================================
+   SERVICE QUOTE PANEL - Optimized
+   ============================================ */
 .service-quote-panel {
-    background: #1A2332;
+    background: var(--bg-secondary);
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 3rem;
+    padding: var(--spacing-xxl);
     position: relative;
     min-height: calc(100vh - 100px);
 }
@@ -419,19 +535,22 @@ body:not(.home) .nav-logo {
 }
 
 .service-quote-text {
-    color: #fff;
+    color: var(--text-primary);
     font-style: italic;
     font-size: 1.5rem;
     line-height: 1.6;
-    font-family: 'Playfair Display', serif;
+    font-family: var(--font-heading);
     margin: 0;
 }
 
-/* Right Panel: Form Section */
+/* ============================================
+   SERVICE FORM PANEL - Optimized
+   ============================================ */
 .service-form-panel {
-    background: #1E2A3A;
-    border-radius: 12px 0 0 12px;
-    padding: 3rem;
+    background: rgba(30, 42, 58, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: var(--radius-xl) 0 0 var(--radius-xl);
+    padding: var(--spacing-xxl);
     display: flex;
     align-items: flex-start;
     min-height: calc(100vh - 100px);
@@ -442,12 +561,14 @@ body:not(.home) .nav-logo {
     max-width: 600px;
 }
 
-/* Common Form Styles (shared between service and seeking) */
+/* ============================================
+   COMMON FORM STYLES - Harmonized
+   ============================================ */
 .service-label,
 .seeking-label {
-    color: #fff;
+    color: var(--text-primary);
     font-weight: 500;
-    margin-bottom: 0.75rem;
+    margin-bottom: var(--spacing-md);
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     font-size: 0.95rem;
 }
@@ -616,38 +737,62 @@ body:not(.home) .nav-logo {
     display: none;
 }
 
+/* Legacy support - will be overridden by Bootstrap styles above */
 .service-filter-label {
-    color: #fff;
+    color: var(--text-primary);
     font-size: 0.9rem;
     cursor: pointer;
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: var(--spacing-sm);
     margin: 0;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-family: var(--font-body);
 }
 
 .service-filter-star {
     font-size: 1.2rem;
-    color: #fff;
+    color: var(--text-muted);
+    transition: color var(--transition-base);
 }
 
 .service-filter-checkbox:checked + .service-filter-label .service-filter-star {
-    color: #8B5CF6;
+    color: var(--color-primary);
 }
 
-/* Common Submit Button Styles */
+/* ============================================
+   SERVICE SUBMIT BUTTONS - Harmonized
+   ============================================ */
 .service-submit-section,
 .seeking-submit-section {
-    margin-top: 2rem;
+    margin-top: var(--spacing-xl);
     text-align: center;
 }
 
 .service-submit-btn,
 .seeking-submit-btn {
-    background: #1A2332;
-    color: #fff;
+    background: var(--bg-secondary);
+    color: var(--text-primary);
     border: none;
+    border-radius: var(--radius-md);
+    padding: var(--spacing-md) var(--spacing-xxl);
+    font-size: 1rem;
+    font-weight: 500;
+    transition: all var(--transition-base);
+    box-shadow: var(--shadow-sm);
+}
+
+.service-submit-btn:hover,
+.seeking-submit-btn:hover {
+    background: var(--color-primary);
+    color: var(--text-primary);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.service-submit-btn:active,
+.seeking-submit-btn:active {
+    transform: translateY(0);
+}
     border-radius: 8px;
     padding: 0.75rem 2rem;
     font-size: 1rem;
@@ -947,10 +1092,13 @@ body:not(.home) .nav-logo {
 }
 
 /* Profile Content */
+/* ============================================
+   PROFILE CONTENT - Optimized
+   ============================================ */
 .profile-content {
     width: 100%;
-    padding: 3rem 0;
-    background: #0A0E1A;
+    padding: var(--spacing-xxl) 0;
+    background: var(--bg-primary);
 }
 
 /* Modern Profile Info Section */
@@ -1112,29 +1260,38 @@ body:not(.home) .nav-logo {
 }
 
 /* Modern Info Cards */
+/* ============================================
+   PROFILE INFO CARDS - Bootstrap Optimized
+   ============================================ */
 .profile-info-cards {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 1.5rem;
-    margin-top: 2rem;
+    gap: var(--spacing-lg);
+    margin-top: var(--spacing-xl);
+}
+
+@media (max-width: 768px) {
+    .profile-info-cards {
+        grid-template-columns: 1fr;
+    }
 }
 
 .info-card {
     background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 16px;
-    padding: 2rem;
-    transition: all 0.3s ease;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-xl);
+    padding: var(--spacing-xl);
+    transition: all var(--transition-base);
     display: flex;
     flex-direction: column;
-    gap: 1.25rem;
+    gap: var(--spacing-lg);
 }
 
 .info-card:hover {
     background: rgba(255, 255, 255, 0.05);
-    border-color: rgba(255, 255, 255, 0.15);
+    border-color: var(--border-color-light);
     transform: translateY(-4px);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    box-shadow: var(--shadow-lg);
 }
 
 .info-card-icon {
@@ -1786,20 +1943,25 @@ body:not(.home) .nav-logo {
 
 .login-form-wrapper {
     width: 100%;
-    background: transparent;
-    padding: 2rem;
+    background: rgba(26, 35, 50, 0.85);
+    backdrop-filter: blur(10px);
+    padding: var(--spacing-xxl);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-xl);
+    border: 1px solid var(--border-color);
     position: relative;
     z-index: 10;
 }
 
 .login-logo {
-    margin-bottom: 2rem;
+    margin-bottom: var(--spacing-xl);
 }
 
 .login-logo-img {
     height: 50px;
     width: auto;
     display: block;
+    margin: 0 auto;
     margin: 0 auto;
 }
 
@@ -1842,31 +2004,78 @@ body:not(.home) .nav-logo {
     margin-top: 0.3rem;
 }
 
+/* ============================================
+   BUTTONS - Harmonized with Palette
+   ============================================ */
 .btn-login {
-    background: #1A2332;
-    color: #fff;
+    background: var(--bg-secondary);
+    color: var(--text-primary);
     border: none;
-    border-radius: 8px;
-    padding: 0.75rem 1.5rem;
+    border-radius: var(--radius-md);
+    padding: var(--spacing-md) var(--spacing-lg);
     font-size: 1rem;
     font-weight: 500;
     text-transform: lowercase;
-    transition: all 0.3s;
+    transition: all var(--transition-base);
     cursor: pointer;
+    box-shadow: var(--shadow-sm);
 }
 
 .btn-login:hover {
-    background: #2a3a4f;
-    color: #fff;
+    background: var(--color-primary);
+    color: var(--text-primary);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
 }
 
+.btn-login:active {
+    transform: translateY(0);
+}
+
+/* ============================================
+   ALERTS - Bootstrap Enhanced
+   ============================================ */
+.alert {
+    border-radius: var(--radius-md);
+    margin-bottom: var(--spacing-lg);
+    border: 1px solid transparent;
+    padding: var(--spacing-md) var(--spacing-lg);
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+.alert-danger {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--color-error);
+    border-color: rgba(239, 68, 68, 0.3);
+}
+
+.alert-warning {
+    background: rgba(245, 158, 11, 0.1);
+    color: var(--color-warning);
+    border-color: rgba(245, 158, 11, 0.3);
+}
+
+.alert-info {
+    background: rgba(59, 130, 246, 0.1);
+    color: var(--color-info);
+    border-color: rgba(59, 130, 246, 0.3);
+}
+
+.alert-success {
+    background: rgba(16, 185, 129, 0.1);
+    color: var(--color-success);
+    border-color: rgba(16, 185, 129, 0.3);
+}
+
+/* Legacy error/success messages (for backward compatibility) */
 .error-message {
-    background: rgba(248, 215, 218, 0.95);
-    color: #721c24;
-    padding: 1rem 1.5rem;
-    border-radius: 8px;
-    margin-bottom: 1.5rem;
-    border: 1px solid #f5c6cb;
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--color-error);
+    padding: var(--spacing-md) var(--spacing-lg);
+    border-radius: var(--radius-md);
+    margin-bottom: var(--spacing-lg);
+    border: 1px solid rgba(239, 68, 68, 0.3);
     font-size: 0.95rem;
     line-height: 1.5;
 }
@@ -1901,7 +2110,7 @@ body:not(.home) .nav-logo {
 }
 
 .required {
-    color: #dc3545;
+    color: var(--color-error);
     font-weight: bold;
     margin-left: 2px;
 }
@@ -1955,21 +2164,24 @@ body:not(.home) .nav-logo {
 .register-link,
 .login-link {
     text-align: center;
-    margin-top: 1rem;
+    margin-top: var(--spacing-lg);
+    color: var(--text-primary);
 }
 
 .register-link a,
 .login-link a {
-    color: #fff;
+    color: var(--text-primary);
     text-decoration: none;
     opacity: 0.8;
-    transition: opacity 0.3s;
+    transition: opacity var(--transition-base);
+    font-weight: 500;
 }
 
 .register-link a:hover,
 .login-link a:hover {
     opacity: 1;
     text-decoration: underline;
+    color: var(--color-primary-light);
 }
 
 /* Footer */
@@ -2559,26 +2771,29 @@ footer {
    ANNOUNCEMENTS PAGE STYLES
    ============================================ */
 
+/* ============================================
+   ANNONCES PAGE - Optimized
+   ============================================ */
 .annonces-page {
     min-height: 100vh;
-    background: #0A0E1A;
-    padding: 120px 0 80px;
-    color: #fff;
+    background: var(--bg-primary);
+    padding: 120px 0 var(--spacing-xxxl);
+    color: var(--text-primary);
 }
 
 .annonces-page .container {
     max-width: 1400px;
     margin: 0 auto;
-    padding: 0 2rem;
+    padding: 0 var(--spacing-xl);
 }
 
 .annonces-page-title {
-    font-family: 'Playfair Display', serif;
+    font-family: var(--font-heading);
     font-size: 3rem;
     font-weight: 400;
     text-align: center;
-    color: #fff;
-    margin-bottom: 3rem;
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-xxl);
     letter-spacing: 0.05em;
 }
 
@@ -2605,21 +2820,21 @@ footer {
 }
 
 /* Announcements Grid */
+/* Bootstrap grid will handle layout now */
 .annonces-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 2rem;
-    margin-top: 2rem;
+    margin-top: var(--spacing-xl);
 }
 
 .annonce-card {
-    background: #1A2332;
-    border-radius: 12px;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-lg);
     overflow: hidden;
     cursor: pointer;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    transition: transform var(--transition-base), box-shadow var(--transition-base);
     display: flex;
     flex-direction: column;
+    border: 1px solid var(--border-color);
+    height: 100%;
 }
 
 .annonce-card:hover {
@@ -2694,6 +2909,20 @@ footer {
     line-height: 1.6;
     margin-bottom: 1rem;
     flex: 1;
+}
+
+.annonce-card-author {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #9CA3AF;
+    font-size: 0.9rem;
+    margin-bottom: 0.75rem;
+}
+
+.annonce-card-author svg {
+    flex-shrink: 0;
+    color: #6B7280;
 }
 
 .annonce-card-location {
@@ -2944,6 +3173,32 @@ footer {
     margin-bottom: 1.5rem;
 }
 
+.annonce-modal-author {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: #9CA3AF;
+    font-size: 1rem;
+    margin-bottom: 1rem;
+}
+
+.annonce-modal-author svg {
+    flex-shrink: 0;
+    color: #6B7280;
+}
+
+.annonce-modal-author-link {
+    color: #60A5FA;
+    text-decoration: none;
+    transition: color 0.3s ease;
+    font-weight: 500;
+}
+
+.annonce-modal-author-link:hover {
+    color: #93C5FD;
+    text-decoration: underline;
+}
+
 .annonce-modal-location {
     display: flex;
     align-items: center;
@@ -2969,25 +3224,14 @@ footer {
 
 /* Responsive */
 @media (max-width: 992px) {
-    .annonces-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 1.5rem;
-    }
-}
-
 @media (max-width: 768px) {
     .annonces-page {
-        padding: 100px 0 60px;
+        padding: 100px 0 var(--spacing-xxl);
     }
 
     .annonces-page-title {
         font-size: 2rem;
-        margin-bottom: 2rem;
-    }
-
-    .annonces-grid {
-        grid-template-columns: 1fr;
-        gap: 1.5rem;
+        margin-bottom: var(--spacing-xl);
     }
 
     .annonce-modal-content {

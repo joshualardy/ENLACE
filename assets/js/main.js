@@ -482,6 +482,11 @@ document.addEventListener('DOMContentLoaded', function() {
         const location = card.querySelector('.annonce-card-location span')?.textContent || '';
         const image = card.querySelector('.annonce-card-image img')?.src || '';
         const imagePlaceholder = card.querySelector('.annonce-card-placeholder');
+        
+        // Get author data from data attributes
+        const authorId = card.getAttribute('data-author-id');
+        const authorName = card.getAttribute('data-author-name') || 'Utilisateur';
+        const authorUrl = card.getAttribute('data-author-url') || '#';
 
         let imageHtml = '';
         if (image) {
@@ -497,6 +502,12 @@ document.addEventListener('DOMContentLoaded', function() {
             <div class="annonce-modal-details">
                 <h2 class="annonce-modal-title">${title}</h2>
                 <p class="annonce-modal-description">${description}</p>
+                <div class="annonce-modal-author">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M20 21V19C20 17.9391 19.5786 16.9217 18.8284 16.1716C18.0783 15.4214 17.0609 15 16 15H8C6.93913 15 5.92172 15.4214 5.17157 16.1716C4.42143 16.9217 4 17.9391 4 19V21M16 7C16 9.20914 14.2091 11 12 11C9.79086 11 8 9.20914 8 7C8 4.79086 9.79086 3 12 3C14.2091 3 16 4.79086 16 7Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <a href="${authorUrl}" class="annonce-modal-author-link">${authorName}</a>
+                </div>
                 ${location ? `<div class="annonce-modal-location">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M21 10C21 17 12 23 12 23C12 23 3 17 3 10C3 7.61305 3.94821 5.32387 5.63604 3.63604C7.32387 1.94821 9.61305 1 12 1C14.3869 1 16.6761 1.94821 18.364 3.63604C20.0518 5.32387 21 7.61305 21 10Z" stroke="currentColor" stroke-width="1.5"/>

@@ -570,7 +570,7 @@ document.addEventListener('DOMContentLoaded', function() {
     bookmarkButtons.forEach(function(btn) {
         btn.addEventListener('click', function(e) {
             e.stopPropagation();
-            console.log('Bookmark clicked for annonce:', btn.getAttribute('data-annonce-id'));
+            // TODO: Implement bookmark functionality
         });
     });
 });

@@ -17,11 +17,49 @@ add_action('after_setup_theme', 'theme_setup');
 // Enqueue styles and scripts
 function theme_scripts()
 {
+    // Bootstrap CSS (always loaded)
     wp_enqueue_style('bootstrap-css', get_template_directory_uri() . '/assets/css/bootstrap.min.css', array(), '5.3.8');
-    wp_enqueue_style('theme-style', get_template_directory_uri() . '/assets/css/main.css', array('bootstrap-css'), '1.2.0');
+    
+    // Base CSS files (always loaded)
+    wp_enqueue_style('theme-variables', get_template_directory_uri() . '/assets/css/variables.css', array(), '1.0.0');
+    wp_enqueue_style('theme-base', get_template_directory_uri() . '/assets/css/base.css', array('theme-variables'), '1.0.0');
+    wp_enqueue_style('theme-header', get_template_directory_uri() . '/assets/css/header.css', array('theme-base'), '1.0.0');
+    wp_enqueue_style('theme-footer', get_template_directory_uri() . '/assets/css/footer.css', array('theme-base'), '1.0.0');
+    wp_enqueue_style('theme-common', get_template_directory_uri() . '/assets/css/common.css', array('theme-base'), '1.0.0');
+    
+    // Page-specific CSS
+    if (is_front_page() || is_home()) {
+        wp_enqueue_style('theme-front-page', get_template_directory_uri() . '/assets/css/front-page.css', array('theme-common'), '1.0.0');
+    }
+    
+    // Check if we're on a template page
+    $template = get_page_template_slug();
+    if ($template === 'template-login.php') {
+        wp_enqueue_style('theme-login', get_template_directory_uri() . '/assets/css/login.css', array('theme-common'), '1.0.0');
+    } elseif ($template === 'template-register.php') {
+        wp_enqueue_style('theme-register', get_template_directory_uri() . '/assets/css/register.css', array('theme-common'), '1.0.0');
+    } elseif ($template === 'template-offering-service.php' || $template === 'template-seeking-service.php') {
+        wp_enqueue_style('theme-service-forms', get_template_directory_uri() . '/assets/css/service-forms.css', array('theme-common'), '1.0.0');
+    } elseif ($template === 'template-userprofil.php') {
+        wp_enqueue_style('theme-userprofil', get_template_directory_uri() . '/assets/css/userprofil.css', array('theme-common'), '1.0.0');
+    } elseif ($template === 'template-annonces.php') {
+        wp_enqueue_style('theme-annonces', get_template_directory_uri() . '/assets/css/annonces.css', array('theme-common'), '1.0.0');
+    } elseif ($template === 'template-decouvrir.php') {
+        wp_enqueue_style('theme-decouvrir', get_template_directory_uri() . '/assets/css/decouvrir.css', array('theme-common'), '1.0.0');
+    } elseif ($template === 'template-messagerie.php') {
+        wp_enqueue_style('theme-messagerie', get_template_directory_uri() . '/assets/css/messagerie.css', array('theme-common'), '1.0.0');
+    }
+    
+    // Scripts
     wp_enqueue_script('jquery');
     wp_enqueue_script('bootstrap-js', 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js', array('jquery'), '5.3.0', true);
     wp_enqueue_script('theme-script', get_template_directory_uri() . '/assets/js/main.js', array('jquery'), '1.0.0', true);
+    
+    // Localize script for AJAX
+    wp_localize_script('theme-script', 'enlaceAjax', array(
+        'ajaxurl' => admin_url('admin-ajax.php'),
+        'nonce' => wp_create_nonce('enlace_messaging')
+    ));
 }
 add_action('wp_enqueue_scripts', 'theme_scripts');
 
@@ -798,6 +836,10 @@ function create_default_pages() {
         'annonces' => array(
             'title' => 'Annonces',
             'template' => 'template-annonces.php'
+        ),
+        'messagerie' => array(
+            'title' => 'Messagerie',
+            'template' => 'template-messagerie.php'
         )
     );
 
@@ -817,4 +859,448 @@ function create_default_pages() {
     }
 }
 add_action('after_switch_theme', 'create_default_pages');
+
+// ============================================
+// MESSAGERIE SYSTEM
+// ============================================
+
+// Create messages table on theme activation and verify on init
+function create_messages_table() {
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'enlace_messages';
+    $charset_collate = $wpdb->get_charset_collate();
+
+    $sql = "CREATE TABLE IF NOT EXISTS $table_name (
+        id bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+        conversation_id bigint(20) UNSIGNED NOT NULL,
+        sender_id bigint(20) UNSIGNED NOT NULL,
+        recipient_id bigint(20) UNSIGNED NOT NULL,
+        message text NOT NULL,
+        is_read tinyint(1) DEFAULT 0,
+        created_at datetime DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (id),
+        KEY conversation_id (conversation_id),
+        KEY sender_id (sender_id),
+        KEY recipient_id (recipient_id),
+        KEY is_read (is_read),
+        KEY created_at (created_at)
+    ) $charset_collate;";
+
+    require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+    dbDelta($sql);
+
+    // Create conversations table
+    $conversations_table = $wpdb->prefix . 'enlace_conversations';
+    $sql_conversations = "CREATE TABLE IF NOT EXISTS $conversations_table (
+        id bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+        user1_id bigint(20) UNSIGNED NOT NULL,
+        user2_id bigint(20) UNSIGNED NOT NULL,
+        last_message_id bigint(20) UNSIGNED DEFAULT NULL,
+        last_message_at datetime DEFAULT NULL,
+        user1_unread_count int(11) DEFAULT 0,
+        user2_unread_count int(11) DEFAULT 0,
+        created_at datetime DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (id),
+        UNIQUE KEY user_pair (user1_id, user2_id),
+        KEY user1_id (user1_id),
+        KEY user2_id (user2_id),
+        KEY last_message_at (last_message_at)
+    ) $charset_collate;";
+
+    dbDelta($sql_conversations);
+}
+add_action('after_switch_theme', 'create_messages_table');
+
+// Verify tables exist on init (for safety)
+function verify_messaging_tables() {
+    global $wpdb;
+    $messages_table = $wpdb->prefix . 'enlace_messages';
+    $conversations_table = $wpdb->prefix . 'enlace_conversations';
+    
+    // Check if tables exist
+    $messages_exists = $wpdb->get_var("SHOW TABLES LIKE '$messages_table'") == $messages_table;
+    $conversations_exists = $wpdb->get_var("SHOW TABLES LIKE '$conversations_table'") == $conversations_table;
+    
+    if (!$messages_exists || !$conversations_exists) {
+        create_messages_table();
+    }
+}
+add_action('init', 'verify_messaging_tables', 1);
+
+// Get or create conversation between two users
+function get_or_create_conversation($user1_id, $user2_id) {
+    global $wpdb;
+    
+    // Verify tables exist
+    verify_messaging_tables();
+    
+    $table = $wpdb->prefix . 'enlace_conversations';
+    
+    // Ensure user1_id < user2_id for consistency
+    $normalized_user1 = min($user1_id, $user2_id);
+    $normalized_user2 = max($user1_id, $user2_id);
+    
+    // First, try to find existing conversation
+    $conversation = $wpdb->get_row($wpdb->prepare(
+        "SELECT * FROM $table WHERE user1_id = %d AND user2_id = %d",
+        $normalized_user1, $normalized_user2
+    ));
+    
+    // If conversation doesn't exist, create it
+    if (!$conversation) {
+        $result = $wpdb->insert(
+            $table,
+            array(
+                'user1_id' => $normalized_user1,
+                'user2_id' => $normalized_user2,
+                'created_at' => current_time('mysql')
+            ),
+            array('%d', '%d', '%s')
+        );
+        
+        if ($result !== false && $wpdb->insert_id) {
+            $conversation_id = $wpdb->insert_id;
+            // Retrieve the newly created conversation
+            $conversation = $wpdb->get_row($wpdb->prepare(
+                "SELECT * FROM $table WHERE id = %d",
+                $conversation_id
+            ));
+        }
+    }
+    
+    return $conversation ? $conversation : null;
+}
+
+// Send a message
+function send_message($sender_id, $recipient_id, $message) {
+    global $wpdb;
+    
+    if (empty($message) || !is_user_logged_in() || $sender_id != get_current_user_id()) {
+        return false;
+    }
+    
+    // Get or create conversation
+    $conversation = get_or_create_conversation($sender_id, $recipient_id);
+    if (!$conversation || !isset($conversation->id)) {
+        return false;
+    }
+    $conversation_id = $conversation->id;
+    
+    // Insert message
+    $messages_table = $wpdb->prefix . 'enlace_messages';
+    $result = $wpdb->insert(
+        $messages_table,
+        array(
+            'conversation_id' => $conversation_id,
+            'sender_id' => $sender_id,
+            'recipient_id' => $recipient_id,
+            'message' => sanitize_textarea_field($message),
+            'is_read' => 0,
+            'created_at' => current_time('mysql')
+        ),
+        array('%d', '%d', '%d', '%s', '%d', '%s')
+    );
+    
+    if ($result) {
+        $message_id = $wpdb->insert_id;
+        
+        // Update conversation
+        $conversations_table = $wpdb->prefix . 'enlace_conversations';
+        $is_user1 = ($conversation->user1_id == $sender_id);
+        
+        $wpdb->update(
+            $conversations_table,
+            array(
+                'last_message_id' => $message_id,
+                'last_message_at' => current_time('mysql'),
+                ($is_user1 ? 'user2_unread_count' : 'user1_unread_count') => $wpdb->get_var($wpdb->prepare(
+                    "SELECT COUNT(*) FROM $messages_table WHERE conversation_id = %d AND recipient_id = %d AND is_read = 0",
+                    $conversation_id,
+                    $recipient_id
+                ))
+            ),
+            array('id' => $conversation_id),
+            array('%d', '%s', '%d'),
+            array('%d')
+        );
+        
+        return $message_id;
+    }
+    
+    return false;
+}
+
+// Get messages for a conversation
+function get_conversation_messages($conversation_id, $user_id, $limit = 50, $offset = 0) {
+    global $wpdb;
+    $table = $wpdb->prefix . 'enlace_messages';
+    
+    // Verify user is part of conversation
+    $conversations_table = $wpdb->prefix . 'enlace_conversations';
+    $conversation = $wpdb->get_row($wpdb->prepare(
+        "SELECT * FROM $conversations_table WHERE id = %d AND (user1_id = %d OR user2_id = %d)",
+        $conversation_id, $user_id, $user_id
+    ));
+    
+    if (!$conversation) {
+        return array();
+    }
+    
+    // Mark messages as read
+    $wpdb->update(
+        $table,
+        array('is_read' => 1),
+        array(
+            'conversation_id' => $conversation_id,
+            'recipient_id' => $user_id,
+            'is_read' => 0
+        ),
+        array('%d'),
+        array('%d', '%d', '%d')
+    );
+    
+    // Reset unread count
+    $is_user1 = ($conversation->user1_id == $user_id);
+    $wpdb->update(
+        $conversations_table,
+        array(($is_user1 ? 'user1_unread_count' : 'user2_unread_count') => 0),
+        array('id' => $conversation_id),
+        array('%d'),
+        array('%d')
+    );
+    
+    // Get messages
+    $messages = $wpdb->get_results($wpdb->prepare(
+        "SELECT * FROM $table 
+        WHERE conversation_id = %d 
+        ORDER BY created_at DESC 
+        LIMIT %d OFFSET %d",
+        $conversation_id, $limit, $offset
+    ));
+    
+    return array_reverse($messages); // Reverse to show oldest first
+}
+
+// Get all conversations for a user
+function get_user_conversations($user_id) {
+    global $wpdb;
+    
+    // Verify tables exist
+    verify_messaging_tables();
+    
+    $table = $wpdb->prefix . 'enlace_conversations';
+    
+    // Order by last_message_at DESC, but put NULL values (new conversations) at the end
+    $conversations = $wpdb->get_results($wpdb->prepare(
+        "SELECT * FROM $table 
+        WHERE user1_id = %d OR user2_id = %d 
+        ORDER BY 
+            CASE WHEN last_message_at IS NULL THEN 1 ELSE 0 END,
+            last_message_at DESC,
+            created_at DESC",
+        $user_id, $user_id
+    ));
+    
+    $result = array();
+    foreach ($conversations as $conv) {
+        $other_user_id = ($conv->user1_id == $user_id) ? $conv->user2_id : $conv->user1_id;
+        $other_user = get_userdata($other_user_id);
+        
+        // Skip if other user doesn't exist
+        if (!$other_user) {
+            continue;
+        }
+        
+        $profile_data = get_user_profile_data($other_user_id);
+        $unread_count = ($conv->user1_id == $user_id) ? $conv->user1_unread_count : $conv->user2_unread_count;
+        
+        // Get last message text if exists
+        $last_message = '';
+        if ($conv->last_message_id) {
+            $last_message = get_last_message_text($conv->last_message_id);
+        }
+        
+        $result[] = array(
+            'id' => $conv->id,
+            'other_user_id' => $other_user_id,
+            'other_user_name' => $profile_data ? $profile_data['full_name'] : $other_user->display_name,
+            'other_user_photo' => $profile_data ? $profile_data['profile_photo_url'] : '',
+            'last_message_at' => $conv->last_message_at,
+            'unread_count' => $unread_count,
+            'last_message' => $last_message
+        );
+    }
+    
+    return $result;
+}
+
+// Get last message text
+function get_last_message_text($message_id) {
+    global $wpdb;
+    $table = $wpdb->prefix . 'enlace_messages';
+    return $wpdb->get_var($wpdb->prepare("SELECT message FROM $table WHERE id = %d", $message_id));
+}
+
+// Get unread messages count for user
+function get_unread_messages_count($user_id) {
+    global $wpdb;
+    $conversations_table = $wpdb->prefix . 'enlace_conversations';
+    
+    $total = $wpdb->get_var($wpdb->prepare(
+        "SELECT SUM(CASE WHEN user1_id = %d THEN user1_unread_count ELSE user2_unread_count END) 
+        FROM $conversations_table 
+        WHERE user1_id = %d OR user2_id = %d",
+        $user_id, $user_id, $user_id
+    ));
+    
+    return intval($total ? $total : 0);
+}
+
+// AJAX: Send message
+function ajax_send_message() {
+    check_ajax_referer('enlace_messaging', 'nonce');
+    
+    if (!is_user_logged_in()) {
+        wp_send_json_error(array('message' => 'Vous devez être connecté.'));
+    }
+    
+    $recipient_id = isset($_POST['recipient_id']) ? intval($_POST['recipient_id']) : 0;
+    $message = isset($_POST['message']) ? trim($_POST['message']) : '';
+    
+    if (empty($recipient_id) || empty($message)) {
+        wp_send_json_error(array('message' => 'Destinataire et message requis.'));
+    }
+    
+    $sender_id = get_current_user_id();
+    
+    if ($sender_id == $recipient_id) {
+        wp_send_json_error(array('message' => 'Vous ne pouvez pas vous envoyer un message.'));
+    }
+    
+    $message_id = send_message($sender_id, $recipient_id, $message);
+    
+    if ($message_id) {
+        wp_send_json_success(array(
+            'message_id' => $message_id,
+            'message' => 'Message envoyé avec succès.'
+        ));
+    } else {
+        wp_send_json_error(array('message' => 'Erreur lors de l\'envoi du message.'));
+    }
+}
+add_action('wp_ajax_send_message', 'ajax_send_message');
+
+// AJAX: Get messages
+function ajax_get_messages() {
+    check_ajax_referer('enlace_messaging', 'nonce');
+    
+    if (!is_user_logged_in()) {
+        wp_send_json_error(array('message' => 'Vous devez être connecté.'));
+    }
+    
+    $conversation_id = isset($_POST['conversation_id']) ? intval($_POST['conversation_id']) : 0;
+    $offset = isset($_POST['offset']) ? intval($_POST['offset']) : 0;
+    
+    if (empty($conversation_id)) {
+        wp_send_json_error(array('message' => 'ID de conversation requis.'));
+    }
+    
+    $user_id = get_current_user_id();
+    $messages = get_conversation_messages($conversation_id, $user_id, 50, $offset);
+    
+    $formatted_messages = array();
+    foreach ($messages as $msg) {
+        $sender_data = get_user_profile_data($msg->sender_id);
+        $formatted_messages[] = array(
+            'id' => $msg->id,
+            'sender_id' => $msg->sender_id,
+            'sender_name' => $sender_data ? $sender_data['full_name'] : get_userdata($msg->sender_id)->display_name,
+            'sender_photo' => $sender_data ? $sender_data['profile_photo_url'] : '',
+            'message' => $msg->message,
+            'is_read' => $msg->is_read,
+            'created_at' => $msg->created_at,
+            'is_own' => ($msg->sender_id == $user_id)
+        );
+    }
+    
+    wp_send_json_success(array('messages' => $formatted_messages));
+}
+add_action('wp_ajax_get_messages', 'ajax_get_messages');
+
+// AJAX: Get conversations list
+function ajax_get_conversations() {
+    check_ajax_referer('enlace_messaging', 'nonce');
+    
+    if (!is_user_logged_in()) {
+        wp_send_json_error(array('message' => 'Vous devez être connecté.'));
+    }
+    
+    $user_id = get_current_user_id();
+    $conversations = get_user_conversations($user_id);
+    
+    wp_send_json_success(array('conversations' => $conversations));
+}
+add_action('wp_ajax_get_conversations', 'ajax_get_conversations');
+
+// Search users for messaging
+function ajax_search_users_for_messaging() {
+    check_ajax_referer('enlace_messaging', 'nonce');
+    
+    if (!is_user_logged_in()) {
+        wp_send_json_error(array('message' => 'Vous devez être connecté.'));
+    }
+    
+    $current_user_id = get_current_user_id();
+    $query = isset($_POST['query']) ? sanitize_text_field($_POST['query']) : '';
+    
+    if (strlen($query) < 2) {
+        wp_send_json_success(array('users' => array()));
+    }
+    
+    // Get all users
+    $users_args = array(
+        'number' => 20,
+        'exclude' => array($current_user_id),
+        'search' => '*' . esc_attr($query) . '*',
+        'search_columns' => array('user_login', 'user_nicename', 'display_name')
+    );
+    
+    $users = get_users($users_args);
+    $results = array();
+    
+    foreach ($users as $user) {
+        $user_id = $user->ID;
+        
+        // Skip users without profiles
+        $service_type = get_user_meta($user_id, 'service_type', true);
+        if (empty($service_type)) {
+            continue;
+        }
+        
+        $profile_data = get_user_profile_data($user_id);
+        if (!$profile_data) {
+            continue;
+        }
+        
+        // Check if name matches search query
+        $first_name = get_user_meta($user_id, 'first_name', true);
+        $last_name = get_user_meta($user_id, 'last_name', true);
+        $full_name = trim($first_name . ' ' . $last_name);
+        $search_text = strtolower($full_name . ' ' . $user->user_login);
+        
+        if (strpos($search_text, strtolower($query)) === false) {
+            continue;
+        }
+        
+        $results[] = array(
+            'id' => $user_id,
+            'name' => $profile_data['full_name'] ? $profile_data['full_name'] : $user->display_name,
+            'photo' => $profile_data['profile_photo_url'] ? $profile_data['profile_photo_url'] : '',
+            'location' => $profile_data['ville'] ? $profile_data['ville'] : ''
+        );
+    }
+    
+    wp_send_json_success(array('users' => $results));
+}
+add_action('wp_ajax_search_users_for_messaging', 'ajax_search_users_for_messaging');
 

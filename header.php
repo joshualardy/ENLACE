@@ -14,7 +14,7 @@
         <nav class="navbar navbar-expand-lg navbar-dark">
             <div class="container-fluid">
                 <a class="navbar-brand" href="<?php echo esc_url(home_url('/')); ?>">
-                    <img src="<?php echo esc_url(get_template_directory_uri() . '/assets/images/Logos/logo+ENLACE.svg'); ?>" alt="ENLACE Logo" class="nav-logo">
+                    <img src="<?php echo get_template_directory_uri() . '/assets/images/Logos/logo+ENLACE.svg'; ?>" alt="ENLACE Logo" class="nav-logo">
                 </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
@@ -30,7 +30,17 @@
                         <li class="nav-item">
                             <a class="nav-link" href="<?php echo esc_url(home_url('/annonces')); ?>">ANNONCES</a>
                         </li>
-                        <?php if (is_user_logged_in()) : ?>
+                        <?php if (is_user_logged_in()) : 
+                            $unread_count = get_unread_messages_count(get_current_user_id());
+                        ?>
+                            <li class="nav-item">
+                                <a class="nav-link" href="<?php echo esc_url(home_url('/messagerie')); ?>">
+                                    Messages
+                                    <?php if ($unread_count > 0) : ?>
+                                        <span class="nav-unread-badge"><?php echo $unread_count; ?></span>
+                                    <?php endif; ?>
+                                </a>
+                            </li>
                             <li class="nav-item">
                                 <a class="nav-link" href="<?php echo esc_url(home_url('/userprofil')); ?>"><?php echo esc_html(wp_get_current_user()->display_name); ?></a>
                             </li>

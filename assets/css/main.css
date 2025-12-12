@@ -1,3 +1,23 @@
+/*
+ * NOTE: Ce fichier main.css a été réorganisé en fichiers séparés pour une meilleure organisation.
+ * Les styles ont été divisés en :
+ * - variables.css : Variables CSS et font-faces
+ * - base.css : Styles de base (reset, html, body)
+ * - header.css : Styles du header/navigation
+ * - footer.css : Styles du footer
+ * - common.css : Styles communs (alerts, messages, etc.)
+ * - front-page.css : Styles de la page d'accueil
+ * - login.css : Styles de la page de connexion
+ * - register.css : Styles de la page d'inscription
+ * - service-forms.css : Styles des formulaires de service
+ * - userprofil.css : Styles de la page de profil utilisateur
+ * - annonces.css : Styles de la page des annonces
+ * - decouvrir.css : Styles de la page découvrir
+ * 
+ * Ce fichier est conservé pour référence mais n'est plus chargé automatiquement.
+ * Voir functions.php pour le chargement des nouveaux fichiers CSS.
+ */
+
 :root {
     /* ============================================
        PALETTE DE COULEURS - SYSTÈME SÉMANTIQUE

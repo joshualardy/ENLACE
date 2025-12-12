@@ -129,11 +129,18 @@ $annonces_query = new WP_Query($args);
                         <div class="annonce-card-content">
                             <div class="annonce-card-header">
                                 <h3 class="annonce-card-title"><?php echo esc_html(get_the_title()); ?></h3>
-                                <button class="annonce-bookmark-btn" data-annonce-id="<?php echo get_the_ID(); ?>" aria-label="Ajouter aux favoris">
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <?php if (is_user_logged_in()) : 
+                                    $is_favorited = is_favorited(get_current_user_id(), 'annonce', get_the_ID());
+                                ?>
+                                <button class="annonce-bookmark-btn <?php echo $is_favorited ? 'favorited' : ''; ?>" 
+                                        data-item-type="annonce" 
+                                        data-item-id="<?php echo get_the_ID(); ?>" 
+                                        aria-label="<?php echo $is_favorited ? 'Retirer des favoris' : 'Ajouter aux favoris'; ?>">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="<?php echo $is_favorited ? 'currentColor' : 'none'; ?>" xmlns="http://www.w3.org/2000/svg">
                                         <path d="M19 21L12 16L5 21V5C5 4.46957 5.21071 3.96086 5.58579 3.58579C5.96086 3.21071 6.46957 3 7 3H17C17.5304 3 18.0391 3.21071 18.4142 3.58579C18.7893 3.96086 19 4.46957 19 5V21Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                                     </svg>
                                 </button>
+                                <?php endif; ?>
                             </div>
                             <p class="annonce-card-description"><?php echo esc_html(wp_trim_words(get_the_content(), 20)); ?></p>
                             <div class="annonce-card-author">

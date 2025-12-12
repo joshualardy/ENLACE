@@ -1,0 +1,217 @@
+/* ============================================
+   BASE STYLES - Reset & Global
+   ============================================ */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    height: 100%;
+    width: 100%;
+    background: var(--bg-primary);
+}
+
+html:not(.home) {
+    background-image: url('../images/bckgd Bleu.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    min-height: 100%;
+}
+
+body {
+    min-height: 100vh;
+    width: 100%;
+    font-family: var(--font-body);
+    font-size: var(--font-size-base);
+    line-height: var(--line-height-normal);
+    letter-spacing: var(--letter-spacing-normal);
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-primary);
+    position: relative;
+    color: var(--text-primary);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+}
+
+/* Body background for login/register pages */
+body:not(.home) {
+    background-image: url('../images/bckgd Bleu.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+}
+
+body.home {
+    background: var(--bg-primary);
+}
+
+html.home {
+    background: var(--bg-primary);
+}
+
+#main-content {
+    margin: 0;
+    padding: 0;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: calc(100vh - 200px);
+}
+
+/* ============================================
+   TYPOGRAPHY - Premium Urbain
+   ============================================ */
+
+/* Headings - Anton (Urbain, Impactant) */
+h1, h2, h3, h4, h5, h6,
+.h1, .h2, .h3, .h4, .h5, .h6 {
+    font-family: var(--font-heading);
+    font-weight: 400;
+    line-height: var(--line-height-tight);
+    letter-spacing: var(--letter-spacing-tight);
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-lg);
+}
+
+/* Sous-titres élégants - Playfair Display */
+.subtitle-elegant,
+.quote-elegant,
+.accent-elegant {
+    font-family: var(--font-elegant);
+    font-weight: 400;
+    font-style: italic;
+    line-height: var(--line-height-relaxed);
+    letter-spacing: var(--letter-spacing-normal);
+    color: var(--text-primary);
+}
+
+h1, .h1 {
+    font-size: var(--font-size-5xl);
+    line-height: var(--line-height-tight);
+    letter-spacing: var(--letter-spacing-tight);
+    margin-bottom: var(--spacing-xl);
+    font-weight: 400;
+}
+
+h2, .h2 {
+    font-size: var(--font-size-4xl);
+    line-height: var(--line-height-tight);
+    margin-bottom: var(--spacing-lg);
+    font-weight: 400;
+}
+
+h3, .h3 {
+    font-size: var(--font-size-3xl);
+    line-height: var(--line-height-tight);
+    margin-bottom: var(--spacing-lg);
+    font-weight: 400;
+}
+
+h4, .h4 {
+    font-size: var(--font-size-2xl);
+    line-height: var(--line-height-normal);
+    margin-bottom: var(--spacing-md);
+}
+
+h5, .h5 {
+    font-size: var(--font-size-xl);
+    line-height: var(--line-height-normal);
+    margin-bottom: var(--spacing-sm);
+}
+
+h6, .h6 {
+    font-size: var(--font-size-lg);
+    line-height: var(--line-height-normal);
+    margin-bottom: var(--spacing-sm);
+}
+
+/* Body text - Inter (Moderne) */
+p {
+    font-family: var(--font-body);
+    font-size: var(--font-size-base);
+    line-height: var(--line-height-relaxed);
+    color: var(--text-secondary);
+    margin-bottom: var(--spacing-md);
+}
+
+/* Links - Premium */
+a {
+    color: var(--text-primary);
+    text-decoration: none;
+    transition: all var(--transition-base);
+    font-weight: 500;
+}
+
+a:hover {
+    color: var(--color-primary-light);
+    text-decoration: none;
+}
+
+a:focus {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+/* Lists */
+ul, ol {
+    margin-bottom: var(--spacing-md);
+    padding-left: var(--spacing-lg);
+}
+
+li {
+    margin-bottom: var(--spacing-xs);
+    line-height: var(--line-height-relaxed);
+}
+
+/* Strong & Emphasis */
+strong, b {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+em, i {
+    font-style: italic;
+}
+
+/* Small text */
+small, .small {
+    font-size: var(--font-size-sm);
+    line-height: var(--line-height-normal);
+    color: var(--text-muted);
+}
+
+/* Code */
+code, pre {
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: var(--font-size-sm);
+}
+
+/* Blockquote */
+blockquote {
+    border-left: 3px solid var(--color-primary);
+    padding-left: var(--spacing-lg);
+    margin: var(--spacing-lg) 0;
+    font-style: italic;
+    color: var(--text-secondary);
+}
+
+/* Selection */
+::selection {
+    background: var(--color-primary);
+    color: var(--text-primary);
+}
+
+::-moz-selection {
+    background: var(--color-primary);
+    color: var(--text-primary);
+}

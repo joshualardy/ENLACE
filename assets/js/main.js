@@ -565,13 +565,441 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Bookmark functionality (placeholder)
-    const bookmarkButtons = document.querySelectorAll('.annonce-bookmark-btn');
-    bookmarkButtons.forEach(function(btn) {
-        btn.addEventListener('click', function(e) {
-            e.stopPropagation();
-            // TODO: Implement bookmark functionality
+    // Favorites functionality
+    function toggleFavorite(button) {
+        if (!button) return;
+        
+        const itemType = button.getAttribute('data-item-type');
+        const itemId = button.getAttribute('data-item-id');
+        
+        if (!itemType || !itemId) return;
+        
+        // Disable button during request
+        button.disabled = true;
+        const originalHTML = button.innerHTML;
+        
+        // Show loading state
+        button.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+        
+        // Make AJAX request
+        if (typeof enlaceAjax === 'undefined') {
+            console.error('AJAX configuration not available');
+            alert('Erreur de configuration. Veuillez rafraîchir la page.');
+            button.disabled = false;
+            button.innerHTML = originalHTML;
+            return;
+        }
+        
+        if (!enlaceAjax.favorites_nonce) {
+            console.error('Favorites nonce not available');
+            alert('Erreur de sécurité. Veuillez rafraîchir la page.');
+            button.disabled = false;
+            button.innerHTML = originalHTML;
+            return;
+        }
+        
+        jQuery.ajax({
+            url: enlaceAjax.ajaxurl || ajaxurl || '/wp-admin/admin-ajax.php',
+            type: 'POST',
+            data: {
+                action: 'toggle_favorite',
+                nonce: enlaceAjax.favorites_nonce,
+                item_type: itemType,
+                item_id: itemId
+            },
+            success: function(response) {
+                if (response.success) {
+                    // Update button state
+                    const isFavorited = response.data.is_favorited;
+                    button.classList.toggle('favorited', isFavorited);
+                    
+                    // Update SVG fill
+                    const svg = button.querySelector('svg');
+                    if (svg) {
+                        svg.setAttribute('fill', isFavorited ? 'currentColor' : 'none');
+                    }
+                    
+                    // Update aria-label
+                    button.setAttribute('aria-label', isFavorited ? 'Retirer des favoris' : 'Ajouter aux favoris');
+                    
+                    // If it's a remove button in favorites list, remove the item
+                    if (button.classList.contains('favorite-remove-btn')) {
+                        button.closest('.favorite-user-item, .favorite-annonce-item')?.remove();
+                        
+                        // Check if favorites list is now empty
+                        const favoritesSection = document.querySelector('.profile-favorites-section');
+                        if (favoritesSection) {
+                            const remainingItems = favoritesSection.querySelectorAll('.favorite-user-item, .favorite-annonce-item');
+                            if (remainingItems.length === 0) {
+                                const emptyMsg = document.createElement('p');
+                                emptyMsg.className = 'favorites-empty';
+                                emptyMsg.textContent = 'Aucun favori pour le moment. Ajoutez des utilisateurs ou des annonces à vos favoris !';
+                                favoritesSection.appendChild(emptyMsg);
+                            }
+                        }
+                    }
+                } else {
+                    alert(response.data.message || 'Erreur lors de l\'opération');
+                    button.innerHTML = originalHTML;
+                }
+                button.disabled = false;
+            },
+            error: function(xhr, status, error) {
+                console.error('AJAX Error:', status, error);
+                console.error('Response:', xhr.responseText);
+                alert('Erreur de connexion. Veuillez réessayer.');
+                button.disabled = false;
+                button.innerHTML = originalHTML;
+            }
         });
+    }
+    
+    // Handle bookmark buttons on annonces
+    document.addEventListener('click', function(e) {
+        // Check for annonce bookmark button
+        const annonceBtn = e.target.closest('.annonce-bookmark-btn');
+        if (annonceBtn) {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('Annonce bookmark clicked', annonceBtn);
+            toggleFavorite(annonceBtn);
+            return;
+        }
+        
+        // Handle favorite buttons on user profiles
+        const profileBtn = e.target.closest('.btn-profile-favorite');
+        if (profileBtn) {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('Profile favorite clicked', profileBtn);
+            toggleFavorite(profileBtn);
+            return;
+        }
+        
+        // Handle remove favorite buttons
+        const removeBtn = e.target.closest('.favorite-remove-btn');
+        if (removeBtn) {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('Remove favorite clicked', removeBtn);
+            toggleFavorite(removeBtn);
+            return;
+        }
+    });
+    
+    // Debug: Log available buttons on page load
+    console.log('Favorites system initialized');
+    console.log('Annonce bookmark buttons:', document.querySelectorAll('.annonce-bookmark-btn').length);
+    console.log('Profile favorite buttons:', document.querySelectorAll('.btn-profile-favorite').length);
+    console.log('enlaceAjax available:', typeof enlaceAjax !== 'undefined');
+    if (typeof enlaceAjax !== 'undefined') {
+        console.log('favorites_nonce available:', !!enlaceAjax.favorites_nonce);
+    }
+    
+    // Production Comments Functionality
+    function toggleComments(button) {
+        const productionId = button.getAttribute('data-production-id');
+        const commentsContainer = document.getElementById('comments-' + productionId);
+        
+        if (!commentsContainer) return;
+        
+        const isVisible = commentsContainer.style.display !== 'none';
+        commentsContainer.style.display = isVisible ? 'none' : 'block';
+        
+        // Load comments if not already loaded
+        if (!isVisible && commentsContainer.querySelector('.production-comments-list').children.length === 0) {
+            loadComments(productionId);
+        }
+    }
+    
+    function loadComments(productionId) {
+        if (typeof enlaceAjax === 'undefined' || !enlaceAjax.production_comments_nonce) {
+            console.error('Production comments nonce not available');
+            return;
+        }
+        
+        jQuery.ajax({
+            url: enlaceAjax.ajaxurl || ajaxurl || '/wp-admin/admin-ajax.php',
+            type: 'POST',
+            data: {
+                action: 'get_production_comments',
+                nonce: enlaceAjax.production_comments_nonce,
+                production_id: productionId
+            },
+            success: function(response) {
+                if (response.success && response.data.comments) {
+                    const commentsList = document.getElementById('comments-list-' + productionId);
+                    if (commentsList) {
+                        renderComments(commentsList, response.data.comments, productionId);
+                    }
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Error loading comments:', error);
+            }
+        });
+    }
+    
+    function renderComments(container, comments, productionId) {
+        if (comments.length === 0) {
+            container.innerHTML = '<p class="production-comments-empty">Aucun commentaire pour le moment.</p>';
+            return;
+        }
+        
+        const currentUserId = typeof wpApiSettings !== 'undefined' ? wpApiSettings.currentUserId : 0;
+        const productionOwnerId = container.closest('.production-item')?.querySelector('.add-production-comment-form')?.getAttribute('data-production-owner-id') || 0;
+        
+        let html = '';
+        comments.forEach(function(comment) {
+            const canDelete = comment.is_own || (currentUserId == productionOwnerId);
+            html += '<div class="production-comment-item" data-comment-id="' + comment.id + '">';
+            html += '<div class="production-comment-avatar">';
+            if (comment.user_photo) {
+                html += '<img src="' + comment.user_photo + '" alt="' + comment.user_name + '">';
+            } else {
+                html += '<div class="production-comment-avatar-placeholder">';
+                html += '<svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M20 21V19C20 17.9391 19.5786 16.9217 18.8284 16.1716C18.0783 15.4214 17.0609 15 16 15H8C6.93913 15 5.92172 15.4214 5.17157 16.1716C4.42143 16.9217 4 17.9391 4 19V21M16 7C16 9.20914 14.2091 11 12 11C9.79086 11 8 9.20914 8 7C8 4.79086 9.79086 3 12 3C14.2091 3 16 4.79086 16 7Z" stroke="currentColor" stroke-width="1.5"/></svg>';
+                html += '</div>';
+            }
+            html += '</div>';
+            html += '<div class="production-comment-content">';
+            html += '<div class="production-comment-header">';
+            html += '<span class="production-comment-author">' + comment.user_name + '</span>';
+            html += '<span class="production-comment-date">' + getTimeAgo(comment.created_at) + '</span>';
+            if (canDelete) {
+                html += '<button class="production-comment-delete" data-comment-id="' + comment.id + '" aria-label="Supprimer">';
+                html += '<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2"/></svg>';
+                html += '</button>';
+            }
+            html += '</div>';
+            html += '<p class="production-comment-text">' + escapeHtml(comment.comment).replace(/\n/g, '<br>') + '</p>';
+            html += '</div>';
+            html += '</div>';
+        });
+        container.innerHTML = html;
+    }
+    
+    function getTimeAgo(dateString) {
+        const now = new Date();
+        const date = new Date(dateString);
+        const diff = Math.floor((now - date) / 1000);
+        
+        if (diff < 60) return 'à l\'instant';
+        if (diff < 3600) return 'il y a ' + Math.floor(diff / 60) + ' min';
+        if (diff < 86400) return 'il y a ' + Math.floor(diff / 3600) + ' h';
+        if (diff < 604800) return 'il y a ' + Math.floor(diff / 86400) + ' j';
+        return date.toLocaleDateString('fr-FR');
+    }
+    
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+    
+    // Handle comment toggle
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.production-comments-toggle')) {
+            e.preventDefault();
+            e.stopPropagation();
+            const button = e.target.closest('.production-comments-toggle');
+            toggleComments(button);
+        }
+    });
+    
+    // Handle add comment
+    document.addEventListener('submit', function(e) {
+        if (e.target.closest('.add-production-comment-form')) {
+            e.preventDefault();
+            const form = e.target.closest('.add-production-comment-form');
+            const productionId = form.getAttribute('data-production-id');
+            const productionOwnerId = form.getAttribute('data-production-owner-id');
+            const textarea = form.querySelector('.production-comment-input');
+            const comment = textarea.value.trim();
+            
+            if (!comment) return;
+            
+            if (typeof enlaceAjax === 'undefined' || !enlaceAjax.production_comments_nonce) {
+                alert('Erreur de configuration. Veuillez rafraîchir la page.');
+                return;
+            }
+            
+            const submitBtn = form.querySelector('.production-comment-submit');
+            const originalHTML = submitBtn.innerHTML;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+            
+            jQuery.ajax({
+                url: enlaceAjax.ajaxurl || ajaxurl || '/wp-admin/admin-ajax.php',
+                type: 'POST',
+                data: {
+                    action: 'add_production_comment',
+                    nonce: enlaceAjax.production_comments_nonce,
+                    production_id: productionId,
+                    production_owner_id: productionOwnerId,
+                    comment: comment
+                },
+                success: function(response) {
+                    if (response.success) {
+                        textarea.value = '';
+                        const commentsList = document.getElementById('comments-list-' + productionId);
+                        if (commentsList) {
+                            // Add new comment to list
+                            const comment = response.data.comment;
+                            const commentHtml = '<div class="production-comment-item" data-comment-id="' + comment.id + '">' +
+                                '<div class="production-comment-avatar">' +
+                                (comment.user_photo ? '<img src="' + comment.user_photo + '" alt="' + comment.user_name + '">' : 
+                                '<div class="production-comment-avatar-placeholder"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M20 21V19C20 17.9391 19.5786 16.9217 18.8284 16.1716C18.0783 15.4214 17.0609 15 16 15H8C6.93913 15 5.92172 15.4214 5.17157 16.1716C4.42143 16.9217 4 17.9391 4 19V21M16 7C16 9.20914 14.2091 11 12 11C9.79086 11 8 9.20914 8 7C8 4.79086 9.79086 3 12 3C14.2091 3 16 4.79086 16 7Z" stroke="currentColor" stroke-width="1.5"/></svg></div>') +
+                                '</div>' +
+                                '<div class="production-comment-content">' +
+                                '<div class="production-comment-header">' +
+                                '<span class="production-comment-author">' + comment.user_name + '</span>' +
+                                '<span class="production-comment-date">à l\'instant</span>' +
+                                '<button class="production-comment-delete" data-comment-id="' + comment.id + '" aria-label="Supprimer">' +
+                                '<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2"/></svg>' +
+                                '</button>' +
+                                '</div>' +
+                                '<p class="production-comment-text">' + escapeHtml(comment.comment).replace(/\n/g, '<br>') + '</p>' +
+                                '</div>' +
+                                '</div>';
+                            
+                            // Remove empty message if exists
+                            const emptyMsg = commentsList.querySelector('.production-comments-empty');
+                            if (emptyMsg) emptyMsg.remove();
+                            
+                            commentsList.insertAdjacentHTML('beforeend', commentHtml);
+                            
+                            // Update comment count
+                            const toggleBtn = form.closest('.production-comments-container').previousElementSibling;
+                            if (toggleBtn) {
+                                const countSpan = toggleBtn.querySelector('.comments-count');
+                                if (countSpan) {
+                                    const newCount = parseInt(countSpan.textContent) + 1;
+                                    countSpan.textContent = newCount;
+                                    const labelSpan = toggleBtn.querySelector('.comments-label');
+                                    if (labelSpan) {
+                                        labelSpan.textContent = newCount == 1 ? 'commentaire' : 'commentaires';
+                                    }
+                                }
+                            }
+                        }
+                    } else {
+                        alert(response.data.message || 'Erreur lors de l\'ajout du commentaire.');
+                    }
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalHTML;
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error adding comment:', error);
+                    alert('Erreur de connexion. Veuillez réessayer.');
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalHTML;
+                }
+            });
+        }
+    });
+    
+    // Handle delete comment
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.production-comment-delete')) {
+            e.preventDefault();
+            e.stopPropagation();
+            const button = e.target.closest('.production-comment-delete');
+            const commentId = button.getAttribute('data-comment-id');
+            const commentItem = button.closest('.production-comment-item');
+            
+            if (!confirm('Êtes-vous sûr de vouloir supprimer ce commentaire ?')) {
+                return;
+            }
+            
+            if (typeof enlaceAjax === 'undefined' || !enlaceAjax.production_comments_nonce) {
+                alert('Erreur de configuration.');
+                return;
+            }
+            
+            button.disabled = true;
+            
+            jQuery.ajax({
+                url: enlaceAjax.ajaxurl || ajaxurl || '/wp-admin/admin-ajax.php',
+                type: 'POST',
+                data: {
+                    action: 'delete_production_comment',
+                    nonce: enlaceAjax.production_comments_nonce,
+                    comment_id: commentId
+                },
+                success: function(response) {
+                    if (response.success) {
+                        commentItem.remove();
+                        
+                        // Update comment count
+                        const productionItem = commentItem.closest('.production-item');
+                        if (productionItem) {
+                            const toggleBtn = productionItem.querySelector('.production-comments-toggle');
+                            if (toggleBtn) {
+                                const countSpan = toggleBtn.querySelector('.comments-count');
+                                if (countSpan) {
+                                    const newCount = Math.max(0, parseInt(countSpan.textContent) - 1);
+                                    countSpan.textContent = newCount;
+                                    const labelSpan = toggleBtn.querySelector('.comments-label');
+                                    if (labelSpan) {
+                                        labelSpan.textContent = newCount == 1 ? 'commentaire' : 'commentaires';
+                                    }
+                                }
+                            }
+                            
+                            // Show empty message if no comments left
+                            const commentsList = productionItem.querySelector('.production-comments-list');
+                            if (commentsList && commentsList.querySelectorAll('.production-comment-item').length === 0) {
+                                commentsList.innerHTML = '<p class="production-comments-empty">Aucun commentaire pour le moment.</p>';
+                            }
+                        }
+                    } else {
+                        alert(response.data.message || 'Erreur lors de la suppression.');
+                        button.disabled = false;
+                    }
+                },
+                error: function() {
+                    alert('Erreur de connexion.');
+                    button.disabled = false;
+                }
+            });
+        }
+    });
+    
+    // Production Edit Functionality
+    document.addEventListener('click', function(e) {
+        // Handle edit button click
+        if (e.target.closest('.production-edit')) {
+            e.preventDefault();
+            e.stopPropagation();
+            const button = e.target.closest('.production-edit');
+            const productionId = button.getAttribute('data-production-id');
+            const editForm = document.getElementById('edit-production-' + productionId);
+            const productionItem = button.closest('.production-item');
+            
+            if (editForm) {
+                const isVisible = editForm.style.display !== 'none';
+                editForm.style.display = isVisible ? 'none' : 'block';
+                
+                if (!isVisible) {
+                    // Scroll to form
+                    editForm.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+            }
+        }
+        
+        // Handle cancel edit button
+        if (e.target.closest('.cancel-edit-production')) {
+            e.preventDefault();
+            e.stopPropagation();
+            const button = e.target.closest('.cancel-edit-production');
+            const productionId = button.getAttribute('data-production-id');
+            const editForm = document.getElementById('edit-production-' + productionId);
+            
+            if (editForm) {
+                editForm.style.display = 'none';
+            }
+        }
     });
 });
 

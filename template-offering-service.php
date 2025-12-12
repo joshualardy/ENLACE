@@ -86,6 +86,68 @@ if (isset($_POST['offering_submit'])) {
         update_user_meta($user_id, 'filters', array_map('sanitize_text_field', $_POST['filters']));
     }
 
+    // Handle productions if provided
+    if (isset($_POST['productions']) && is_array($_POST['productions'])) {
+        $productions = array();
+        
+        foreach ($_POST['productions'] as $index => $production_data) {
+            // Skip if title is empty (optional field)
+            if (empty($production_data['title']) || trim($production_data['title']) === '') {
+                continue;
+            }
+            
+            $production = array(
+                'title' => sanitize_text_field($production_data['title']),
+                'genre' => isset($production_data['genre']) ? sanitize_text_field($production_data['genre']) : '',
+                'description' => isset($production_data['description']) ? sanitize_textarea_field($production_data['description']) : '',
+                'rating' => 5,
+                'audio_file' => '',
+                'video_file' => '',
+                'soundcloud_url' => '',
+                'spotify_url' => '',
+                'youtube_url' => ''
+            );
+            
+            // Handle audio file upload
+            if (isset($_FILES['production_audio_' . $index]) && !empty($_FILES['production_audio_' . $index]['name'])) {
+                $audio_result = handle_production_media_upload($user_id, 'production_audio_' . $index, array('audio'));
+                if ($audio_result && $audio_result !== 'size_error' && $audio_result !== 'type_error') {
+                    $production['audio_file'] = $audio_result;
+                }
+            }
+            
+            // Handle video file upload
+            if (isset($_FILES['production_video_' . $index]) && !empty($_FILES['production_video_' . $index]['name'])) {
+                $video_result = handle_production_media_upload($user_id, 'production_video_' . $index, array('video'));
+                if ($video_result && $video_result !== 'size_error' && $video_result !== 'type_error') {
+                    $production['video_file'] = $video_result;
+                }
+            }
+            
+            // Validate and save external links
+            if (isset($production_data['soundcloud_url']) && !empty($production_data['soundcloud_url'])) {
+                if (validate_platform_url($production_data['soundcloud_url'], 'soundcloud')) {
+                    $production['soundcloud_url'] = esc_url_raw($production_data['soundcloud_url']);
+                }
+            }
+            
+            if (isset($production_data['spotify_url']) && !empty($production_data['spotify_url'])) {
+                if (validate_platform_url($production_data['spotify_url'], 'spotify')) {
+                    $production['spotify_url'] = esc_url_raw($production_data['spotify_url']);
+                }
+            }
+            
+            if (isset($production_data['youtube_url']) && !empty($production_data['youtube_url'])) {
+                if (validate_platform_url($production_data['youtube_url'], 'youtube')) {
+                    $production['youtube_url'] = esc_url_raw($production_data['youtube_url']);
+                }
+            }
+            
+            // Add production using the function
+            add_user_production($user_id, $production);
+        }
+    }
+
     // Auto-login user
     wp_set_current_user($user_id);
     wp_set_auth_cookie($user_id, true);
@@ -236,6 +298,117 @@ display_registration_error_message();
 
                         <!-- Error message for filters -->
                         <div class="error-message field-error" id="filters-error" style="display: none;">Veuillez sélectionner au moins un service.</div>
+
+                        <!-- Productions Section (Optional) -->
+                        <div class="mb-4 productions-registration-section">
+                            <label class="form-label service-label mb-3">Productions (optionnel)</label>
+                            <p class="form-text text-muted mb-3">Ajoutez une production pour montrer votre travail. Vous pourrez en ajouter d'autres plus tard.</p>
+                            
+                            <div class="production-form-item" data-production-index="0">
+                                <div class="mb-3">
+                                    <label for="production_title_0" class="form-label">Titre de la production</label>
+                                    <input type="text" class="form-control service-input" name="productions[0][title]" id="production_title_0" placeholder="Ex: Mon premier single">
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="production_genre_0" class="form-label">Genre</label>
+                                    <input type="text" class="form-control service-input" name="productions[0][genre]" id="production_genre_0" placeholder="Ex: Indie Rock, Rock Alternatif">
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="production_description_0" class="form-label">Description</label>
+                                    <textarea class="form-control service-input" name="productions[0][description]" id="production_description_0" rows="3" placeholder="Décrivez votre production..."></textarea>
+                                </div>
+                                
+                                <div class="row g-3 mb-3">
+                                    <div class="col-md-6">
+                                        <label for="production_audio_0" class="form-label">Fichier audio (MP3, WAV, OGG)</label>
+                                        <input type="file" class="form-control service-input" name="production_audio_0" id="production_audio_0" accept="audio/*">
+                                        <small class="form-text text-muted">Max 50MB</small>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="production_video_0" class="form-label">Fichier vidéo (MP4, WebM)</label>
+                                        <input type="file" class="form-control service-input" name="production_video_0" id="production_video_0" accept="video/*">
+                                        <small class="form-text text-muted">Max 50MB</small>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="production_soundcloud_0" class="form-label">Lien SoundCloud (optionnel)</label>
+                                    <input type="url" class="form-control service-input" name="productions[0][soundcloud_url]" id="production_soundcloud_0" placeholder="https://soundcloud.com/...">
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="production_spotify_0" class="form-label">Lien Spotify (optionnel)</label>
+                                    <input type="url" class="form-control service-input" name="productions[0][spotify_url]" id="production_spotify_0" placeholder="https://open.spotify.com/...">
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="production_youtube_0" class="form-label">Lien YouTube (optionnel)</label>
+                                    <input type="url" class="form-control service-input" name="productions[0][youtube_url]" id="production_youtube_0" placeholder="https://www.youtube.com/...">
+                                </div>
+                            </div>
+                            
+                            <button type="button" class="btn btn-sm btn-outline-secondary" id="add-another-production" style="display: none;">
+                                + Ajouter une autre production
+                            </button>
+                        </div>
+                        
+                        <script>
+                        document.addEventListener('DOMContentLoaded', function() {
+                            let productionIndex = 1;
+                            const addProductionBtn = document.getElementById('add-another-production');
+                            const productionsSection = document.querySelector('.productions-registration-section');
+                            
+                            if (addProductionBtn && productionsSection) {
+                                // Check if first production has content
+                                const firstTitle = document.getElementById('production_title_0');
+                                if (firstTitle && firstTitle.value.trim() !== '') {
+                                    addProductionBtn.style.display = 'block';
+                                }
+                                
+                                // Show button when first production is filled
+                                if (firstTitle) {
+                                    firstTitle.addEventListener('input', function() {
+                                        if (this.value.trim() !== '') {
+                                            addProductionBtn.style.display = 'block';
+                                        }
+                                    });
+                                }
+                                
+                                addProductionBtn.addEventListener('click', function() {
+                                    const newProduction = document.querySelector('.production-form-item').cloneNode(true);
+                                    newProduction.setAttribute('data-production-index', productionIndex);
+                                    
+                                    // Update all IDs and names
+                                    const inputs = newProduction.querySelectorAll('input, textarea, select, label');
+                                    inputs.forEach(function(input) {
+                                        if (input.id) {
+                                            input.id = input.id.replace('_0', '_' + productionIndex);
+                                        }
+                                        if (input.name) {
+                                            input.name = input.name.replace('[0]', '[' + productionIndex + ']');
+                                        }
+                                        if (input.htmlFor) {
+                                            input.htmlFor = input.htmlFor.replace('_0', '_' + productionIndex);
+                                        }
+                                    });
+                                    
+                                    // Clear values
+                                    newProduction.querySelectorAll('input[type="text"], input[type="url"], textarea').forEach(function(input) {
+                                        input.value = '';
+                                    });
+                                    newProduction.querySelectorAll('input[type="file"]').forEach(function(input) {
+                                        input.value = '';
+                                    });
+                                    
+                                    // Insert before button
+                                    addProductionBtn.parentNode.insertBefore(newProduction, addProductionBtn);
+                                    productionIndex++;
+                                });
+                            }
+                        });
+                        </script>
 
                         <!-- Submit Button -->
                         <div class="service-submit-section">

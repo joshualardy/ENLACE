@@ -231,56 +231,25 @@ if (isset($_GET['profile_updated'])) {
             
             <!-- Modern Profile Info Section -->
             <div class="profile-info-modern">
-                <!-- Contact Button (for other users) -->
-                <?php if (get_current_user_id() != $profile_data['id']) : ?>
+                <!-- Contact and Favorite Buttons (for other users) -->
+                <?php if (is_user_logged_in() && get_current_user_id() != $profile_data['id']) : 
+                    $is_favorited = is_favorited(get_current_user_id(), 'user', $profile_data['id']);
+                ?>
                     <div class="profile-contact-wrapper">
-                        <button class="btn-profile-contact" id="contact-btn">
-                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M2.5 6.66667L10 11.6667L17.5 6.66667M3.33333 15H16.6667C17.5871 15 18.3333 14.2538 18.3333 13.3333V6.66667C18.3333 5.74619 17.5871 5 16.6667 5H3.33333C2.41286 5 1.66667 5.74619 1.66667 6.66667V13.3333C1.66667 14.2538 2.41286 15 3.33333 15Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        <a href="<?php echo esc_url(home_url('/messagerie?user_id=' . $profile_data['id'])); ?>" class="btn-profile-contact">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M21 15C21 15.5304 20.7893 16.0391 20.4142 16.4142C20.0391 16.7893 19.5304 17 19 17H7L3 21V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H19C19.5304 3 20.0391 3.21071 20.4142 3.58579C20.7893 3.96086 21 4.46957 21 5V15Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                             </svg>
                             Contacter
+                        </a>
+                        <button class="btn-profile-favorite <?php echo $is_favorited ? 'favorited' : ''; ?>" 
+                                data-item-type="user" 
+                                data-item-id="<?php echo esc_attr($profile_data['id']); ?>" 
+                                aria-label="<?php echo $is_favorited ? 'Retirer des favoris' : 'Ajouter aux favoris'; ?>">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="<?php echo $is_favorited ? 'currentColor' : 'none'; ?>" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M19 21L12 16L5 21V5C5 4.46957 5.21071 3.96086 5.58579 3.58579C5.96086 3.21071 6.46957 3 7 3H17C17.5304 3 18.0391 3.21071 18.4142 3.58579C18.7893 3.96086 19 4.46957 19 5V21Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
                         </button>
-                        
-                        <!-- Contact Modal -->
-                        <div class="contact-modal" id="contact-modal">
-                            <div class="contact-modal-overlay" id="contact-modal-overlay"></div>
-                            <div class="contact-modal-content">
-                                <button class="contact-modal-close" id="contact-modal-close">×</button>
-                                <h3 class="contact-modal-title">Informations de contact</h3>
-                                <div class="contact-info-list">
-                                    <?php if (!empty($profile_data['full_name'])) : ?>
-                                        <div class="contact-info-item">
-                                            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                <path d="M9 9C11.0711 9 12.75 7.32107 12.75 5.25C12.75 3.17893 11.0711 1.5 9 1.5C6.92893 1.5 5.25 3.17893 5.25 5.25C5.25 7.32107 6.92893 9 9 9Z" stroke="currentColor" stroke-width="1.5"/>
-                                                <path d="M3.72754 15.75C3.72754 12.8522 6.10217 10.5 9 10.5C11.8978 10.5 14.2725 12.8522 14.2725 15.75" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-                                            </svg>
-                                            <span class="contact-info-label">Nom</span>
-                                            <span class="contact-info-value"><?php echo esc_html($profile_data['full_name']); ?></span>
-                                        </div>
-                                    <?php endif; ?>
-                                    
-                                    <?php if (!empty($profile_data['email'])) : ?>
-                                        <div class="contact-info-item">
-                                            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                <path d="M2.25 6L9 10.5L15.75 6M3 13.5H15C15.4142 13.5 15.75 13.1642 15.75 12.75V5.25C15.75 4.83579 15.4142 4.5 15 4.5H3C2.58579 4.5 2.25 4.83579 2.25 5.25V12.75C2.25 13.1642 2.58579 13.5 3 13.5Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                                            </svg>
-                                            <span class="contact-info-label">Email</span>
-                                            <a href="mailto:<?php echo esc_attr($profile_data['email']); ?>" class="contact-info-value contact-link"><?php echo esc_html($profile_data['email']); ?></a>
-                                        </div>
-                                    <?php endif; ?>
-                                    
-                                    <?php if (!empty($profile_data['phone'])) : ?>
-                                        <div class="contact-info-item">
-                                            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                <path d="M3.75 3.75L7.4025 7.4025M14.25 14.25L10.5975 10.5975M10.5975 10.5975L12.75 6.75L8.25 2.25L4.4025 4.4025M10.5975 10.5975L7.4025 7.4025M7.4025 7.4025L9.75 5.25L13.5975 9.0975" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                                            </svg>
-                                            <span class="contact-info-label">Téléphone</span>
-                                            <a href="tel:<?php echo esc_attr($profile_data['phone']); ?>" class="contact-info-value contact-link"><?php echo esc_html($profile_data['phone']); ?></a>
-                                        </div>
-                                    <?php endif; ?>
-                                </div>
-                            </div>
-                        </div>
                     </div>
                 <?php endif; ?>
                 
@@ -375,7 +344,7 @@ if (isset($_GET['profile_updated'])) {
                 
                 <!-- Add Production Form (Hidden by default) -->
                 <div class="add-production-form-wrapper" id="add-production-form-wrapper" style="display: none;">
-                    <form method="post" action="<?php echo esc_url($_SERVER['REQUEST_URI']); ?>" class="add-production-form">
+                    <form method="post" action="<?php echo esc_url($_SERVER['REQUEST_URI']); ?>" class="add-production-form" enctype="multipart/form-data">
                         <?php wp_nonce_field('production_action', 'production_nonce'); ?>
                         <input type="hidden" name="production_action" value="add">
                         
@@ -405,6 +374,34 @@ if (isset($_GET['profile_updated'])) {
                             </select>
                         </div>
                         
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label for="production_audio" class="form-label">Fichier audio (MP3, WAV, OGG)</label>
+                                <input type="file" class="form-control" name="production_audio" id="production_audio" accept="audio/*">
+                                <small class="form-text text-muted">Max 50MB</small>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="production_video" class="form-label">Fichier vidéo (MP4, WebM)</label>
+                                <input type="file" class="form-control" name="production_video" id="production_video" accept="video/*">
+                                <small class="form-text text-muted">Max 50MB</small>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="production_soundcloud" class="form-label">Lien SoundCloud (optionnel)</label>
+                            <input type="url" class="form-control" name="production_soundcloud_url" id="production_soundcloud" placeholder="https://soundcloud.com/...">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="production_spotify" class="form-label">Lien Spotify (optionnel)</label>
+                            <input type="url" class="form-control" name="production_spotify_url" id="production_spotify" placeholder="https://open.spotify.com/...">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="production_youtube" class="form-label">Lien YouTube (optionnel)</label>
+                            <input type="url" class="form-control" name="production_youtube_url" id="production_youtube" placeholder="https://www.youtube.com/...">
+                        </div>
+                        
                         <div class="add-production-form-actions">
                             <button type="submit" class="btn btn-primary">Ajouter</button>
                             <button type="button" class="btn btn-secondary" id="cancel-add-production">Annuler</button>
@@ -420,8 +417,11 @@ if (isset($_GET['profile_updated'])) {
                     if (empty($productions)) : ?>
                         <p class="productions-empty">Aucune production pour le moment. Ajoutez votre première production pour montrer de quoi vous êtes capable !</p>
                     <?php else : ?>
-                        <?php foreach ($productions as $production) : ?>
-                            <div class="production-item">
+                        <?php foreach ($productions as $production) : 
+                            $comment_count = get_production_comment_count($production['id']);
+                            $comments = get_production_comments($production['id'], 10, 0);
+                        ?>
+                            <div class="production-item" data-production-id="<?php echo esc_attr($production['id']); ?>">
                                 <div class="production-icon">
                                     <svg width="60" height="60" viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
                                         <circle cx="30" cy="30" r="30" fill="#000"/>
@@ -434,6 +434,96 @@ if (isset($_GET['profile_updated'])) {
                                     <h3 class="production-title"><?php echo esc_html($production['title']); ?></h3>
                                     <p class="production-genre"><?php echo esc_html($production['genre']); ?>.</p>
                                     <p class="production-description"><?php echo esc_html($production['description']); ?></p>
+                                    
+                                    <!-- Production Media -->
+                                    <div class="production-media">
+                                        <?php if (!empty($production['audio_file'])) : ?>
+                                            <div class="production-media-item">
+                                                <audio controls class="production-audio-player">
+                                                    <source src="<?php echo esc_url($production['audio_file']); ?>" type="audio/mpeg">
+                                                    Votre navigateur ne supporte pas l'élément audio.
+                                                </audio>
+                                            </div>
+                                        <?php endif; ?>
+                                        
+                                        <?php if (!empty($production['video_file'])) : ?>
+                                            <div class="production-media-item">
+                                                <video controls class="production-video-player">
+                                                    <source src="<?php echo esc_url($production['video_file']); ?>" type="video/mp4">
+                                                    Votre navigateur ne supporte pas l'élément vidéo.
+                                                </video>
+                                            </div>
+                                        <?php endif; ?>
+                                        
+                                        <?php if (!empty($production['youtube_url'])) : 
+                                            // Extract YouTube video ID
+                                            $youtube_id = '';
+                                            if (preg_match('/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/', $production['youtube_url'], $matches)) {
+                                                $youtube_id = $matches[1];
+                                            }
+                                        ?>
+                                            <?php if ($youtube_id) : ?>
+                                                <div class="production-media-item production-youtube-embed">
+                                                    <iframe 
+                                                        width="100%" 
+                                                        height="315" 
+                                                        src="https://www.youtube.com/embed/<?php echo esc_attr($youtube_id); ?>" 
+                                                        frameborder="0" 
+                                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                                                        allowfullscreen>
+                                                    </iframe>
+                                                </div>
+                                            <?php else : ?>
+                                                <div class="production-media-item">
+                                                    <a href="<?php echo esc_url($production['youtube_url']); ?>" target="_blank" rel="noopener noreferrer" class="production-external-link">
+                                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                            <path d="M18 13V19A2 2 0 0 1 16 21H5A2 2 0 0 1 3 19V8A2 2 0 0 1 5 6H11M15 3H21M21 3V9M21 3L10 14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                                        </svg>
+                                                        Voir sur YouTube
+                                                    </a>
+                                                </div>
+                                            <?php endif; ?>
+                                        <?php endif; ?>
+                                    </div>
+                                    
+                                    <!-- External Links -->
+                                    <?php if (!empty($production['soundcloud_url']) || !empty($production['spotify_url']) || !empty($production['youtube_url'])) : ?>
+                                        <div class="production-external-links">
+                                            <?php if (!empty($production['soundcloud_url'])) : ?>
+                                                <a href="<?php echo esc_url($production['soundcloud_url']); ?>" target="_blank" rel="noopener noreferrer" class="production-platform-link production-soundcloud">
+                                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                                        <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.568 17.5c-.169 0-.312-.143-.312-.312v-1.25c0-.169.143-.312.312-.312.169 0 .312.143.312.312v1.25c0 .169-.143.312-.312.312zm-1.25-2.5c-.169 0-.312-.143-.312-.312V8.312c0-.169.143-.312.312-.312.169 0 .312.143.312.312v6.376c0 .169-.143.312-.312.312zm-1.25-3.75c-.169 0-.312-.143-.312-.312V8.312c0-.169.143-.312.312-.312.169 0 .312.143.312.312v2.626c0 .169-.143.312-.312.312zm-1.25-2.5c-.169 0-.312-.143-.312-.312V8.312c0-.169.143-.312.312-.312.169 0 .312.143.312.312v.626c0 .169-.143.312-.312.312zm-1.25-1.25c-.169 0-.312-.143-.312-.312v-.313c0-.169.143-.312.312-.312.169 0 .312.143.312.312v.313c0 .169-.143.312-.312.312z"/>
+                                                    </svg>
+                                                    SoundCloud
+                                                </a>
+                                            <?php endif; ?>
+                                            
+                                            <?php if (!empty($production['spotify_url'])) : ?>
+                                                <a href="<?php echo esc_url($production['spotify_url']); ?>" target="_blank" rel="noopener noreferrer" class="production-platform-link production-spotify">
+                                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                                        <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.84-.179-.84-.66 0-.419.24-.66.54-.84 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.24 1.021zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.42 1.56-.299.421-1.02.599-1.559.3z"/>
+                                                    </svg>
+                                                    Spotify
+                                                </a>
+                                            <?php endif; ?>
+                                            
+                                            <?php if (!empty($production['youtube_url']) && empty($production['video_file'])) : 
+                                                // Only show link if not embedded
+                                                $youtube_id = '';
+                                                if (preg_match('/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/', $production['youtube_url'], $matches)) {
+                                                    $youtube_id = $matches[1];
+                                                }
+                                                if (!$youtube_id) :
+                                            ?>
+                                                <a href="<?php echo esc_url($production['youtube_url']); ?>" target="_blank" rel="noopener noreferrer" class="production-platform-link production-youtube">
+                                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                                        <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                                                    </svg>
+                                                    YouTube
+                                                </a>
+                                            <?php endif; endif; ?>
+                                        </div>
+                                    <?php endif; ?>
                                 </div>
                                 
                                 <div class="production-actions">
@@ -451,6 +541,11 @@ if (isset($_GET['profile_updated'])) {
                                         </svg>
                                     </button>
                                     <?php if (get_current_user_id() == $profile_data['id']) : ?>
+                                        <button type="button" class="production-edit" data-production-id="<?php echo esc_attr($production['id']); ?>" aria-label="Modifier">
+                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                <path d="M11 4H4C3.46957 4 2.96086 4.21071 2.58579 4.58579C2.21071 4.96086 2 5.46957 2 6V20C2 20.5304 2.21071 21.0391 2.58579 21.4142C2.96086 21.7893 3.46957 22 4 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V13M18.5 2.5C18.8978 2.10217 19.4374 1.87868 20 1.87868C20.5626 1.87868 21.1022 2.10217 21.5 2.5C21.8978 2.89782 22.1213 3.43739 22.1213 4C22.1213 4.56261 21.8978 5.10217 21.5 5.5L12 15L8 16L9 12L18.5 2.5Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                            </svg>
+                                        </button>
                                         <form method="post" action="<?php echo esc_url($_SERVER['REQUEST_URI']); ?>" class="delete-production-form" style="display: inline;">
                                             <?php wp_nonce_field('production_action', 'production_nonce'); ?>
                                             <input type="hidden" name="production_action" value="delete">
@@ -458,6 +553,148 @@ if (isset($_GET['profile_updated'])) {
                                             <button type="submit" class="production-delete" aria-label="Supprimer" onclick="return confirm('Êtes-vous sûr de vouloir supprimer cette production ?');">×</button>
                                         </form>
                                     <?php endif; ?>
+                                </div>
+                                
+                                <!-- Edit Production Form (Hidden by default) -->
+                                <?php if (get_current_user_id() == $profile_data['id']) : ?>
+                                    <div class="edit-production-form-wrapper" id="edit-production-<?php echo esc_attr($production['id']); ?>" style="display: none;">
+                                        <form method="post" action="<?php echo esc_url($_SERVER['REQUEST_URI']); ?>" class="edit-production-form" enctype="multipart/form-data">
+                                            <?php wp_nonce_field('production_action', 'production_nonce'); ?>
+                                            <input type="hidden" name="production_action" value="edit">
+                                            <input type="hidden" name="production_id" value="<?php echo esc_attr($production['id']); ?>">
+                                            
+                                            <div class="mb-3">
+                                                <label class="form-label">Titre de la production</label>
+                                                <input type="text" class="form-control" name="production_title" value="<?php echo esc_attr($production['title']); ?>" required>
+                                            </div>
+                                            
+                                            <div class="mb-3">
+                                                <label class="form-label">Genre</label>
+                                                <input type="text" class="form-control" name="production_genre" value="<?php echo esc_attr($production['genre']); ?>" required>
+                                            </div>
+                                            
+                                            <div class="mb-3">
+                                                <label class="form-label">Description</label>
+                                                <textarea class="form-control" name="production_description" rows="3" required><?php echo esc_textarea($production['description']); ?></textarea>
+                                            </div>
+                                            
+                                            <div class="mb-3">
+                                                <label class="form-label">Note (1-5)</label>
+                                                <select class="form-control" name="production_rating">
+                                                    <?php for ($i = 5; $i >= 1; $i--) : ?>
+                                                        <option value="<?php echo $i; ?>" <?php selected(isset($production['rating']) ? $production['rating'] : 5, $i); ?>><?php echo $i; ?> étoile<?php echo $i > 1 ? 's' : ''; ?></option>
+                                                    <?php endfor; ?>
+                                                </select>
+                                            </div>
+                                            
+                                            <div class="row g-3 mb-3">
+                                                <div class="col-md-6">
+                                                    <label class="form-label">Fichier audio (remplacer)</label>
+                                                    <input type="file" class="form-control" name="production_audio" accept="audio/*">
+                                                    <?php if (!empty($production['audio_file'])) : ?>
+                                                        <small class="form-text text-muted">Fichier actuel: <a href="<?php echo esc_url($production['audio_file']); ?>" target="_blank">Écouter</a></small>
+                                                    <?php endif; ?>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label class="form-label">Fichier vidéo (remplacer)</label>
+                                                    <input type="file" class="form-control" name="production_video" accept="video/*">
+                                                    <?php if (!empty($production['video_file'])) : ?>
+                                                        <small class="form-text text-muted">Fichier actuel: <a href="<?php echo esc_url($production['video_file']); ?>" target="_blank">Voir</a></small>
+                                                    <?php endif; ?>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="mb-3">
+                                                <label class="form-label">Lien SoundCloud</label>
+                                                <input type="url" class="form-control" name="production_soundcloud_url" value="<?php echo esc_attr(isset($production['soundcloud_url']) ? $production['soundcloud_url'] : ''); ?>" placeholder="https://soundcloud.com/...">
+                                            </div>
+                                            
+                                            <div class="mb-3">
+                                                <label class="form-label">Lien Spotify</label>
+                                                <input type="url" class="form-control" name="production_spotify_url" value="<?php echo esc_attr(isset($production['spotify_url']) ? $production['spotify_url'] : ''); ?>" placeholder="https://open.spotify.com/...">
+                                            </div>
+                                            
+                                            <div class="mb-3">
+                                                <label class="form-label">Lien YouTube</label>
+                                                <input type="url" class="form-control" name="production_youtube_url" value="<?php echo esc_attr(isset($production['youtube_url']) ? $production['youtube_url'] : ''); ?>" placeholder="https://www.youtube.com/...">
+                                            </div>
+                                            
+                                            <div class="edit-production-form-actions">
+                                                <button type="submit" class="btn btn-primary">Enregistrer</button>
+                                                <button type="button" class="btn btn-secondary cancel-edit-production" data-production-id="<?php echo esc_attr($production['id']); ?>">Annuler</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                <?php endif; ?>
+                                
+                                <!-- Comments Section -->
+                                <div class="production-comments-section">
+                                    <button class="production-comments-toggle" data-production-id="<?php echo esc_attr($production['id']); ?>">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M21 15C21 15.5304 20.7893 16.0391 20.4142 16.4142C20.0391 16.7893 19.5304 17 19 17H7L3 21V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H19C19.5304 3 20.0391 3.21071 20.4142 3.58579C20.7893 3.96086 21 4.46957 21 5V15Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                        </svg>
+                                        <span class="comments-count"><?php echo $comment_count; ?></span>
+                                        <span class="comments-label"><?php echo $comment_count == 1 ? 'commentaire' : 'commentaires'; ?></span>
+                                    </button>
+                                    
+                                    <div class="production-comments-container" id="comments-<?php echo esc_attr($production['id']); ?>" style="display: none;">
+                                        <div class="production-comments-list" id="comments-list-<?php echo esc_attr($production['id']); ?>">
+                                            <?php if (!empty($comments)) : ?>
+                                                <?php foreach ($comments as $comment) : ?>
+                                                    <div class="production-comment-item" data-comment-id="<?php echo esc_attr($comment['id']); ?>">
+                                                        <div class="production-comment-avatar">
+                                                            <?php if (!empty($comment['user_photo'])) : ?>
+                                                                <img src="<?php echo esc_url($comment['user_photo']); ?>" alt="<?php echo esc_attr($comment['user_name']); ?>">
+                                                            <?php else : ?>
+                                                                <div class="production-comment-avatar-placeholder">
+                                                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                                        <path d="M20 21V19C20 17.9391 19.5786 16.9217 18.8284 16.1716C18.0783 15.4214 17.0609 15 16 15H8C6.93913 15 5.92172 15.4214 5.17157 16.1716C4.42143 16.9217 4 17.9391 4 19V21M16 7C16 9.20914 14.2091 11 12 11C9.79086 11 8 9.20914 8 7C8 4.79086 9.79086 3 12 3C14.2091 3 16 4.79086 16 7Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                                                    </svg>
+                                                                </div>
+                                                            <?php endif; ?>
+                                                        </div>
+                                                        <div class="production-comment-content">
+                                                            <div class="production-comment-header">
+                                                                <span class="production-comment-author"><?php echo esc_html($comment['user_name']); ?></span>
+                                                                <span class="production-comment-date"><?php echo human_time_diff(strtotime($comment['created_at']), current_time('timestamp')); ?></span>
+                                                                <?php if ($comment['is_own'] || get_current_user_id() == $profile_data['id']) : ?>
+                                                                    <button class="production-comment-delete" data-comment-id="<?php echo esc_attr($comment['id']); ?>" aria-label="Supprimer">
+                                                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                                            <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                                                        </svg>
+                                                                    </button>
+                                                                <?php endif; ?>
+                                                            </div>
+                                                            <p class="production-comment-text"><?php echo nl2br(esc_html($comment['comment'])); ?></p>
+                                                        </div>
+                                                    </div>
+                                                <?php endforeach; ?>
+                                            <?php else : ?>
+                                                <p class="production-comments-empty">Aucun commentaire pour le moment.</p>
+                                            <?php endif; ?>
+                                        </div>
+                                        
+                                        <?php if (is_user_logged_in()) : ?>
+                                            <div class="production-comment-form">
+                                                <form class="add-production-comment-form" data-production-id="<?php echo esc_attr($production['id']); ?>" data-production-owner-id="<?php echo esc_attr($profile_data['id']); ?>">
+                                                    <div class="production-comment-input-wrapper">
+                                                        <textarea 
+                                                            class="production-comment-input" 
+                                                            placeholder="Ajouter un commentaire..." 
+                                                            rows="2"
+                                                            required></textarea>
+                                                        <button type="submit" class="production-comment-submit">
+                                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                                <path d="M22 2L11 13M22 2L15 22L11 13M22 2L2 9L11 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                                            </svg>
+                                                        </button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        <?php else : ?>
+                                            <p class="production-comments-login-required">Connectez-vous pour commenter.</p>
+                                        <?php endif; ?>
+                                    </div>
                                 </div>
                             </div>
                         <?php endforeach; ?>
@@ -467,7 +704,121 @@ if (isset($_GET['profile_updated'])) {
                 <!-- Contact Button -->
                 <?php if (!empty($productions) && get_current_user_id() != $profile_data['id']) : ?>
                     <div class="productions-contact">
-                        <a href="mailto:<?php echo esc_attr($profile_data['email']); ?>" class="btn btn-contact">contacter</a>
+                        <a href="<?php echo esc_url(home_url('/messagerie?user_id=' . $profile_data['id'])); ?>" class="btn btn-contact">contacter</a>
+                    </div>
+                <?php endif; ?>
+                
+                <!-- Favorites Section (only for own profile) -->
+                <?php if (is_user_logged_in() && get_current_user_id() == $profile_data['id']) : 
+                    $favorites = get_user_favorites(get_current_user_id());
+                    $user_favorites = array();
+                    $annonce_favorites = array();
+                    
+                    foreach ($favorites as $fav) {
+                        if ($fav->item_type === 'user') {
+                            $user = get_userdata($fav->item_id);
+                            if ($user) {
+                                $user_profile = get_user_profile_data($fav->item_id);
+                                if ($user_profile) {
+                                    $user_favorites[] = array(
+                                        'id' => $fav->item_id,
+                                        'profile' => $user_profile,
+                                        'created_at' => $fav->created_at
+                                    );
+                                }
+                            }
+                        } elseif ($fav->item_type === 'annonce') {
+                            $post = get_post($fav->item_id);
+                            if ($post) {
+                                $annonce_favorites[] = array(
+                                    'id' => $fav->item_id,
+                                    'post' => $post,
+                                    'created_at' => $fav->created_at
+                                );
+                            }
+                        }
+                    }
+                ?>
+                    <div class="profile-favorites-section">
+                        <h2 class="profile-section-title">Mes Favoris</h2>
+                        
+                        <?php if (empty($favorites)) : ?>
+                            <p class="favorites-empty">Aucun favori pour le moment. Ajoutez des utilisateurs ou des annonces à vos favoris !</p>
+                        <?php else : ?>
+                            <!-- User Favorites -->
+                            <?php if (!empty($user_favorites)) : ?>
+                                <div class="favorites-users">
+                                    <h3 class="favorites-subtitle">Utilisateurs</h3>
+                                    <div class="favorites-users-list">
+                                        <?php foreach ($user_favorites as $fav_user) : ?>
+                                            <div class="favorite-user-item">
+                                                <a href="<?php echo esc_url(home_url('/userprofil?user_id=' . $fav_user['id'])); ?>" class="favorite-user-link">
+                                                    <div class="favorite-user-avatar">
+                                                        <?php if (!empty($fav_user['profile']['profile_photo_url'])) : ?>
+                                                            <img src="<?php echo esc_url($fav_user['profile']['profile_photo_url']); ?>" alt="<?php echo esc_attr($fav_user['profile']['full_name']); ?>">
+                                                        <?php else : ?>
+                                                            <div class="favorite-user-avatar-placeholder">
+                                                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                                    <path d="M20 21V19C20 17.9391 19.5786 16.9217 18.8284 16.1716C18.0783 15.4214 17.0609 15 16 15H8C6.93913 15 5.92172 15.4214 5.17157 16.1716C4.42143 16.9217 4 17.9391 4 19V21M16 7C16 9.20914 14.2091 11 12 11C9.79086 11 8 9.20914 8 7C8 4.79086 9.79086 3 12 3C14.2091 3 16 4.79086 16 7Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                                                </svg>
+                                                            </div>
+                                                        <?php endif; ?>
+                                                    </div>
+                                                    <div class="favorite-user-info">
+                                                        <h4 class="favorite-user-name"><?php echo esc_html($fav_user['profile']['full_name']); ?></h4>
+                                                        <?php if (!empty($fav_user['profile']['ville'])) : ?>
+                                                            <p class="favorite-user-location"><?php echo esc_html($fav_user['profile']['ville']); ?></p>
+                                                        <?php endif; ?>
+                                                    </div>
+                                                </a>
+                                                <button class="favorite-remove-btn" 
+                                                        data-item-type="user" 
+                                                        data-item-id="<?php echo esc_attr($fav_user['id']); ?>" 
+                                                        aria-label="Retirer des favoris">
+                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                        <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                        <?php endforeach; ?>
+                                    </div>
+                                </div>
+                            <?php endif; ?>
+                            
+                            <!-- Annonce Favorites -->
+                            <?php if (!empty($annonce_favorites)) : ?>
+                                <div class="favorites-annonces">
+                                    <h3 class="favorites-subtitle">Annonces</h3>
+                                    <div class="favorites-annonces-list">
+                                        <?php foreach ($annonce_favorites as $fav_annonce) : 
+                                            $image = get_the_post_thumbnail_url($fav_annonce['id'], 'medium');
+                                        ?>
+                                            <div class="favorite-annonce-item">
+                                                <a href="<?php echo esc_url(get_permalink($fav_annonce['id'])); ?>" class="favorite-annonce-link">
+                                                    <?php if ($image) : ?>
+                                                        <div class="favorite-annonce-image">
+                                                            <img src="<?php echo esc_url($image); ?>" alt="<?php echo esc_attr($fav_annonce['post']->post_title); ?>">
+                                                        </div>
+                                                    <?php endif; ?>
+                                                    <div class="favorite-annonce-info">
+                                                        <h4 class="favorite-annonce-title"><?php echo esc_html($fav_annonce['post']->post_title); ?></h4>
+                                                        <p class="favorite-annonce-description"><?php echo esc_html(wp_trim_words($fav_annonce['post']->post_content, 15)); ?></p>
+                                                    </div>
+                                                </a>
+                                                <button class="favorite-remove-btn" 
+                                                        data-item-type="annonce" 
+                                                        data-item-id="<?php echo esc_attr($fav_annonce['id']); ?>" 
+                                                        aria-label="Retirer des favoris">
+                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                        <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                        <?php endforeach; ?>
+                                    </div>
+                                </div>
+                            <?php endif; ?>
+                        <?php endif; ?>
                     </div>
                 <?php endif; ?>
             </div>

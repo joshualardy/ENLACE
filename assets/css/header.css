@@ -1,0 +1,131 @@
+/* ============================================
+   NAVIGATION - Bootstrap Optimized
+   ============================================ */
+.main-header {
+    background: transparent;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1000;
+    padding: 0;
+}
+
+.main-header .navbar {
+    padding: var(--spacing-lg) var(--section-padding-x);
+    background: transparent !important;
+    max-width: var(--container-max-width);
+    margin: 0 auto;
+}
+
+.main-header .navbar-brand {
+    padding: 0;
+    margin-right: var(--spacing-xl);
+}
+
+.nav-logo {
+    height: 40px;
+    width: auto;
+    display: block;
+    filter: brightness(0) invert(1);
+    transition: opacity var(--transition-base);
+}
+
+.nav-logo:hover {
+    opacity: 0.8;
+}
+
+.main-header .navbar-nav {
+    gap: var(--spacing-md);
+}
+
+.main-header .nav-link {
+    color: var(--text-primary) !important;
+    font-family: var(--font-body);
+    font-weight: 400;
+    text-transform: none;
+    font-size: var(--font-size-base);
+    letter-spacing: var(--letter-spacing-normal);
+    padding: var(--spacing-sm) var(--spacing-md) !important;
+    transition: all var(--transition-base);
+    position: relative;
+    opacity: 0.85;
+}
+
+.main-header .nav-link:hover,
+.main-header .nav-link:focus {
+    opacity: 1;
+    color: var(--text-primary) !important;
+}
+
+.main-header .nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    height: 1px;
+    background: var(--text-primary);
+    transition: width var(--transition-base);
+}
+
+.main-header .nav-link:hover::after {
+    width: 100%;
+}
+
+.main-header .navbar-toggler {
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    padding: var(--spacing-sm) var(--spacing-md);
+}
+
+.main-header .navbar-toggler:focus {
+    box-shadow: 0 0 0 0.2rem rgba(255, 255, 255, 0.25);
+}
+
+.main-header .navbar-toggler-icon {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255, 255, 255, 1%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+}
+
+/* Responsive Navigation */
+@media (max-width: 991.98px) {
+    .main-header .navbar {
+        padding: var(--spacing-md) var(--spacing-lg);
+    }
+    
+    .main-header .navbar-collapse {
+        background: var(--bg-overlay);
+        border-radius: var(--radius-md);
+        padding: var(--spacing-lg);
+        margin-top: var(--spacing-md);
+        backdrop-filter: blur(10px);
+    }
+    
+    .main-header .nav-link {
+        font-size: var(--font-size-base);
+        padding: var(--spacing-sm) var(--spacing-md) !important;
+    }
+    
+    .main-header .nav-link {
+        padding: var(--spacing-sm) 0 !important;
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .main-header .nav-link:last-child {
+        border-bottom: none;
+    }
+}
+
+/* Unread messages badge in navigation */
+.nav-unread-badge {
+    display: inline-block;
+    background: var(--color-primary);
+    color: var(--text-primary);
+    border-radius: var(--radius-full);
+    padding: 0.125rem 0.5rem;
+    font-size: 0.7rem;
+    font-weight: 600;
+    margin-left: 0.5rem;
+    min-width: 18px;
+    text-align: center;
+    line-height: 1.4;
+}

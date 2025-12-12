@@ -1,0 +1,512 @@
+
+/* ============================================
+   ANNONCES PAGE
+   ============================================ */
+.annonces-page {
+    min-height: 100vh;
+    background: var(--bg-primary);
+    padding: 120px 0 var(--section-padding-y);
+    color: var(--text-primary);
+}
+
+.annonces-page-title {
+    font-family: var(--font-heading);
+    font-size: var(--font-size-5xl);
+    font-weight: 400;
+    text-align: center;
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-5xl);
+    letter-spacing: var(--letter-spacing-tight);
+    line-height: var(--line-height-tight);
+    padding: 0 var(--section-padding-x);
+}
+
+.annonces-page .container {
+    max-width: var(--container-max-width);
+    margin: 0 auto;
+    padding: 0 var(--section-padding-x);
+}
+
+
+.annonces-actions {
+    text-align: center;
+    margin-bottom: var(--spacing-5xl);
+    padding: 0 var(--section-padding-x);
+}
+
+.btn-add-annonce {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color-light);
+    padding: 0.875rem 2rem;
+    font-size: var(--font-size-base);
+    font-weight: 500;
+    font-family: var(--font-body);
+    letter-spacing: var(--letter-spacing-normal);
+    text-transform: none;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all var(--transition-base);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.btn-add-annonce:hover {
+    background: var(--bg-light);
+    color: var(--text-dark);
+}
+
+/* Announcements Grid */
+/* Bootstrap grid will handle layout now */
+.annonces-grid {
+    margin-top: 0;
+    padding: 0 var(--section-padding-x);
+    max-width: var(--container-max-width);
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.annonce-card {
+    background: var(--bg-secondary);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    cursor: pointer;
+    transition: all var(--transition-base);
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--border-color);
+    height: 100%;
+    box-shadow: none;
+}
+
+.annonce-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    border-color: var(--border-color-light);
+}
+
+.annonce-card-image {
+    width: 100%;
+    height: 200px;
+    background: var(--bg-secondary);
+    overflow: hidden;
+    position: relative;
+}
+
+.annonce-card-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.annonce-card-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #6B7280;
+}
+
+.annonce-card-content {
+    padding: var(--spacing-xl);
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.annonce-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+}
+
+.annonce-card-title {
+    font-size: var(--font-size-xl);
+    font-family: var(--font-heading);
+    font-weight: 400;
+    letter-spacing: var(--letter-spacing-tight);
+    color: var(--text-primary);
+    margin: 0;
+    flex: 1;
+    line-height: var(--line-height-tight);
+}
+
+.annonce-bookmark-btn {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 0.5rem;
+    margin-left: 1rem;
+    transition: all var(--transition-base);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.annonce-bookmark-btn:hover {
+    color: var(--color-primary);
+    transform: scale(1.1);
+}
+
+.annonce-bookmark-btn.favorited {
+    color: var(--color-primary);
+}
+
+.annonce-bookmark-btn.favorited:hover {
+    color: var(--color-primary-dark);
+}
+
+.annonce-bookmark-btn svg {
+    width: 20px;
+    height: 20px;
+    transition: all var(--transition-base);
+}
+
+.annonce-card-description {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    line-height: 1.6;
+    margin-bottom: 1rem;
+    flex: 1;
+}
+
+.annonce-card-author {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    margin-bottom: 0.75rem;
+}
+
+.annonce-card-author svg {
+    flex-shrink: 0;
+    color: var(--text-muted);
+}
+
+.annonce-card-location {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    margin-top: auto;
+}
+
+.annonce-card-location svg {
+    flex-shrink: 0;
+}
+
+/* Add Announcement Form */
+.add-annonce-form-wrapper {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    overflow-y: auto;
+}
+
+.add-annonce-form-container {
+    background: var(--bg-secondary);
+    border-radius: var(--radius-lg);
+    max-width: 600px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+    box-shadow: var(--shadow-xl);
+}
+
+.add-annonce-form-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.add-annonce-form-header h2 {
+    color: var(--text-primary);
+    font-size: 1.5rem;
+    margin: 0;
+}
+
+.btn-close-form {
+    background: none;
+    border: none;
+    color: var(--text-primary);
+    font-size: 2rem;
+    cursor: pointer;
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color var(--transition-base);
+}
+
+.btn-close-form:hover {
+    color: var(--text-muted);
+}
+
+.add-annonce-form {
+    padding: 1.5rem;
+}
+
+.add-annonce-form .form-label {
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+.add-annonce-form .form-control {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    border-radius: var(--radius-md);
+    padding: 0.75rem;
+}
+
+.add-annonce-form .form-control:focus {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: var(--color-primary);
+    color: var(--text-primary);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+}
+
+.add-annonce-form .form-control::placeholder {
+    color: var(--text-muted);
+}
+
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+.btn-submit-annonce {
+    background: var(--bg-light);
+    color: var(--text-dark);
+    border: none;
+    padding: 0.75rem 2rem;
+    border-radius: var(--radius-md);
+    font-weight: 500;
+    cursor: pointer;
+    transition: background var(--transition-base);
+    flex: 1;
+}
+
+.btn-submit-annonce:hover {
+    background: var(--bg-tertiary);
+}
+
+.btn-cancel-annonce {
+    background: transparent;
+    color: var(--text-primary);
+    border: 1px solid var(--text-primary);
+    padding: 0.75rem 2rem;
+    border-radius: var(--radius-md);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition-base);
+    flex: 1;
+}
+
+.btn-cancel-annonce:hover {
+    background: var(--bg-light);
+    color: var(--text-dark);
+}
+
+/* Announcement Modal */
+.annonce-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.9);
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    overflow-y: auto;
+}
+
+.annonce-modal-content {
+    background: var(--bg-secondary);
+    border-radius: var(--radius-lg);
+    max-width: 900px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+    animation: modalFadeIn var(--transition-base) ease;
+}
+
+@keyframes modalFadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.annonce-modal-close {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: rgba(0, 0, 0, 0.5);
+    border: none;
+    color: var(--text-primary);
+    font-size: 2rem;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    transition: background var(--transition-base);
+}
+
+.annonce-modal-close:hover {
+    background: rgba(0, 0, 0, 0.7);
+}
+
+.annonce-modal-body {
+    padding: 2rem;
+}
+
+.annonce-modal-image {
+    width: 100%;
+    height: 400px;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    margin-bottom: 2rem;
+}
+
+.annonce-modal-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.annonce-modal-image-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+}
+
+.annonce-modal-details {
+    color: var(--text-primary);
+}
+
+.annonce-modal-title {
+    font-size: 2rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: var(--text-primary);
+}
+
+.annonce-modal-description {
+    font-size: 1.1rem;
+    line-height: 1.8;
+    color: var(--text-secondary);
+    margin-bottom: 1.5rem;
+}
+
+.annonce-modal-author {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: var(--text-muted);
+    font-size: 1rem;
+    margin-bottom: 1rem;
+}
+
+.annonce-modal-author svg {
+    flex-shrink: 0;
+    color: var(--text-muted);
+}
+
+.annonce-modal-author-link {
+    color: var(--color-info);
+    text-decoration: none;
+    transition: color var(--transition-base);
+    font-weight: 500;
+}
+
+.annonce-modal-author-link:hover {
+    color: var(--color-info);
+    opacity: 0.8;
+    text-decoration: underline;
+}
+
+.annonce-modal-location {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: var(--text-muted);
+    font-size: 1rem;
+}
+
+.annonce-modal-location svg {
+    flex-shrink: 0;
+}
+
+.no-annonces {
+    text-align: center;
+    padding: 4rem 2rem;
+    color: var(--text-muted);
+}
+
+.no-annonces p {
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .annonces-page {
+        padding: 100px 0 var(--spacing-xxl);
+    }
+
+    .annonces-page-title {
+        font-size: 2rem;
+        margin-bottom: var(--spacing-xl);
+    }
+
+    .annonce-modal-content {
+        max-width: 100%;
+        margin: 1rem;
+    }
+
+    .annonce-modal-image {
+        height: 250px;
+    }
+
+    .annonce-modal-title {
+        font-size: 1.5rem;
+    }
+}

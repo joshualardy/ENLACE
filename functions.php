@@ -58,7 +58,9 @@ function theme_scripts()
     // Localize script for AJAX
     wp_localize_script('theme-script', 'enlaceAjax', array(
         'ajaxurl' => admin_url('admin-ajax.php'),
-        'nonce' => wp_create_nonce('enlace_messaging')
+        'nonce' => wp_create_nonce('enlace_messaging'),
+        'favorites_nonce' => wp_create_nonce('enlace_favorites'),
+        'production_comments_nonce' => wp_create_nonce('enlace_production_comments')
     ));
 }
 add_action('wp_enqueue_scripts', 'theme_scripts');
@@ -420,6 +422,75 @@ function get_user_productions($user_id = null) {
     return $productions;
 }
 
+// Handle audio/video file upload
+function handle_production_media_upload($user_id, $file_key, $allowed_types = array('audio', 'video')) {
+    if (empty($_FILES[$file_key]['name'])) {
+        return false;
+    }
+
+    require_once(ABSPATH . 'wp-admin/includes/file.php');
+    
+    $uploadedfile = $_FILES[$file_key];
+    
+    // Validate file size (max 50MB for audio/video)
+    $max_size = 50 * 1024 * 1024; // 50MB
+    if ($uploadedfile['size'] > $max_size) {
+        return 'size_error';
+    }
+    
+    // Validate file type
+    $upload_overrides = array('test_form' => false);
+    $allowed_mime_types = array();
+    
+    if (in_array('audio', $allowed_types)) {
+        $allowed_mime_types = array_merge($allowed_mime_types, array(
+            'audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/ogg', 'audio/aac', 'audio/flac'
+        ));
+    }
+    
+    if (in_array('video', $allowed_types)) {
+        $allowed_mime_types = array_merge($allowed_mime_types, array(
+            'video/mp4', 'video/webm', 'video/ogg', 'video/quicktime', 'video/x-msvideo'
+        ));
+    }
+    
+    $file_type = wp_check_filetype($uploadedfile['name']);
+    $mime_type = $uploadedfile['type'];
+    
+    if (!in_array($mime_type, $allowed_mime_types) && !in_array($file_type['type'], $allowed_mime_types)) {
+        return 'type_error';
+    }
+    
+    // Handle upload
+    $movefile = wp_handle_upload($uploadedfile, $upload_overrides);
+    
+    if ($movefile && !isset($movefile['error'])) {
+        return esc_url_raw($movefile['url']);
+    }
+    
+    return false;
+}
+
+// Validate external platform URL
+function validate_platform_url($url, $platform) {
+    if (empty($url)) {
+        return true; // Optional field
+    }
+    
+    $url = esc_url_raw($url);
+    
+    switch ($platform) {
+        case 'soundcloud':
+            return (strpos($url, 'soundcloud.com') !== false);
+        case 'spotify':
+            return (strpos($url, 'spotify.com') !== false || strpos($url, 'open.spotify.com') !== false);
+        case 'youtube':
+            return (strpos($url, 'youtube.com') !== false || strpos($url, 'youtu.be') !== false);
+        default:
+            return filter_var($url, FILTER_VALIDATE_URL) !== false;
+    }
+}
+
 // Add production to user
 function add_user_production($user_id, $production_data) {
     $productions = get_user_productions($user_id);
@@ -430,6 +501,11 @@ function add_user_production($user_id, $production_data) {
         'genre' => sanitize_text_field($production_data['genre']),
         'description' => sanitize_textarea_field($production_data['description']),
         'rating' => isset($production_data['rating']) ? intval($production_data['rating']) : 5,
+        'audio_file' => isset($production_data['audio_file']) ? esc_url_raw($production_data['audio_file']) : '',
+        'video_file' => isset($production_data['video_file']) ? esc_url_raw($production_data['video_file']) : '',
+        'soundcloud_url' => isset($production_data['soundcloud_url']) ? esc_url_raw($production_data['soundcloud_url']) : '',
+        'spotify_url' => isset($production_data['spotify_url']) ? esc_url_raw($production_data['spotify_url']) : '',
+        'youtube_url' => isset($production_data['youtube_url']) ? esc_url_raw($production_data['youtube_url']) : '',
         'created_at' => current_time('mysql')
     );
     
@@ -438,6 +514,42 @@ function add_user_production($user_id, $production_data) {
     update_user_meta($user_id, 'productions', $productions);
     
     return $new_production['id'];
+}
+
+// Update production
+function update_user_production($user_id, $production_id, $production_data) {
+    $productions = get_user_productions($user_id);
+    
+    foreach ($productions as &$prod) {
+        if ($prod['id'] === $production_id) {
+            $prod['title'] = sanitize_text_field($production_data['title']);
+            $prod['genre'] = sanitize_text_field($production_data['genre']);
+            $prod['description'] = sanitize_textarea_field($production_data['description']);
+            $prod['rating'] = isset($production_data['rating']) ? intval($production_data['rating']) : $prod['rating'];
+            
+            if (isset($production_data['audio_file'])) {
+                $prod['audio_file'] = esc_url_raw($production_data['audio_file']);
+            }
+            if (isset($production_data['video_file'])) {
+                $prod['video_file'] = esc_url_raw($production_data['video_file']);
+            }
+            if (isset($production_data['soundcloud_url'])) {
+                $prod['soundcloud_url'] = esc_url_raw($production_data['soundcloud_url']);
+            }
+            if (isset($production_data['spotify_url'])) {
+                $prod['spotify_url'] = esc_url_raw($production_data['spotify_url']);
+            }
+            if (isset($production_data['youtube_url'])) {
+                $prod['youtube_url'] = esc_url_raw($production_data['youtube_url']);
+            }
+            
+            break;
+        }
+    }
+    
+    update_user_meta($user_id, 'productions', $productions);
+    
+    return true;
 }
 
 // Delete production
@@ -484,16 +596,123 @@ function handle_production_action() {
     
     if ($action === 'add') {
         if (isset($_POST['production_title']) && isset($_POST['production_genre']) && isset($_POST['production_description'])) {
-            add_user_production($user_id, array(
+            $production_data = array(
                 'title' => $_POST['production_title'],
                 'genre' => $_POST['production_genre'],
                 'description' => $_POST['production_description'],
-                'rating' => isset($_POST['production_rating']) ? $_POST['production_rating'] : 5
-            ));
+                'rating' => isset($_POST['production_rating']) ? $_POST['production_rating'] : 5,
+                'audio_file' => '',
+                'video_file' => '',
+                'soundcloud_url' => '',
+                'spotify_url' => '',
+                'youtube_url' => ''
+            );
+            
+            // Handle audio file upload
+            if (isset($_FILES['production_audio']) && !empty($_FILES['production_audio']['name'])) {
+                $audio_result = handle_production_media_upload($user_id, 'production_audio', array('audio'));
+                if ($audio_result && $audio_result !== 'size_error' && $audio_result !== 'type_error') {
+                    $production_data['audio_file'] = $audio_result;
+                }
+            }
+            
+            // Handle video file upload
+            if (isset($_FILES['production_video']) && !empty($_FILES['production_video']['name'])) {
+                $video_result = handle_production_media_upload($user_id, 'production_video', array('video'));
+                if ($video_result && $video_result !== 'size_error' && $video_result !== 'type_error') {
+                    $production_data['video_file'] = $video_result;
+                }
+            }
+            
+            // Validate and save external links
+            if (isset($_POST['production_soundcloud_url']) && !empty($_POST['production_soundcloud_url'])) {
+                if (validate_platform_url($_POST['production_soundcloud_url'], 'soundcloud')) {
+                    $production_data['soundcloud_url'] = esc_url_raw($_POST['production_soundcloud_url']);
+                }
+            }
+            
+            if (isset($_POST['production_spotify_url']) && !empty($_POST['production_spotify_url'])) {
+                if (validate_platform_url($_POST['production_spotify_url'], 'spotify')) {
+                    $production_data['spotify_url'] = esc_url_raw($_POST['production_spotify_url']);
+                }
+            }
+            
+            if (isset($_POST['production_youtube_url']) && !empty($_POST['production_youtube_url'])) {
+                if (validate_platform_url($_POST['production_youtube_url'], 'youtube')) {
+                    $production_data['youtube_url'] = esc_url_raw($_POST['production_youtube_url']);
+                }
+            }
+            
+            add_user_production($user_id, $production_data);
             
             wp_redirect(home_url('/userprofil?production_added=success'));
         } else {
             wp_redirect(home_url('/userprofil?production_added=error'));
+        }
+    } elseif ($action === 'edit' && isset($_POST['production_id'])) {
+        $production_id = sanitize_text_field($_POST['production_id']);
+        $productions = get_user_productions($user_id);
+        $existing_production = null;
+        
+        foreach ($productions as $prod) {
+            if ($prod['id'] === $production_id) {
+                $existing_production = $prod;
+                break;
+            }
+        }
+        
+        if ($existing_production && isset($_POST['production_title']) && isset($_POST['production_genre']) && isset($_POST['production_description'])) {
+            $production_data = array(
+                'title' => $_POST['production_title'],
+                'genre' => $_POST['production_genre'],
+                'description' => $_POST['production_description'],
+                'rating' => isset($_POST['production_rating']) ? $_POST['production_rating'] : $existing_production['rating'],
+                'audio_file' => $existing_production['audio_file'],
+                'video_file' => $existing_production['video_file'],
+                'soundcloud_url' => isset($_POST['production_soundcloud_url']) ? esc_url_raw($_POST['production_soundcloud_url']) : '',
+                'spotify_url' => isset($_POST['production_spotify_url']) ? esc_url_raw($_POST['production_spotify_url']) : '',
+                'youtube_url' => isset($_POST['production_youtube_url']) ? esc_url_raw($_POST['production_youtube_url']) : ''
+            );
+            
+            // Handle audio file upload (replace if new file uploaded)
+            if (isset($_FILES['production_audio']) && !empty($_FILES['production_audio']['name'])) {
+                $audio_result = handle_production_media_upload($user_id, 'production_audio', array('audio'));
+                if ($audio_result && $audio_result !== 'size_error' && $audio_result !== 'type_error') {
+                    $production_data['audio_file'] = $audio_result;
+                }
+            }
+            
+            // Handle video file upload (replace if new file uploaded)
+            if (isset($_FILES['production_video']) && !empty($_FILES['production_video']['name'])) {
+                $video_result = handle_production_media_upload($user_id, 'production_video', array('video'));
+                if ($video_result && $video_result !== 'size_error' && $video_result !== 'type_error') {
+                    $production_data['video_file'] = $video_result;
+                }
+            }
+            
+            // Validate external links
+            if (isset($_POST['production_soundcloud_url']) && !empty($_POST['production_soundcloud_url'])) {
+                if (validate_platform_url($_POST['production_soundcloud_url'], 'soundcloud')) {
+                    $production_data['soundcloud_url'] = esc_url_raw($_POST['production_soundcloud_url']);
+                }
+            }
+            
+            if (isset($_POST['production_spotify_url']) && !empty($_POST['production_spotify_url'])) {
+                if (validate_platform_url($_POST['production_spotify_url'], 'spotify')) {
+                    $production_data['spotify_url'] = esc_url_raw($_POST['production_spotify_url']);
+                }
+            }
+            
+            if (isset($_POST['production_youtube_url']) && !empty($_POST['production_youtube_url'])) {
+                if (validate_platform_url($_POST['production_youtube_url'], 'youtube')) {
+                    $production_data['youtube_url'] = esc_url_raw($_POST['production_youtube_url']);
+                }
+            }
+            
+            update_user_production($user_id, $production_id, $production_data);
+            wp_redirect(home_url('/userprofil?production_updated=success'));
+        } else {
+            wp_redirect(home_url('/userprofil?production_updated=error'));
         }
     } elseif ($action === 'delete' && isset($_POST['production_id'])) {
         delete_user_production($user_id, sanitize_text_field($_POST['production_id']));
@@ -1303,4 +1522,553 @@ function ajax_search_users_for_messaging() {
     wp_send_json_success(array('users' => $results));
 }
 add_action('wp_ajax_search_users_for_messaging', 'ajax_search_users_for_messaging');
+
+// ============================================
+// FAVORIS SYSTEM
+// ============================================
+
+// Create favorites table on theme activation
+function create_favorites_table() {
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'enlace_favorites';
+    $charset_collate = $wpdb->get_charset_collate();
+
+    $sql = "CREATE TABLE IF NOT EXISTS $table_name (
+        id bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+        user_id bigint(20) UNSIGNED NOT NULL,
+        item_type varchar(50) NOT NULL,
+        item_id bigint(20) UNSIGNED NOT NULL,
+        created_at datetime DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (id),
+        UNIQUE KEY user_item (user_id, item_type, item_id),
+        KEY user_id (user_id),
+        KEY item_type (item_type),
+        KEY item_id (item_id),
+        KEY created_at (created_at)
+    ) $charset_collate;";
+
+    require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+    dbDelta($sql);
+}
+add_action('after_switch_theme', 'create_favorites_table');
+
+// Verify favorites table exists on init
+function verify_favorites_table() {
+    global $wpdb;
+    $table = $wpdb->prefix . 'enlace_favorites';
+    
+    $table_exists = $wpdb->get_var("SHOW TABLES LIKE '$table'") == $table;
+    
+    if (!$table_exists) {
+        create_favorites_table();
+    }
+}
+add_action('init', 'verify_favorites_table', 1);
+
+// Add favorite
+function add_favorite($user_id, $item_type, $item_id) {
+    global $wpdb;
+    
+    verify_favorites_table();
+    
+    $table = $wpdb->prefix . 'enlace_favorites';
+    
+    // Validate item_type
+    $allowed_types = array('user', 'annonce');
+    if (!in_array($item_type, $allowed_types)) {
+        return false;
+    }
+    
+    // Check if already favorited
+    $existing = $wpdb->get_var($wpdb->prepare(
+        "SELECT id FROM $table WHERE user_id = %d AND item_type = %s AND item_id = %d",
+        $user_id, $item_type, $item_id
+    ));
+    
+    if ($existing) {
+        return true; // Already favorited
+    }
+    
+    // Insert favorite
+    $result = $wpdb->insert(
+        $table,
+        array(
+            'user_id' => $user_id,
+            'item_type' => $item_type,
+            'item_id' => $item_id,
+            'created_at' => current_time('mysql')
+        ),
+        array('%d', '%s', '%d', '%s')
+    );
+    
+    return $result !== false;
+}
+
+// Remove favorite
+function remove_favorite($user_id, $item_type, $item_id) {
+    global $wpdb;
+    
+    verify_favorites_table();
+    
+    $table = $wpdb->prefix . 'enlace_favorites';
+    
+    $result = $wpdb->delete(
+        $table,
+        array(
+            'user_id' => $user_id,
+            'item_type' => $item_type,
+            'item_id' => $item_id
+        ),
+        array('%d', '%s', '%d')
+    );
+    
+    return $result !== false;
+}
+
+// Check if item is favorited
+function is_favorited($user_id, $item_type, $item_id) {
+    global $wpdb;
+    
+    verify_favorites_table();
+    
+    $table = $wpdb->prefix . 'enlace_favorites';
+    
+    $count = $wpdb->get_var($wpdb->prepare(
+        "SELECT COUNT(*) FROM $table WHERE user_id = %d AND item_type = %s AND item_id = %d",
+        $user_id, $item_type, $item_id
+    ));
+    
+    return $count > 0;
+}
+
+// Get user favorites
+function get_user_favorites($user_id, $item_type = null) {
+    global $wpdb;
+    
+    verify_favorites_table();
+    
+    $table = $wpdb->prefix . 'enlace_favorites';
+    
+    if ($item_type) {
+        $favorites = $wpdb->get_results($wpdb->prepare(
+            "SELECT * FROM $table WHERE user_id = %d AND item_type = %s ORDER BY created_at DESC",
+            $user_id, $item_type
+        ));
+    } else {
+        $favorites = $wpdb->get_results($wpdb->prepare(
+            "SELECT * FROM $table WHERE user_id = %d ORDER BY created_at DESC",
+            $user_id
+        ));
+    }
+    
+    return $favorites;
+}
+
+// Get favorite count for an item
+function get_favorite_count($item_type, $item_id) {
+    global $wpdb;
+    
+    verify_favorites_table();
+    
+    $table = $wpdb->prefix . 'enlace_favorites';
+    
+    $count = $wpdb->get_var($wpdb->prepare(
+        "SELECT COUNT(*) FROM $table WHERE item_type = %s AND item_id = %d",
+        $item_type, $item_id
+    ));
+    
+    return intval($count);
+}
+
+// AJAX: Toggle favorite
+function ajax_toggle_favorite() {
+    // Check nonce
+    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'enlace_favorites')) {
+        wp_send_json_error(array('message' => 'Erreur de sécurité. Veuillez rafraîchir la page.'));
+        return;
+    }
+    
+    if (!is_user_logged_in()) {
+        wp_send_json_error(array('message' => 'Vous devez être connecté.'));
+        return;
+    }
+    
+    $user_id = get_current_user_id();
+    $item_type = isset($_POST['item_type']) ? sanitize_text_field($_POST['item_type']) : '';
+    $item_id = isset($_POST['item_id']) ? intval($_POST['item_id']) : 0;
+    
+    if (empty($item_type) || empty($item_id)) {
+        wp_send_json_error(array('message' => 'Paramètres invalides.'));
+        return;
+    }
+    
+    // Validate item exists
+    if ($item_type === 'user') {
+        $item = get_userdata($item_id);
+        if (!$item) {
+            wp_send_json_error(array('message' => 'Utilisateur introuvable.'));
+            return;
+        }
+        // Don't allow favoriting yourself
+        if ($item_id == $user_id) {
+            wp_send_json_error(array('message' => 'Vous ne pouvez pas vous ajouter aux favoris.'));
+            return;
+        }
+    } elseif ($item_type === 'annonce') {
+        $item = get_post($item_id);
+        if (!$item || $item->post_type !== 'annonce') {
+            wp_send_json_error(array('message' => 'Annonce introuvable.'));
+            return;
+        }
+    } else {
+        wp_send_json_error(array('message' => 'Type invalide.'));
+        return;
+    }
+    
+    // Toggle favorite
+    $is_favorited = is_favorited($user_id, $item_type, $item_id);
+    
+    if ($is_favorited) {
+        $result = remove_favorite($user_id, $item_type, $item_id);
+        $action = 'removed';
+    } else {
+        $result = add_favorite($user_id, $item_type, $item_id);
+        $action = 'added';
+    }
+    
+    if ($result) {
+        $new_count = get_favorite_count($item_type, $item_id);
+        wp_send_json_success(array(
+            'action' => $action,
+            'is_favorited' => !$is_favorited,
+            'count' => $new_count,
+            'message' => $is_favorited ? 'Retiré des favoris' : 'Ajouté aux favoris'
+        ));
+    } else {
+        wp_send_json_error(array('message' => 'Erreur lors de l\'opération.'));
+    }
+}
+add_action('wp_ajax_toggle_favorite', 'ajax_toggle_favorite');
+
+// AJAX: Get favorites list
+function ajax_get_favorites() {
+    check_ajax_referer('enlace_favorites', 'nonce');
+    
+    if (!is_user_logged_in()) {
+        wp_send_json_error(array('message' => 'Vous devez être connecté.'));
+    }
+    
+    $user_id = get_current_user_id();
+    $item_type = isset($_POST['item_type']) ? sanitize_text_field($_POST['item_type']) : null;
+    
+    $favorites = get_user_favorites($user_id, $item_type);
+    
+    $result = array();
+    foreach ($favorites as $fav) {
+        if ($fav->item_type === 'user') {
+            $user = get_userdata($fav->item_id);
+            if ($user) {
+                $profile_data = get_user_profile_data($fav->item_id);
+                $result[] = array(
+                    'id' => $fav->id,
+                    'type' => 'user',
+                    'item_id' => $fav->item_id,
+                    'name' => $profile_data ? $profile_data['full_name'] : $user->display_name,
+                    'photo' => $profile_data ? $profile_data['profile_photo_url'] : '',
+                    'url' => home_url('/userprofil?user_id=' . $fav->item_id),
+                    'created_at' => $fav->created_at
+                );
+            }
+        } elseif ($fav->item_type === 'annonce') {
+            $post = get_post($fav->item_id);
+            if ($post) {
+                $image = get_the_post_thumbnail_url($fav->item_id, 'medium');
+                $result[] = array(
+                    'id' => $fav->id,
+                    'type' => 'annonce',
+                    'item_id' => $fav->item_id,
+                    'title' => $post->post_title,
+                    'description' => wp_trim_words($post->post_content, 20),
+                    'image' => $image ? $image : '',
+                    'url' => get_permalink($fav->item_id),
+                    'created_at' => $fav->created_at
+                );
+            }
+        }
+    }
+    
+    wp_send_json_success(array('favorites' => $result));
+}
+add_action('wp_ajax_get_favorites', 'ajax_get_favorites');
+
+// ============================================
+// PRODUCTION COMMENTS SYSTEM
+// ============================================
+
+// Create production comments table on theme activation
+function create_production_comments_table() {
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'enlace_production_comments';
+    $charset_collate = $wpdb->get_charset_collate();
+
+    $sql = "CREATE TABLE IF NOT EXISTS $table_name (
+        id bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+        production_id varchar(255) NOT NULL,
+        user_id bigint(20) UNSIGNED NOT NULL,
+        production_owner_id bigint(20) UNSIGNED NOT NULL,
+        comment text NOT NULL,
+        created_at datetime DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (id),
+        KEY production_id (production_id),
+        KEY user_id (user_id),
+        KEY production_owner_id (production_owner_id),
+        KEY created_at (created_at)
+    ) $charset_collate;";
+
+    require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+    dbDelta($sql);
+}
+add_action('after_switch_theme', 'create_production_comments_table');
+
+// Verify production comments table exists on init
+function verify_production_comments_table() {
+    global $wpdb;
+    $table = $wpdb->prefix . 'enlace_production_comments';
+    
+    $table_exists = $wpdb->get_var("SHOW TABLES LIKE '$table'") == $table;
+    
+    if (!$table_exists) {
+        create_production_comments_table();
+    }
+}
+add_action('init', 'verify_production_comments_table', 1);
+
+// Add comment to production
+function add_production_comment($production_id, $production_owner_id, $user_id, $comment) {
+    global $wpdb;
+    
+    verify_production_comments_table();
+    
+    $table = $wpdb->prefix . 'enlace_production_comments';
+    
+    if (empty($comment) || empty($production_id) || empty($user_id)) {
+        return false;
+    }
+    
+    $result = $wpdb->insert(
+        $table,
+        array(
+            'production_id' => sanitize_text_field($production_id),
+            'user_id' => $user_id,
+            'production_owner_id' => $production_owner_id,
+            'comment' => sanitize_textarea_field($comment),
+            'created_at' => current_time('mysql')
+        ),
+        array('%s', '%d', '%d', '%s', '%s')
+    );
+    
+    return $result !== false ? $wpdb->insert_id : false;
+}
+
+// Get comments for a production
+function get_production_comments($production_id, $limit = 50, $offset = 0) {
+    global $wpdb;
+    
+    verify_production_comments_table();
+    
+    $table = $wpdb->prefix . 'enlace_production_comments';
+    
+    $comments = $wpdb->get_results($wpdb->prepare(
+        "SELECT * FROM $table 
+        WHERE production_id = %s 
+        ORDER BY created_at ASC 
+        LIMIT %d OFFSET %d",
+        $production_id, $limit, $offset
+    ));
+    
+    $result = array();
+    foreach ($comments as $comment) {
+        $user = get_userdata($comment->user_id);
+        $profile_data = get_user_profile_data($comment->user_id);
+        
+        $result[] = array(
+            'id' => $comment->id,
+            'user_id' => $comment->user_id,
+            'user_name' => $profile_data ? $profile_data['full_name'] : ($user ? $user->display_name : 'Utilisateur'),
+            'user_photo' => $profile_data ? $profile_data['profile_photo_url'] : '',
+            'comment' => $comment->comment,
+            'created_at' => $comment->created_at,
+            'is_own' => ($comment->user_id == get_current_user_id())
+        );
+    }
+    
+    return $result;
+}
+
+// Get comment count for a production
+function get_production_comment_count($production_id) {
+    global $wpdb;
+    
+    verify_production_comments_table();
+    
+    $table = $wpdb->prefix . 'enlace_production_comments';
+    
+    $count = $wpdb->get_var($wpdb->prepare(
+        "SELECT COUNT(*) FROM $table WHERE production_id = %s",
+        $production_id
+    ));
+    
+    return intval($count);
+}
+
+// Delete comment
+function delete_production_comment($comment_id, $user_id) {
+    global $wpdb;
+    
+    verify_production_comments_table();
+    
+    $table = $wpdb->prefix . 'enlace_production_comments';
+    
+    // Verify user owns the comment or is admin
+    $comment = $wpdb->get_row($wpdb->prepare(
+        "SELECT * FROM $table WHERE id = %d",
+        $comment_id
+    ));
+    
+    if (!$comment) {
+        return false;
+    }
+    
+    // Only allow deletion if user owns the comment or is the production owner
+    if ($comment->user_id != $user_id && $comment->production_owner_id != $user_id) {
+        return false;
+    }
+    
+    $result = $wpdb->delete(
+        $table,
+        array('id' => $comment_id),
+        array('%d')
+    );
+    
+    return $result !== false;
+}
+
+// AJAX: Add comment to production
+function ajax_add_production_comment() {
+    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'enlace_production_comments')) {
+        wp_send_json_error(array('message' => 'Erreur de sécurité. Veuillez rafraîchir la page.'));
+        return;
+    }
+    
+    if (!is_user_logged_in()) {
+        wp_send_json_error(array('message' => 'Vous devez être connecté.'));
+        return;
+    }
+    
+    $user_id = get_current_user_id();
+    $production_id = isset($_POST['production_id']) ? sanitize_text_field($_POST['production_id']) : '';
+    $production_owner_id = isset($_POST['production_owner_id']) ? intval($_POST['production_owner_id']) : 0;
+    $comment = isset($_POST['comment']) ? trim($_POST['comment']) : '';
+    
+    if (empty($production_id) || empty($production_owner_id) || empty($comment)) {
+        wp_send_json_error(array('message' => 'Tous les champs sont requis.'));
+        return;
+    }
+    
+    // Verify production exists
+    $owner_data = get_user_profile_data($production_owner_id);
+    if (!$owner_data) {
+        wp_send_json_error(array('message' => 'Production introuvable.'));
+        return;
+    }
+    
+    $productions = get_user_productions($production_owner_id);
+    $production_exists = false;
+    foreach ($productions as $prod) {
+        if ($prod['id'] === $production_id) {
+            $production_exists = true;
+            break;
+        }
+    }
+    
+    if (!$production_exists) {
+        wp_send_json_error(array('message' => 'Production introuvable.'));
+        return;
+    }
+    
+    $comment_id = add_production_comment($production_id, $production_owner_id, $user_id, $comment);
+    
+    if ($comment_id) {
+        $user = get_userdata($user_id);
+        $profile_data = get_user_profile_data($user_id);
+        
+        wp_send_json_success(array(
+            'comment_id' => $comment_id,
+            'comment' => array(
+                'id' => $comment_id,
+                'user_id' => $user_id,
+                'user_name' => $profile_data ? $profile_data['full_name'] : $user->display_name,
+                'user_photo' => $profile_data ? $profile_data['profile_photo_url'] : '',
+                'comment' => $comment,
+                'created_at' => current_time('mysql'),
+                'is_own' => true
+            ),
+            'message' => 'Commentaire ajouté avec succès.'
+        ));
+    } else {
+        wp_send_json_error(array('message' => 'Erreur lors de l\'ajout du commentaire.'));
+    }
+}
+add_action('wp_ajax_add_production_comment', 'ajax_add_production_comment');
+
+// AJAX: Get comments for production
+function ajax_get_production_comments() {
+    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'enlace_production_comments')) {
+        wp_send_json_error(array('message' => 'Erreur de sécurité.'));
+        return;
+    }
+    
+    $production_id = isset($_POST['production_id']) ? sanitize_text_field($_POST['production_id']) : '';
+    
+    if (empty($production_id)) {
+        wp_send_json_error(array('message' => 'ID de production requis.'));
+        return;
+    }
+    
+    $comments = get_production_comments($production_id);
+    
+    wp_send_json_success(array('comments' => $comments));
+}
+add_action('wp_ajax_get_production_comments', 'ajax_get_production_comments');
+add_action('wp_ajax_nopriv_get_production_comments', 'ajax_get_production_comments');
+
+// AJAX: Delete comment
+function ajax_delete_production_comment() {
+    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'enlace_production_comments')) {
+        wp_send_json_error(array('message' => 'Erreur de sécurité.'));
+        return;
+    }
+    
+    if (!is_user_logged_in()) {
+        wp_send_json_error(array('message' => 'Vous devez être connecté.'));
+        return;
+    }
+    
+    $user_id = get_current_user_id();
+    $comment_id = isset($_POST['comment_id']) ? intval($_POST['comment_id']) : 0;
+    
+    if (empty($comment_id)) {
+        wp_send_json_error(array('message' => 'ID de commentaire requis.'));
+        return;
+    }
+    
+    $result = delete_production_comment($comment_id, $user_id);
+    
+    if ($result) {
+        wp_send_json_success(array('message' => 'Commentaire supprimé avec succès.'));
+    } else {
+        wp_send_json_error(array('message' => 'Erreur lors de la suppression ou vous n\'avez pas les permissions.'));
+    }
+}
+add_action('wp_ajax_delete_production_comment', 'ajax_delete_production_comment');
 

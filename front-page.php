@@ -8,7 +8,9 @@ get_header();
     <div class="hero-content">
         <div class="hero-tagline-wrapper">
             <p class="hero-tagline">Connecte ton énergie, crée tes opportunités</p>
-            <a href="<?php echo esc_url(home_url('/signup')); ?>" class="hero-inscription-btn">Inscription</a>
+            <?php if (!is_user_logged_in()) : ?>
+                <a href="<?php echo esc_url(home_url('/signup')); ?>" class="hero-inscription-btn">Inscription</a>
+            <?php endif; ?>
         </div>
         <h1 class="hero-title" id="hero-title-enlace">ENLACE</h1>
     </div>

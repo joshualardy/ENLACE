@@ -1,0 +1,329 @@
+/* ============================================
+   COMMON STYLES - Shared across pages
+   ============================================ */
+
+/* Alerts */
+.alert {
+    border-radius: var(--radius-md);
+    margin-bottom: var(--spacing-lg);
+    border: 1px solid transparent;
+    padding: var(--spacing-md) var(--spacing-lg);
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+.alert-danger {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--color-error);
+    border-color: rgba(239, 68, 68, 0.3);
+}
+
+.alert-warning {
+    background: rgba(245, 158, 11, 0.1);
+    color: var(--color-warning);
+    border-color: rgba(245, 158, 11, 0.3);
+}
+
+.alert-info {
+    background: rgba(59, 130, 246, 0.1);
+    color: var(--color-info);
+    border-color: rgba(59, 130, 246, 0.3);
+}
+
+.alert-success {
+    background: rgba(16, 185, 129, 0.1);
+    color: var(--color-success);
+    border-color: rgba(16, 185, 129, 0.3);
+}
+
+/* Legacy error/success messages (for backward compatibility) */
+.error-message {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--color-error);
+    padding: var(--spacing-md) var(--spacing-lg);
+    border-radius: var(--radius-md);
+    margin-bottom: var(--spacing-lg);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+.error-message.field-error {
+    background: rgba(248, 215, 218, 0.9);
+    padding: 0.75rem 1rem;
+    margin-top: 0.5rem;
+    font-size: 0.875rem;
+    border-left: 3px solid #dc3545;
+}
+
+.error-message.fixed {
+    position: fixed;
+    top: 100px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9999;
+    margin: 1rem;
+    max-width: 90%;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.form-control.is-invalid,
+.form-check-input.is-invalid {
+    border-color: #dc3545;
+}
+
+.form-control.is-invalid:focus {
+    border-color: #dc3545;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+}
+
+.required {
+    color: var(--color-error);
+    font-weight: bold;
+    margin-left: 2px;
+}
+
+/* Spinner styles for form submission */
+.spinner-border-sm {
+    width: 1rem;
+    height: 1rem;
+    border-width: 0.15em;
+    margin-left: 0.5rem;
+}
+
+.success-message {
+    background: rgba(212, 237, 218, 0.95);
+    color: #155724;
+    padding: 1rem 1.5rem;
+    border-radius: var(--radius-md);
+    margin-bottom: 1.5rem;
+    border: 1px solid #c3e6cb;
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+.success-message.fixed {
+    position: fixed;
+    top: 100px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9999;
+    margin: 1rem;
+    max-width: 90%;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.success-message a {
+    color: #155724;
+    text-decoration: underline;
+}
+
+/* Links */
+.register-link,
+.login-link {
+    text-align: center;
+    margin-top: var(--spacing-lg);
+    color: var(--text-primary);
+}
+
+.register-link a,
+.login-link a {
+    color: var(--text-primary);
+    text-decoration: none;
+    opacity: 0.8;
+    transition: opacity var(--transition-base);
+    font-weight: 500;
+}
+
+.register-link a:hover,
+.login-link a:hover {
+    opacity: 1;
+    text-decoration: underline;
+    color: var(--color-primary-light);
+}
+
+/* ============================================
+   BUTTONS - Premium Urbain
+   ============================================ */
+
+/* Base button styles - Minimaliste Premium (inspiration Akke) */
+.btn,
+button[type="submit"],
+button[type="button"] {
+    font-family: var(--font-body);
+    font-size: var(--font-size-base);
+    font-weight: 400;
+    line-height: 1.5;
+    letter-spacing: var(--letter-spacing-normal);
+    padding: 0.875rem 2rem;
+    border-radius: var(--radius-sm);
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all var(--transition-base);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-sm);
+    text-decoration: none;
+    text-transform: none;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    position: relative;
+    overflow: hidden;
+    background: transparent;
+}
+
+/* Primary button - Minimaliste Premium */
+.btn-primary,
+.btn-primary:not(:disabled):not(.disabled) {
+    background: var(--color-primary);
+    color: var(--text-primary);
+    border: 1px solid var(--color-primary);
+    box-shadow: none;
+}
+
+.btn-primary:hover:not(:disabled):not(.disabled) {
+    background: var(--color-primary-dark);
+    border-color: var(--color-primary-dark);
+    color: var(--text-primary);
+    box-shadow: none;
+    transform: translateY(-2px);
+    opacity: 0.95;
+}
+
+.btn-primary:active:not(:disabled):not(.disabled) {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Secondary button - Minimaliste Premium */
+.btn-secondary,
+.btn-secondary:not(:disabled):not(.disabled) {
+    background: transparent;
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+}
+
+.btn-secondary:hover:not(:disabled):not(.disabled) {
+    background: transparent;
+    border-color: var(--border-color-light);
+    color: var(--text-primary);
+    opacity: 0.9;
+    transform: translateY(-1px);
+}
+
+/* Outline button - Premium */
+.btn-outline-primary,
+.btn-outline-primary:not(:disabled):not(.disabled) {
+    background: transparent;
+    color: var(--color-primary);
+    border: 1px solid var(--color-primary);
+}
+
+.btn-outline-primary:hover:not(:disabled):not(.disabled) {
+    background: var(--color-primary);
+    color: var(--text-primary);
+    border-color: var(--color-primary);
+}
+
+.btn-outline-secondary,
+.btn-outline-secondary:not(:disabled):not(.disabled) {
+    background: transparent;
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+}
+
+.btn-outline-secondary:hover:not(:disabled):not(.disabled) {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: var(--border-color-light);
+    color: var(--text-primary);
+}
+
+/* Button sizes - Premium */
+.btn-sm {
+    padding: 0.625rem 1.5rem;
+    font-size: var(--font-size-sm);
+}
+
+.btn-lg {
+    padding: 1rem 2.5rem;
+    font-size: var(--font-size-lg);
+    font-weight: 600;
+}
+
+/* Button states */
+.btn:disabled,
+.btn.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* Button with icon */
+.btn svg {
+    width: 1.25rem;
+    height: 1.25rem;
+    flex-shrink: 0;
+}
+
+/* Container - Premium spacing */
+.container,
+.container-fluid {
+    width: 100%;
+    padding-left: var(--section-padding-x);
+    padding-right: var(--section-padding-x);
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.container {
+    max-width: var(--container-max-width);
+}
+
+/* Section spacing - Premium */
+section {
+    padding: var(--section-padding-y) 0;
+}
+
+.section-padding-sm {
+    padding: var(--spacing-xxl) 0;
+}
+
+.section-padding-lg {
+    padding: var(--spacing-4xl) 0;
+}
+
+/* Blockquote - Élégant avec Playfair */
+blockquote {
+    border-left: 3px solid var(--color-primary);
+    padding-left: var(--spacing-lg);
+    margin: var(--spacing-lg) 0;
+    font-style: italic;
+    color: var(--text-secondary);
+    font-family: var(--font-elegant);
+    font-size: var(--font-size-lg);
+    line-height: var(--line-height-relaxed);
+}
+
+/* Citations et accents élégants */
+.quote-text,
+.elegant-text,
+.premium-text {
+    font-family: var(--font-elegant);
+    font-style: italic;
+    line-height: var(--line-height-relaxed);
+    color: var(--text-primary);
+}
+
+/* Espacements améliorés pour sections */
+.section-content {
+    padding: var(--spacing-3xl) 0;
+}
+
+.section-content-sm {
+    padding: var(--spacing-xxl) 0;
+}
+
+.section-content-lg {
+    padding: var(--spacing-4xl) 0;
+}

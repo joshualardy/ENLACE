@@ -13,6 +13,9 @@ if (is_user_logged_in() && !isset($_POST['login_submit'])) {
 get_header();
 ?>
 
+<!-- Vanta.TRUNK background pour toute la page -->
+<div id="vanta-background" class="vanta-fullpage-bg"></div>
+
 <div class="login-container">
     <div class="container">
         <div class="row justify-content-center">
@@ -47,12 +50,12 @@ get_header();
 
                             <div class="mb-3">
                                 <label for="user_login" class="form-label">Nom d'utilisateur ou E-mail</label>
-                                <input type="text" class="form-control" name="log" id="user_login" placeholder="nom d'utilisateur ou email" required>
+                                <input type="text" class="form-control" name="log" id="user_login" autocomplete="username" placeholder="nom d'utilisateur ou email" required>
                             </div>
 
                             <div class="mb-3">
                                 <label for="user_pass" class="form-label">Mot de passe</label>
-                                <input type="password" class="form-control" name="pwd" id="user_pass" placeholder="mot de passe" required>
+                                <input type="password" class="form-control" name="pwd" id="user_pass" autocomplete="current-password" placeholder="mot de passe" required>
                             </div>
 
                             <div class="mb-3 form-check">

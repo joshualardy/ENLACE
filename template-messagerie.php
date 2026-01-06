@@ -135,6 +135,14 @@ $unread_count = get_unread_messages_count($current_user_id);
                     </div>
                 </div>
                 
+                <div class="messagerie-search-box">
+                    <input type="search" id="conversation-search-input" class="messagerie-search-input" autocomplete="off" placeholder="Rechercher ici...">
+                    <svg class="messagerie-search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/>
+                        <path d="M21 21L16.65 16.65" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </div>
+                
                 <div class="messagerie-conversations-list">
                     <?php if (!empty($conversations)) : ?>
                         <?php foreach ($conversations as $conv) : 
@@ -312,6 +320,30 @@ jQuery(document).ready(function($) {
     const sendForm = $('#send-message-form');
     const messageInput = $('#message-input');
     const sendBtn = $('#send-btn');
+    
+    // Conversation search functionality
+    const conversationSearchInput = $('#conversation-search-input');
+    if (conversationSearchInput.length) {
+        conversationSearchInput.on('input', function() {
+            const query = $(this).val().toLowerCase().trim();
+            const conversationItems = $('.messagerie-conversation-item');
+            
+            if (query === '') {
+                conversationItems.show();
+            } else {
+                conversationItems.each(function() {
+                    const name = $(this).find('.messagerie-conversation-name').text().toLowerCase();
+                    const preview = $(this).find('.messagerie-conversation-preview').text().toLowerCase();
+                    
+                    if (name.includes(query) || preview.includes(query)) {
+                        $(this).show();
+                    } else {
+                        $(this).hide();
+                    }
+                });
+            }
+        });
+    }
     
     // Auto-resize textarea
     messageInput.on('input', function() {
@@ -510,7 +542,8 @@ jQuery(document).ready(function($) {
         </div>
         <div class="messagerie-modal-body">
             <div class="messagerie-search-box">
-                <input type="text" id="user-search-input" class="messagerie-search-input" placeholder="Rechercher un utilisateur...">
+                <label for="user-search-input" class="sr-only">Rechercher un utilisateur</label>
+                <input type="search" id="user-search-input" class="messagerie-search-input" autocomplete="off" placeholder="Rechercher un utilisateur...">
                 <svg class="messagerie-search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/>
                     <path d="M21 21L16.65 16.65" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>

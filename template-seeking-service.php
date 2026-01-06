@@ -22,7 +22,7 @@ if (isset($_POST['seeking_submit'])) {
     }
     
     // Check session
-    if (!isset($_SESSION['registration_data'])) {
+    if (!isset($_SESSION['registration_data']) || !isset($_SESSION['registration_data']['step2_completed'])) {
         wp_safe_redirect(home_url('/signup?registration=error&message=session_expired'));
         exit;
     }
@@ -57,7 +57,14 @@ if (isset($_POST['seeking_submit'])) {
         exit;
     }
     
-    $user_id = create_user_with_meta($reg_data['user_login'], $reg_data['user_pass'], $reg_data['user_email'], $reg_data);
+    // Create user with all data from session
+    $user_id = create_user_with_meta($reg_data['user_login'], $reg_data['user_pass'], $reg_data['user_email'], array(
+        'first_name' => $reg_data['first_name'],
+        'last_name' => $reg_data['last_name'],
+        'phone' => $reg_data['phone'],
+        'ville' => $reg_data['ville'],
+        'service_type' => $reg_data['service_type']
+    ));
 
     if (!$user_id) {
         wp_safe_redirect(home_url('/seeking-service?registration=error&message=user_creation_failed'));
@@ -120,8 +127,27 @@ display_registration_error_message();
             <!-- Right Panel: Form Section (3/5 width) -->
             <div class="col-md-7 service-form-panel">
                 <div class="service-form-wrapper">
-                    <form method="post" action="<?php echo esc_url($_SERVER['REQUEST_URI']); ?>" class="service-form" enctype="multipart/form-data" novalidate>
+                    <!-- Stepper -->
+                    <div class="registration-stepper" role="progressbar" aria-valuenow="3" aria-valuemin="1" aria-valuemax="3" aria-label="Progression de l'inscription">
+                        <div class="stepper-step completed">
+                            <div class="stepper-step-number">1</div>
+                            <div class="stepper-step-label">Identité</div>
+                        </div>
+                        <div class="stepper-step completed">
+                            <div class="stepper-step-number">2</div>
+                            <div class="stepper-step-label">Contact</div>
+                        </div>
+                        <div class="stepper-step active">
+                            <div class="stepper-step-number">3</div>
+                            <div class="stepper-step-label">Profil</div>
+                        </div>
+                    </div>
+
+                    <form method="post" action="<?php echo esc_url($_SERVER['REQUEST_URI']); ?>" class="service-form" id="seeking-form" enctype="multipart/form-data" novalidate>
                         <?php wp_nonce_field('seeking_action', 'seeking_nonce'); ?>
+                        
+                        <h2 class="form-step-title">Profil</h2>
+                        <p class="form-step-description">Présentez-vous et vos préférences</p>
 
                         <!-- Photo Upload Section -->
                         <div class="service-photo-section mb-4">
@@ -145,25 +171,25 @@ display_registration_error_message();
                         <!-- Biographie Field -->
                         <div class="mb-4">
                             <label for="biographie" class="form-label service-label">Biographie <span class="required">*</span></label>
-                            <textarea class="form-control service-input" name="biographie" id="biographie" rows="4" placeholder="Parlez-nous de vous, de vos projets et de ce que vous recherchez..." required></textarea>
-                            <div class="error-message field-error" id="biographie-error" style="display: none;">Ce champ est requis.</div>
+                            <textarea class="form-control service-input" name="biographie" id="biographie" rows="4" placeholder="Parlez-nous de vous, de vos projets et de ce que vous recherchez..." required aria-describedby="biographie_error"></textarea>
+                            <span class="field-error" id="biographie_error" role="alert" aria-live="polite"></span>
                         </div>
 
                         <!-- Genre Field -->
                         <div class="mb-4">
                             <label for="genre" class="form-label service-label">Genre <span class="required">*</span></label>
-                            <select class="form-select service-input" name="genre" id="genre" required>
+                            <select class="form-select service-input" name="genre" id="genre" required aria-describedby="genre_error">
                                 <option value="">Sélectionnez votre genre</option>
                                 <option value="homme">Homme</option>
                                 <option value="femme">Femme</option>
                                 <option value="autre">Autre</option>
                             </select>
-                            <div class="error-message field-error" id="genre-error" style="display: none;">Ce champ est requis.</div>
+                            <span class="field-error" id="genre_error" role="alert" aria-live="polite"></span>
                         </div>
 
                         <!-- Music Genres Section -->
                         <div class="mb-4">
-                            <label class="form-label service-label mb-3">Genres musicaux préférés <span class="required">*</span></label>
+                            <label for="genre-pop" class="form-label service-label mb-3">Genres musicaux préférés <span class="required">*</span></label>
                             
                             <!-- Music Genres Options Grid - Bootstrap -->
                             <div class="row g-3">
@@ -240,14 +266,14 @@ display_registration_error_message();
                                     </div>
                                 </div>
                             </div>
-                            <div class="error-message field-error mt-2" id="music_genres-error" style="display: none;">Veuillez sélectionner au moins un genre musical.</div>
+                            <span class="field-error mt-2" id="music_genres_error" role="alert" aria-live="polite"></span>
                         </div>
-                        <div class="error-message field-error" id="music_genres-error" style="display: none;">Veuillez sélectionner au moins un genre musical.</div>
 
                         <!-- Submit Button -->
-                        <div class="service-submit-section">
-                            <button type="submit" name="seeking_submit" class="btn service-submit-btn" id="seeking-submit-btn">
-                                <span class="btn-text">suivant</span>
+                        <div class="form-navigation">
+                            <a href="<?php echo home_url('/signup-step2'); ?>" class="btn btn-previous">Précédent</a>
+                            <button type="submit" name="seeking_submit" class="btn btn-submit" id="seeking-submit-btn">
+                                <span class="btn-text">Terminer l'inscription</span>
                                 <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
                             </button>
                         </div>
@@ -257,6 +283,109 @@ display_registration_error_message();
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('seeking-form');
+    const submitBtn = document.getElementById('seeking-submit-btn');
+    
+    // Validation de l'étape 3
+    function validateStep3() {
+        let isValid = true;
+        const errors = {};
+        
+        // Biographie
+        const biographie = document.getElementById('biographie').value.trim();
+        if (!biographie) {
+            errors.biographie = 'La biographie est requise.';
+            isValid = false;
+        }
+        
+        // Genre
+        const genre = document.getElementById('genre').value;
+        if (!genre) {
+            errors.genre = 'Le genre est requis.';
+            isValid = false;
+        }
+        
+        // Genres musicaux
+        const musicGenres = form.querySelectorAll('input[name="music_genres[]"]:checked');
+        if (musicGenres.length === 0) {
+            errors.music_genres = 'Veuillez sélectionner au moins un genre musical.';
+            isValid = false;
+        }
+        
+        // Afficher les erreurs
+        Object.keys(errors).forEach(field => {
+            const errorElement = document.getElementById(field + '_error');
+            const inputElement = document.getElementById(field);
+            if (errorElement) {
+                errorElement.textContent = errors[field] || '';
+                if (errors[field]) {
+                    if (inputElement) {
+                        inputElement.classList.add('is-invalid');
+                        inputElement.setAttribute('aria-invalid', 'true');
+                    }
+                } else {
+                    if (inputElement) {
+                        inputElement.classList.remove('is-invalid');
+                        inputElement.setAttribute('aria-invalid', 'false');
+                    }
+                }
+            }
+        });
+        
+        // Pour les genres musicaux, mettre en évidence visuellement
+        if (errors.music_genres) {
+            const genreCheckboxes = form.querySelectorAll('input[name="music_genres[]"]');
+            genreCheckboxes.forEach(cb => {
+                cb.classList.add('is-invalid');
+            });
+        } else {
+            const genreCheckboxes = form.querySelectorAll('input[name="music_genres[]"]');
+            genreCheckboxes.forEach(cb => {
+                cb.classList.remove('is-invalid');
+            });
+        }
+        
+        return isValid;
+    }
+    
+    // Validation en temps réel
+    ['biographie', 'genre'].forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        if (field) {
+            field.addEventListener('blur', validateStep3);
+        }
+    });
+    
+    // Validation des genres musicaux
+    const genreCheckboxes = form.querySelectorAll('input[name="music_genres[]"]');
+    genreCheckboxes.forEach(cb => {
+        cb.addEventListener('change', function() {
+            const genres = form.querySelectorAll('input[name="music_genres[]"]:checked');
+            const errorElement = document.getElementById('music_genres_error');
+            if (genres.length > 0) {
+                errorElement.textContent = '';
+                genreCheckboxes.forEach(c => c.classList.remove('is-invalid'));
+            } else {
+                validateStep3();
+            }
+        });
+    });
+    
+    // Gestion de la soumission
+    form.addEventListener('submit', function(e) {
+        if (!validateStep3()) {
+            e.preventDefault();
+            const firstError = form.querySelector('.is-invalid');
+            if (firstError) {
+                firstError.focus();
+            }
+        }
+    });
+});
+</script>
 
 <?php get_footer(); ?>
 

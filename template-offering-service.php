@@ -22,7 +22,7 @@ if (isset($_POST['offering_submit'])) {
     }
     
     // Check session
-    if (!isset($_SESSION['registration_data'])) {
+    if (!isset($_SESSION['registration_data']) || !isset($_SESSION['registration_data']['step2_completed'])) {
         wp_safe_redirect(home_url('/signup?registration=error&message=session_expired'));
         exit;
     }
@@ -57,7 +57,14 @@ if (isset($_POST['offering_submit'])) {
         exit;
     }
     
-    $user_id = create_user_with_meta($reg_data['user_login'], $reg_data['user_pass'], $reg_data['user_email'], $reg_data);
+    // Create user with all data from session
+    $user_id = create_user_with_meta($reg_data['user_login'], $reg_data['user_pass'], $reg_data['user_email'], array(
+        'first_name' => $reg_data['first_name'],
+        'last_name' => $reg_data['last_name'],
+        'phone' => $reg_data['phone'],
+        'ville' => $reg_data['ville'],
+        'service_type' => $reg_data['service_type']
+    ));
 
     if (!$user_id) {
         wp_safe_redirect(home_url('/offering-service?registration=error&message=user_creation_failed'));
@@ -182,8 +189,27 @@ display_registration_error_message();
             <!-- Right Panel: Form Section (3/5 width) -->
             <div class="col-md-7 service-form-panel">
                 <div class="service-form-wrapper">
-                    <form method="post" action="<?php echo esc_url($_SERVER['REQUEST_URI']); ?>" class="service-form" enctype="multipart/form-data" novalidate>
+                    <!-- Stepper -->
+                    <div class="registration-stepper" role="progressbar" aria-valuenow="3" aria-valuemin="1" aria-valuemax="3" aria-label="Progression de l'inscription">
+                        <div class="stepper-step completed">
+                            <div class="stepper-step-number">1</div>
+                            <div class="stepper-step-label">Identité</div>
+                        </div>
+                        <div class="stepper-step completed">
+                            <div class="stepper-step-number">2</div>
+                            <div class="stepper-step-label">Contact</div>
+                        </div>
+                        <div class="stepper-step active">
+                            <div class="stepper-step-number">3</div>
+                            <div class="stepper-step-label">Profil</div>
+                        </div>
+                    </div>
+
+                    <form method="post" action="<?php echo esc_url($_SERVER['REQUEST_URI']); ?>" class="service-form" id="offering-form" enctype="multipart/form-data" novalidate>
                         <?php wp_nonce_field('offering_action', 'offering_nonce'); ?>
+                        
+                        <h2 class="form-step-title">Profil</h2>
+                        <p class="form-step-description">Présentez-vous et votre activité</p>
 
                         <!-- Photo Upload Section -->
                         <div class="service-photo-section mb-4">
@@ -207,25 +233,25 @@ display_registration_error_message();
                         <!-- Biographie Field -->
                         <div class="mb-4">
                             <label for="biographie" class="form-label service-label">Biographie <span class="required">*</span></label>
-                            <textarea class="form-control service-input" name="biographie" id="biographie" rows="4" placeholder="Parlez-nous de vous, de votre parcours et de vos compétences..." required></textarea>
-                            <div class="error-message field-error" id="biographie-error" style="display: none;">Ce champ est requis.</div>
+                            <textarea class="form-control service-input" name="biographie" id="biographie" rows="4" placeholder="Parlez-nous de vous, de votre parcours et de vos compétences..." required aria-describedby="biographie_error"></textarea>
+                            <span class="field-error" id="biographie_error" role="alert" aria-live="polite"></span>
                         </div>
 
                         <!-- Genre Field -->
                         <div class="mb-4">
                             <label for="genre" class="form-label service-label">Genre <span class="required">*</span></label>
-                            <select class="form-select service-input" name="genre" id="genre" required>
+                            <select class="form-select service-input" name="genre" id="genre" required aria-describedby="genre_error">
                                 <option value="">Sélectionnez votre genre</option>
                                 <option value="homme">Homme</option>
                                 <option value="femme">Femme</option>
                                 <option value="autre">Autre</option>
                             </select>
-                            <div class="error-message field-error" id="genre-error" style="display: none;">Ce champ est requis.</div>
+                            <span class="field-error" id="genre_error" role="alert" aria-live="polite"></span>
                         </div>
 
                         <!-- Filtres Section -->
                         <div class="mb-4">
-                            <label class="form-label service-label mb-3">Filtres <span class="required">*</span></label>
+                            <label for="filter-beatmaker" class="form-label service-label mb-3">Filtres <span class="required">*</span></label>
                             
                             <!-- Filter Options Grid - Bootstrap -->
                             <div class="row g-3">
@@ -293,31 +319,28 @@ display_registration_error_message();
                                     </div>
                                 </div>
                             </div>
-                            <div class="error-message field-error mt-2" id="filters-error" style="display: none;">Veuillez sélectionner au moins un service.</div>
+                            <span class="field-error mt-2" id="filters_error" role="alert" aria-live="polite"></span>
                         </div>
-
-                        <!-- Error message for filters -->
-                        <div class="error-message field-error" id="filters-error" style="display: none;">Veuillez sélectionner au moins un service.</div>
 
                         <!-- Productions Section (Optional) -->
                         <div class="mb-4 productions-registration-section">
-                            <label class="form-label service-label mb-3">Productions (optionnel)</label>
+                            <label for="production_title_0" class="form-label service-label mb-3">Productions (optionnel)</label>
                             <p class="form-text text-muted mb-3">Ajoutez une production pour montrer votre travail. Vous pourrez en ajouter d'autres plus tard.</p>
                             
                             <div class="production-form-item" data-production-index="0">
                                 <div class="mb-3">
                                     <label for="production_title_0" class="form-label">Titre de la production</label>
-                                    <input type="text" class="form-control service-input" name="productions[0][title]" id="production_title_0" placeholder="Ex: Mon premier single">
+                                    <input type="text" class="form-control service-input" name="productions[0][title]" id="production_title_0" autocomplete="off" placeholder="Ex: Mon premier single">
                                 </div>
                                 
                                 <div class="mb-3">
                                     <label for="production_genre_0" class="form-label">Genre</label>
-                                    <input type="text" class="form-control service-input" name="productions[0][genre]" id="production_genre_0" placeholder="Ex: Indie Rock, Rock Alternatif">
+                                    <input type="text" class="form-control service-input" name="productions[0][genre]" id="production_genre_0" autocomplete="off" placeholder="Ex: Indie Rock, Rock Alternatif">
                                 </div>
                                 
                                 <div class="mb-3">
                                     <label for="production_description_0" class="form-label">Description</label>
-                                    <textarea class="form-control service-input" name="productions[0][description]" id="production_description_0" rows="3" placeholder="Décrivez votre production..."></textarea>
+                                    <textarea class="form-control service-input" name="productions[0][description]" id="production_description_0" rows="3" autocomplete="off" placeholder="Décrivez votre production..."></textarea>
                                 </div>
                                 
                                 <div class="row g-3 mb-3">
@@ -335,17 +358,17 @@ display_registration_error_message();
                                 
                                 <div class="mb-3">
                                     <label for="production_soundcloud_0" class="form-label">Lien SoundCloud (optionnel)</label>
-                                    <input type="url" class="form-control service-input" name="productions[0][soundcloud_url]" id="production_soundcloud_0" placeholder="https://soundcloud.com/...">
+                                    <input type="url" class="form-control service-input" name="productions[0][soundcloud_url]" id="production_soundcloud_0" autocomplete="url" placeholder="https://soundcloud.com/...">
                                 </div>
                                 
                                 <div class="mb-3">
                                     <label for="production_spotify_0" class="form-label">Lien Spotify (optionnel)</label>
-                                    <input type="url" class="form-control service-input" name="productions[0][spotify_url]" id="production_spotify_0" placeholder="https://open.spotify.com/...">
+                                    <input type="url" class="form-control service-input" name="productions[0][spotify_url]" id="production_spotify_0" autocomplete="url" placeholder="https://open.spotify.com/...">
                                 </div>
                                 
                                 <div class="mb-3">
                                     <label for="production_youtube_0" class="form-label">Lien YouTube (optionnel)</label>
-                                    <input type="url" class="form-control service-input" name="productions[0][youtube_url]" id="production_youtube_0" placeholder="https://www.youtube.com/...">
+                                    <input type="url" class="form-control service-input" name="productions[0][youtube_url]" id="production_youtube_0" autocomplete="url" placeholder="https://www.youtube.com/...">
                                 </div>
                             </div>
                             
@@ -411,9 +434,10 @@ display_registration_error_message();
                         </script>
 
                         <!-- Submit Button -->
-                        <div class="service-submit-section">
-                            <button type="submit" name="offering_submit" class="btn service-submit-btn" id="offering-submit-btn">
-                                <span class="btn-text">suivant</span>
+                        <div class="form-navigation">
+                            <a href="<?php echo home_url('/signup-step2'); ?>" class="btn btn-previous">Précédent</a>
+                            <button type="submit" name="offering_submit" class="btn btn-submit" id="offering-submit-btn">
+                                <span class="btn-text">Terminer l'inscription</span>
                                 <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
                             </button>
                         </div>
@@ -423,5 +447,108 @@ display_registration_error_message();
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('offering-form');
+    const submitBtn = document.getElementById('offering-submit-btn');
+    
+    // Validation de l'étape 3
+    function validateStep3() {
+        let isValid = true;
+        const errors = {};
+        
+        // Biographie
+        const biographie = document.getElementById('biographie').value.trim();
+        if (!biographie) {
+            errors.biographie = 'La biographie est requise.';
+            isValid = false;
+        }
+        
+        // Genre
+        const genre = document.getElementById('genre').value;
+        if (!genre) {
+            errors.genre = 'Le genre est requis.';
+            isValid = false;
+        }
+        
+        // Filtres
+        const filters = form.querySelectorAll('input[name="filters[]"]:checked');
+        if (filters.length === 0) {
+            errors.filters = 'Veuillez sélectionner au moins un service que vous offrez.';
+            isValid = false;
+        }
+        
+        // Afficher les erreurs
+        Object.keys(errors).forEach(field => {
+            const errorElement = document.getElementById(field + '_error');
+            const inputElement = document.getElementById(field);
+            if (errorElement) {
+                errorElement.textContent = errors[field] || '';
+                if (errors[field]) {
+                    if (inputElement) {
+                        inputElement.classList.add('is-invalid');
+                        inputElement.setAttribute('aria-invalid', 'true');
+                    }
+                } else {
+                    if (inputElement) {
+                        inputElement.classList.remove('is-invalid');
+                        inputElement.setAttribute('aria-invalid', 'false');
+                    }
+                }
+            }
+        });
+        
+        // Pour les filtres, mettre en évidence visuellement
+        if (errors.filters) {
+            const filterCheckboxes = form.querySelectorAll('input[name="filters[]"]');
+            filterCheckboxes.forEach(cb => {
+                cb.classList.add('is-invalid');
+            });
+        } else {
+            const filterCheckboxes = form.querySelectorAll('input[name="filters[]"]');
+            filterCheckboxes.forEach(cb => {
+                cb.classList.remove('is-invalid');
+            });
+        }
+        
+        return isValid;
+    }
+    
+    // Validation en temps réel
+    ['biographie', 'genre'].forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        if (field) {
+            field.addEventListener('blur', validateStep3);
+        }
+    });
+    
+    // Validation des filtres
+    const filterCheckboxes = form.querySelectorAll('input[name="filters[]"]');
+    filterCheckboxes.forEach(cb => {
+        cb.addEventListener('change', function() {
+            const filters = form.querySelectorAll('input[name="filters[]"]:checked');
+            const errorElement = document.getElementById('filters_error');
+            if (filters.length > 0) {
+                errorElement.textContent = '';
+                filterCheckboxes.forEach(c => c.classList.remove('is-invalid'));
+            } else {
+                validateStep3();
+            }
+        });
+    });
+    
+    // Gestion de la soumission
+    form.addEventListener('submit', function(e) {
+        if (!validateStep3()) {
+            e.preventDefault();
+            const firstError = form.querySelector('.is-invalid');
+            if (firstError) {
+                firstError.focus();
+            }
+        }
+    });
+});
+</script>
 
 <?php get_footer(); ?>

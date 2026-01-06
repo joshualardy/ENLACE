@@ -4,6 +4,9 @@
  * Theme Functions
  */
 
+// Include icon helper functions
+require_once get_template_directory() . '/functions-icons.php';
+
 // Theme setup
 function theme_setup()
 {
@@ -14,46 +17,35 @@ function theme_setup()
 }
 add_action('after_setup_theme', 'theme_setup');
 
+// Helper: Get file version for cache busting
+function get_theme_file_version($file_path) {
+    $file = get_template_directory() . $file_path;
+    return file_exists($file) ? filemtime($file) : '1.0.0';
+}
+
 // Enqueue styles and scripts
 function theme_scripts()
 {
+    $theme_uri = get_template_directory_uri();
+    
     // Bootstrap CSS (always loaded)
-    wp_enqueue_style('bootstrap-css', get_template_directory_uri() . '/assets/css/bootstrap.min.css', array(), '5.3.8');
+    wp_enqueue_style('bootstrap-css', $theme_uri . '/assets/css/bootstrap.min.css', array(), '5.3.8');
     
-    // Base CSS files (always loaded)
-    wp_enqueue_style('theme-variables', get_template_directory_uri() . '/assets/css/variables.css', array(), '1.0.0');
-    wp_enqueue_style('theme-base', get_template_directory_uri() . '/assets/css/base.css', array('theme-variables'), '1.0.0');
-    wp_enqueue_style('theme-header', get_template_directory_uri() . '/assets/css/header.css', array('theme-base'), '1.0.0');
-    wp_enqueue_style('theme-footer', get_template_directory_uri() . '/assets/css/footer.css', array('theme-base'), '1.0.0');
-    wp_enqueue_style('theme-common', get_template_directory_uri() . '/assets/css/common.css', array('theme-base'), '1.0.0');
-    
-    // Page-specific CSS
-    if (is_front_page() || is_home()) {
-        wp_enqueue_style('theme-front-page', get_template_directory_uri() . '/assets/css/front-page.css', array('theme-common'), '1.0.0');
-    }
-    
-    // Check if we're on a template page
-    $template = get_page_template_slug();
-    if ($template === 'template-login.php') {
-        wp_enqueue_style('theme-login', get_template_directory_uri() . '/assets/css/login.css', array('theme-common'), '1.0.0');
-    } elseif ($template === 'template-register.php') {
-        wp_enqueue_style('theme-register', get_template_directory_uri() . '/assets/css/register.css', array('theme-common'), '1.0.0');
-    } elseif ($template === 'template-offering-service.php' || $template === 'template-seeking-service.php') {
-        wp_enqueue_style('theme-service-forms', get_template_directory_uri() . '/assets/css/service-forms.css', array('theme-common'), '1.0.0');
-    } elseif ($template === 'template-userprofil.php') {
-        wp_enqueue_style('theme-userprofil', get_template_directory_uri() . '/assets/css/userprofil.css', array('theme-common'), '1.0.0');
-    } elseif ($template === 'template-annonces.php') {
-        wp_enqueue_style('theme-annonces', get_template_directory_uri() . '/assets/css/annonces.css', array('theme-common'), '1.0.0');
-    } elseif ($template === 'template-decouvrir.php') {
-        wp_enqueue_style('theme-decouvrir', get_template_directory_uri() . '/assets/css/decouvrir.css', array('theme-common'), '1.0.0');
-    } elseif ($template === 'template-messagerie.php') {
-        wp_enqueue_style('theme-messagerie', get_template_directory_uri() . '/assets/css/messagerie.css', array('theme-common'), '1.0.0');
-    }
+    // Main CSS file - Consolidé et optimisé (contient tous les styles)
+    wp_enqueue_style('theme-main', $theme_uri . '/assets/css/main.css', array('bootstrap-css'), get_theme_file_version('/assets/css/main.css'));
     
     // Scripts
     wp_enqueue_script('jquery');
     wp_enqueue_script('bootstrap-js', 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js', array('jquery'), '5.3.0', true);
-    wp_enqueue_script('theme-script', get_template_directory_uri() . '/assets/js/main.js', array('jquery'), '1.0.0', true);
+    wp_enqueue_script('theme-script', $theme_uri . '/assets/js/main.js', array('jquery'), get_theme_file_version('/assets/js/main.js'), true);
+    
+    // Vanta.TRUNK scripts (only on login and register pages)
+    global $template;
+    $template_name = basename($template);
+    if ($template_name === 'template-login.php' || $template_name === 'template-register.php') {
+        wp_enqueue_script('p5', 'https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js', array(), '1.7.0', false);
+        wp_enqueue_script('vanta-trunk', 'https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.trunk.min.js', array('p5'), '0.5.42', false);
+    }
     
     // Localize script for AJAX
     wp_localize_script('theme-script', 'enlaceAjax', array(
@@ -81,7 +73,18 @@ function get_registration_error_messages() {
         'user_already_exists' => 'Un compte avec ce nom d\'utilisateur ou cet email existe déjà.',
         'nonce_failed' => 'Erreur de sécurité. Veuillez réessayer.',
         'photo_too_large' => 'La photo est trop grande. Taille maximum : 5MB.',
-        'photo_invalid_type' => 'Format de photo non autorisé. Formats acceptés : JPEG, PNG, GIF, WebP.'
+        'photo_invalid_type' => 'Format de photo non autorisé. Formats acceptés : JPEG, PNG, GIF, WebP.',
+        'first_name' => 'Le prénom est requis.',
+        'last_name' => 'Le nom est requis.',
+        'user_email' => 'L\'email est requis ou invalide.',
+        'user_email_exists' => 'Cet email est déjà utilisé. Veuillez en choisir un autre.',
+        'user_pass' => 'Le mot de passe est requis et doit contenir au moins 8 caractères.',
+        'user_pass_confirm' => 'Les mots de passe ne correspondent pas.',
+        'user_login' => 'Le nom d\'utilisateur est requis.',
+        'user_login_exists' => 'Ce nom d\'utilisateur est déjà pris. Veuillez en choisir un autre.',
+        'phone' => 'Le numéro de téléphone est requis.',
+        'ville' => 'La ville est requise.',
+        'service_type' => 'Veuillez choisir si vous offrez ou cherchez un service.'
     );
 }
 
@@ -109,8 +112,8 @@ function display_registration_error_message() {
 function check_registration_session($required_service_type = null) {
     if (!isset($_SESSION['registration_data'])) {
         wp_redirect(home_url('/signup'));
-            exit;
-        }
+        exit;
+    }
 
     if ($required_service_type !== null && 
         (!isset($_SESSION['registration_data']['service_type']) || 
@@ -132,14 +135,14 @@ function save_user_meta_fields($user_id, $data) {
 
 // Helper: Update user display name
 function update_user_display_name($user_id, $first_name, $last_name) {
-            if ($first_name || $last_name) {
-                wp_update_user(array(
-                    'ID' => $user_id,
-                    'display_name' => trim($first_name . ' ' . $last_name),
-                    'first_name' => $first_name,
-                    'last_name' => $last_name
-                ));
-            }
+    if ($first_name || $last_name) {
+        wp_update_user(array(
+            'ID' => $user_id,
+            'display_name' => trim($first_name . ' ' . $last_name),
+            'first_name' => $first_name,
+            'last_name' => $last_name
+        ));
+    }
 }
 
 // Helper: Handle profile photo upload with server-side validation
@@ -149,6 +152,7 @@ function handle_profile_photo_upload($user_id) {
     }
 
     require_once(ABSPATH . 'wp-admin/includes/file.php');
+    require_once(ABSPATH . 'wp-admin/includes/image.php');
     
     $uploadedfile = $_FILES['profile_photo'];
     
@@ -158,20 +162,32 @@ function handle_profile_photo_upload($user_id) {
         return 'size_error';
     }
     
-    // Validate file type
-    $upload_overrides = array('test_form' => false);
+    // Validate file type using WordPress function (checks real mime type)
+    $file_type_data = wp_check_filetype_and_ext($uploadedfile['tmp_name'], $uploadedfile['name']);
     $allowed_types = array('image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp');
-    $file_type = wp_check_filetype($uploadedfile['name']);
-    $mime_type = $uploadedfile['type'];
+    $allowed_extensions = array('jpg', 'jpeg', 'png', 'gif', 'webp');
     
-    if (!in_array($mime_type, $allowed_types) && !in_array($file_type['type'], $allowed_types)) {
+    // Check both mime type and extension
+    if (!$file_type_data || !in_array($file_type_data['type'], $allowed_types) || !in_array(strtolower($file_type_data['ext']), $allowed_extensions)) {
         return 'type_error';
     }
     
+    // Get old photo URL before upload to delete it later
+    $old_photo_url = get_user_meta($user_id, 'profile_photo_url', true);
+    
     // Handle upload
+    $upload_overrides = array('test_form' => false);
     $movefile = wp_handle_upload($uploadedfile, $upload_overrides);
     
     if ($movefile && !isset($movefile['error'])) {
+        // Delete old photo file if exists
+        if (!empty($old_photo_url)) {
+            $old_file_path = str_replace(wp_upload_dir()['baseurl'], wp_upload_dir()['basedir'], $old_photo_url);
+            if (file_exists($old_file_path) && is_file($old_file_path)) {
+                @unlink($old_file_path); // Suppress errors if file doesn't exist
+            }
+        }
+        
         update_user_meta($user_id, 'profile_photo_url', esc_url_raw($movefile['url']));
         return true;
     }
@@ -212,43 +228,109 @@ function auto_login_user($user_id) {
 }
 
 // Handle user registration step 1
-function handle_user_registration()
+function handle_user_registration_step1()
 {
-    if (!isset($_POST['register_submit']) || !isset($_POST['register_nonce']) || !wp_verify_nonce($_POST['register_nonce'], 'register_action')) {
+    if (!isset($_POST['registration_step']) || $_POST['registration_step'] != '1') {
         return;
     }
+    
+    if (!isset($_POST['register_step1_nonce']) || !wp_verify_nonce($_POST['register_step1_nonce'], 'register_step1_action')) {
+        wp_safe_redirect(home_url('/signup?registration=error&message=nonce_failed'));
+        exit;
+    }
 
-    $username = sanitize_user($_POST['user_login']);
+    if (!session_id()) {
+        session_start();
+    }
+
     $email = sanitize_email($_POST['user_email']);
     $password = $_POST['user_pass'];
     $password_confirm = $_POST['user_pass_confirm'];
+    $first_name = isset($_POST['first_name']) ? sanitize_text_field($_POST['first_name']) : '';
+    $last_name = isset($_POST['last_name']) ? sanitize_text_field($_POST['last_name']) : '';
 
-    if ($password !== $password_confirm || username_exists($username) || email_exists($email)) {
-            wp_redirect(home_url('/signup?registration=error'));
-            exit;
+    // Validation
+    $errors = array();
+    
+    if (empty($first_name)) {
+        $errors[] = 'first_name';
+    }
+    
+    if (empty($last_name)) {
+        $errors[] = 'last_name';
+    }
+    
+    if (empty($email) || !is_email($email)) {
+        $errors[] = 'user_email';
+    } elseif (email_exists($email)) {
+        $errors[] = 'user_email_exists';
+    }
+    
+    if (empty($password) || strlen($password) < 8) {
+        $errors[] = 'user_pass';
+    }
+    
+    if ($password !== $password_confirm) {
+        $errors[] = 'user_pass_confirm';
+    }
+
+    if (!empty($errors)) {
+        // Sauvegarder les valeurs POST en session pour les réafficher
+        if (!session_id()) {
+            session_start();
         }
+        $_SESSION['registration_step1_post_data'] = array(
+            'first_name' => $first_name,
+            'last_name' => $last_name,
+            'user_email' => $email
+        );
+        $error_params = 'registration=error&fields=' . implode(',', $errors);
+        wp_safe_redirect(home_url('/signup?' . $error_params));
+        exit;
+    }
 
+    // Save step 1 data to session
     $registration_data = array(
-        'user_login' => $username,
+        'first_name' => $first_name,
+        'last_name' => $last_name,
         'user_email' => $email,
         'user_pass' => $password,
-        'first_name' => isset($_POST['first_name']) ? sanitize_text_field($_POST['first_name']) : '',
-        'last_name' => isset($_POST['last_name']) ? sanitize_text_field($_POST['last_name']) : '',
-        'phone' => isset($_POST['phone']) ? sanitize_text_field($_POST['phone']) : '',
-        'ville' => isset($_POST['ville']) ? sanitize_text_field($_POST['ville']) : '',
-        'service_type' => $_POST['register_submit'] === 'offer' ? 'offer' : 'seek'
+        'step1_completed' => true
     );
 
     $_SESSION['registration_data'] = $registration_data;
     
-    if ($_POST['register_submit'] === 'offer') {
-        wp_redirect(home_url('/offering-service'));
-    } else {
-        wp_redirect(home_url('/seeking-service'));
+    // Nettoyer les données POST temporaires si elles existent
+    if (isset($_SESSION['registration_step1_post_data'])) {
+        unset($_SESSION['registration_step1_post_data']);
     }
+    
+    // Redirect to step 2
+    wp_safe_redirect(home_url('/signup-step2'));
     exit;
 }
-add_action('template_redirect', 'handle_user_registration');
+add_action('template_redirect', 'handle_user_registration_step1');
+
+// AJAX: Check username availability
+function ajax_check_username() {
+    $username = isset($_POST['username']) ? sanitize_user($_POST['username']) : '';
+    
+    if (empty($username)) {
+        wp_send_json_error(array('message' => 'Nom d\'utilisateur requis.'));
+        return;
+    }
+    
+    if (strlen($username) < 3) {
+        wp_send_json_success(array('exists' => false, 'message' => 'Le nom d\'utilisateur doit contenir au moins 3 caractères.'));
+        return;
+    }
+    
+    $exists = username_exists($username);
+    
+    wp_send_json_success(array('exists' => $exists));
+}
+add_action('wp_ajax_check_username', 'ajax_check_username');
+add_action('wp_ajax_nopriv_check_username', 'ajax_check_username');
 
 // Note: Form processing is now handled directly in template-offering-service.php
 // to avoid timing issues with template_redirect hook.
@@ -341,9 +423,70 @@ function handle_profile_update()
         }
     }
 
-    // Redirect with success/error message
+    // Redirect with success/error message - check if from settings page
     $redirect_url = home_url('/userprofil');
+    $is_from_settings = false;
+    
+    if (isset($_POST['_wp_http_referer'])) {
+        $referer = $_POST['_wp_http_referer'];
+        // Check if request came from settings page
+        if (strpos($referer, '/settings') !== false || strpos($referer, 'settings') !== false) {
+            $redirect_url = home_url('/settings');
+            $is_from_settings = true;
+            // Preserve section parameter if exists
+            $url_parts = parse_url($referer);
+            parse_str($url_parts['query'] ?? '', $query_params);
+            if (isset($query_params['section'])) {
+                $redirect_url = add_query_arg('section', $query_params['section'], $redirect_url);
+            }
+        } elseif (strpos($referer, 'tab=') !== false) {
+            // Preserve tab parameter for profile page
+            $url_parts = parse_url($referer);
+            parse_str($url_parts['query'] ?? '', $query_params);
+            if (isset($query_params['tab'])) {
+                $redirect_url = add_query_arg('tab', $query_params['tab'], $redirect_url);
+            }
+        }
+    }
+    
     if (empty($errors)) {
+        // Save privacy and notification settings
+        if (isset($_POST['show_email'])) {
+            update_user_meta($user_id, 'show_email', '1');
+        } else {
+            update_user_meta($user_id, 'show_email', '0');
+        }
+        
+        if (isset($_POST['show_phone'])) {
+            update_user_meta($user_id, 'show_phone', '1');
+        } else {
+            update_user_meta($user_id, 'show_phone', '0');
+        }
+        
+        if (isset($_POST['email_notifications'])) {
+            update_user_meta($user_id, 'email_notifications', '1');
+        } else {
+            update_user_meta($user_id, 'email_notifications', '0');
+        }
+        
+        if (isset($_POST['notify_messages'])) {
+            update_user_meta($user_id, 'notify_messages', '1');
+        } else {
+            update_user_meta($user_id, 'notify_messages', '0');
+        }
+        
+        if (isset($_POST['notify_favorites'])) {
+            update_user_meta($user_id, 'notify_favorites', '1');
+        } else {
+            update_user_meta($user_id, 'notify_favorites', '0');
+        }
+        
+        if (isset($_POST['notify_comments'])) {
+            update_user_meta($user_id, 'notify_comments', '1');
+        } else {
+            update_user_meta($user_id, 'notify_comments', '0');
+        }
+        
         $redirect_url = add_query_arg('profile_updated', 'success', $redirect_url);
     } else {
         $redirect_url = add_query_arg('profile_updated', 'error', $redirect_url);
@@ -353,6 +496,61 @@ function handle_profile_update()
     exit;
 }
 add_action('template_redirect', 'handle_profile_update');
+
+// Handle password change
+function handle_password_change() {
+    if (!isset($_POST['password_change_submit']) || !isset($_POST['password_change_nonce']) || !wp_verify_nonce($_POST['password_change_nonce'], 'password_change_action')) {
+        return;
+    }
+    
+    if (!is_user_logged_in()) {
+        wp_safe_redirect(home_url('/login'));
+        exit;
+    }
+    
+    $user_id = get_current_user_id();
+    $current_password = isset($_POST['current_password']) ? $_POST['current_password'] : '';
+    $new_password = isset($_POST['new_password']) ? $_POST['new_password'] : '';
+    $confirm_password = isset($_POST['confirm_password']) ? $_POST['confirm_password'] : '';
+    
+    // Validate current password
+    $user = get_userdata($user_id);
+    if (!wp_check_password($current_password, $user->user_pass, $user_id)) {
+        $redirect_url = home_url('/settings?section=security');
+        $redirect_url = add_query_arg('password_change', 'wrong_password', $redirect_url);
+        wp_safe_redirect($redirect_url);
+        exit;
+    }
+    
+    // Validate new password
+    if (strlen($new_password) < 8) {
+        $redirect_url = home_url('/settings?section=security');
+        $redirect_url = add_query_arg('password_change', 'too_short', $redirect_url);
+        wp_safe_redirect($redirect_url);
+        exit;
+    }
+    
+    // Validate password confirmation
+    if ($new_password !== $confirm_password) {
+        $redirect_url = home_url('/settings?section=security');
+        $redirect_url = add_query_arg('password_change', 'mismatch', $redirect_url);
+        wp_safe_redirect($redirect_url);
+        exit;
+    }
+    
+    // Update password
+    wp_set_password($new_password, $user_id);
+    
+    // Update last active
+    update_user_meta($user_id, 'last_active', current_time('mysql'));
+    
+    // Redirect to settings page
+    $redirect_url = home_url('/settings?section=security');
+    $redirect_url = add_query_arg('password_change', 'success', $redirect_url);
+    wp_safe_redirect($redirect_url);
+    exit;
+}
+add_action('template_redirect', 'handle_password_change');
 
 // Handle user login
 function handle_user_login()
@@ -423,7 +621,7 @@ function get_user_productions($user_id = null) {
 }
 
 // Handle audio/video file upload
-function handle_production_media_upload($user_id, $file_key, $allowed_types = array('audio', 'video')) {
+function handle_production_media_upload($user_id, $file_key, $allowed_types = array('audio', 'video'), $old_file_url = '') {
     if (empty($_FILES[$file_key]['name'])) {
         return false;
     }
@@ -438,33 +636,43 @@ function handle_production_media_upload($user_id, $file_key, $allowed_types = ar
         return 'size_error';
     }
     
-    // Validate file type
-    $upload_overrides = array('test_form' => false);
+    // Validate file type using WordPress function (checks real mime type)
+    $file_type_data = wp_check_filetype_and_ext($uploadedfile['tmp_name'], $uploadedfile['name']);
     $allowed_mime_types = array();
+    $allowed_extensions = array();
     
     if (in_array('audio', $allowed_types)) {
         $allowed_mime_types = array_merge($allowed_mime_types, array(
             'audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/ogg', 'audio/aac', 'audio/flac'
         ));
+        $allowed_extensions = array_merge($allowed_extensions, array('mp3', 'wav', 'ogg', 'aac', 'flac', 'mpeg'));
     }
     
     if (in_array('video', $allowed_types)) {
         $allowed_mime_types = array_merge($allowed_mime_types, array(
             'video/mp4', 'video/webm', 'video/ogg', 'video/quicktime', 'video/x-msvideo'
         ));
+        $allowed_extensions = array_merge($allowed_extensions, array('mp4', 'webm', 'ogg', 'mov', 'avi'));
     }
     
-    $file_type = wp_check_filetype($uploadedfile['name']);
-    $mime_type = $uploadedfile['type'];
-    
-    if (!in_array($mime_type, $allowed_mime_types) && !in_array($file_type['type'], $allowed_mime_types)) {
+    // Check both mime type and extension
+    if (!$file_type_data || !in_array($file_type_data['type'], $allowed_mime_types) || !in_array(strtolower($file_type_data['ext']), $allowed_extensions)) {
         return 'type_error';
     }
     
     // Handle upload
+    $upload_overrides = array('test_form' => false);
     $movefile = wp_handle_upload($uploadedfile, $upload_overrides);
     
     if ($movefile && !isset($movefile['error'])) {
+        // Delete old file if exists and provided
+        if (!empty($old_file_url)) {
+            $old_file_path = str_replace(wp_upload_dir()['baseurl'], wp_upload_dir()['basedir'], $old_file_url);
+            if (file_exists($old_file_path) && is_file($old_file_path)) {
+                @unlink($old_file_path); // Suppress errors if file doesn't exist
+            }
+        }
+        
         return esc_url_raw($movefile['url']);
     }
     
@@ -592,15 +800,15 @@ function handle_production_action() {
         exit;
     }
     
-    $action = $_POST['production_action'];
+    $action = isset($_POST['production_action']) ? sanitize_text_field($_POST['production_action']) : '';
     
     if ($action === 'add') {
         if (isset($_POST['production_title']) && isset($_POST['production_genre']) && isset($_POST['production_description'])) {
             $production_data = array(
-                'title' => $_POST['production_title'],
-                'genre' => $_POST['production_genre'],
-                'description' => $_POST['production_description'],
-                'rating' => isset($_POST['production_rating']) ? $_POST['production_rating'] : 5,
+                'title' => sanitize_text_field($_POST['production_title']),
+                'genre' => sanitize_text_field($_POST['production_genre']),
+                'description' => sanitize_textarea_field($_POST['production_description']),
+                'rating' => isset($_POST['production_rating']) ? intval($_POST['production_rating']) : 5,
                 'audio_file' => '',
                 'video_file' => '',
                 'soundcloud_url' => '',
@@ -663,10 +871,10 @@ function handle_production_action() {
         
         if ($existing_production && isset($_POST['production_title']) && isset($_POST['production_genre']) && isset($_POST['production_description'])) {
             $production_data = array(
-                'title' => $_POST['production_title'],
-                'genre' => $_POST['production_genre'],
-                'description' => $_POST['production_description'],
-                'rating' => isset($_POST['production_rating']) ? $_POST['production_rating'] : $existing_production['rating'],
+                'title' => sanitize_text_field($_POST['production_title']),
+                'genre' => sanitize_text_field($_POST['production_genre']),
+                'description' => sanitize_textarea_field($_POST['production_description']),
+                'rating' => isset($_POST['production_rating']) ? intval($_POST['production_rating']) : $existing_production['rating'],
                 'audio_file' => $existing_production['audio_file'],
                 'video_file' => $existing_production['video_file'],
                 'soundcloud_url' => isset($_POST['production_soundcloud_url']) ? esc_url_raw($_POST['production_soundcloud_url']) : '',
@@ -676,7 +884,8 @@ function handle_production_action() {
             
             // Handle audio file upload (replace if new file uploaded)
             if (isset($_FILES['production_audio']) && !empty($_FILES['production_audio']['name'])) {
-                $audio_result = handle_production_media_upload($user_id, 'production_audio', array('audio'));
+                $old_audio = $existing_production['audio_file'] ?? '';
+                $audio_result = handle_production_media_upload($user_id, 'production_audio', array('audio'), $old_audio);
                 if ($audio_result && $audio_result !== 'size_error' && $audio_result !== 'type_error') {
                     $production_data['audio_file'] = $audio_result;
                 }
@@ -684,7 +893,8 @@ function handle_production_action() {
             
             // Handle video file upload (replace if new file uploaded)
             if (isset($_FILES['production_video']) && !empty($_FILES['production_video']['name'])) {
-                $video_result = handle_production_media_upload($user_id, 'production_video', array('video'));
+                $old_video = $existing_production['video_file'] ?? '';
+                $video_result = handle_production_media_upload($user_id, 'production_video', array('video'), $old_video);
                 if ($video_result && $video_result !== 'size_error' && $video_result !== 'type_error') {
                     $production_data['video_file'] = $video_result;
                 }
@@ -799,6 +1009,194 @@ function get_user_profile_data($user_id = null)
         'music_genres' => is_array($music_genres) ? $music_genres : array(),
         'productions' => $productions,
     );
+}
+
+// Get user statistics (views, favorites, messages)
+function get_user_statistics($user_id = null) {
+    if (!$user_id) {
+        if (!is_user_logged_in()) {
+            return array();
+        }
+        $user_id = get_current_user_id();
+    }
+    
+    global $wpdb;
+    
+    $stats = array(
+        'profile_views' => 0,
+        'favorites_received' => 0,
+        'messages_received' => 0,
+        'productions_count' => 0,
+        'productions_comments' => 0,
+        'registered_date' => '',
+        'last_active' => ''
+    );
+    
+    // Get profile views (stored in user meta)
+    $profile_views = get_user_meta($user_id, 'profile_views', true);
+    $stats['profile_views'] = $profile_views ? intval($profile_views) : 0;
+    
+    // Get favorites received count
+    verify_favorites_table();
+    $favorites_table = $wpdb->prefix . 'enlace_favorites';
+    $favorites_count = $wpdb->get_var($wpdb->prepare(
+        "SELECT COUNT(*) FROM $favorites_table WHERE item_type = 'user' AND item_id = %d",
+        $user_id
+    ));
+    $stats['favorites_received'] = intval($favorites_count);
+    
+    // Get messages received count
+    verify_messaging_tables();
+    $messages_table = $wpdb->prefix . 'enlace_messages';
+    $conversations_table = $wpdb->prefix . 'enlace_conversations';
+    
+    $messages_count = $wpdb->get_var($wpdb->prepare(
+        "SELECT COUNT(*) FROM $messages_table m
+         INNER JOIN $conversations_table c ON m.conversation_id = c.id
+         WHERE c.user2_id = %d AND m.sender_id != %d",
+        $user_id, $user_id
+    ));
+    $stats['messages_received'] = intval($messages_count);
+    
+    // Get productions count
+    $productions = get_user_productions($user_id);
+    $stats['productions_count'] = count($productions);
+    
+    // Get productions comments count
+    $productions_comments_count = 0;
+    foreach ($productions as $production) {
+        if (isset($production['comments']) && is_array($production['comments'])) {
+            $productions_comments_count += count($production['comments']);
+        }
+    }
+    $stats['productions_comments'] = $productions_comments_count;
+    
+    // Get registered date
+    $user = get_userdata($user_id);
+    if ($user) {
+        $stats['registered_date'] = date_i18n('d/m/Y', strtotime($user->user_registered));
+        $stats['last_active'] = get_user_meta($user_id, 'last_active', true);
+        if (!$stats['last_active']) {
+            $stats['last_active'] = 'Jamais';
+        }
+    }
+    
+    return $stats;
+}
+
+// Track profile view (can be called when viewing a profile)
+function track_profile_view($user_id) {
+    if (!$user_id || $user_id == get_current_user_id()) {
+        return; // Don't track own views
+    }
+    
+    $current_views = get_user_meta($user_id, 'profile_views', true);
+    $new_views = $current_views ? intval($current_views) + 1 : 1;
+    update_user_meta($user_id, 'profile_views', $new_views);
+}
+
+// Get user recommendations based on complementary service type, similar genres, and location
+function get_user_recommendations($user_id = null, $limit = 20) {
+    if (!$user_id) {
+        if (!is_user_logged_in()) {
+            return array();
+        }
+        $user_id = get_current_user_id();
+    }
+    
+    // Get current user data
+    $current_user_data = get_user_profile_data($user_id);
+    if (!$current_user_data) {
+        return array();
+    }
+    
+    $current_service_type = $current_user_data['service_type'];
+    $current_music_genres = $current_user_data['music_genres'];
+    $current_ville = $current_user_data['ville'];
+    
+    // Determine complementary service type
+    $target_service_type = ($current_service_type === 'offer') ? 'seek' : 'offer';
+    
+    // Get all users except current user
+    $args = array(
+        'exclude' => array($user_id),
+        'number' => 200, // Get more to filter
+        'meta_query' => array(
+            array(
+                'key' => 'service_type',
+                'value' => $target_service_type,
+                'compare' => '='
+            )
+        )
+    );
+    
+    $users = get_users($args);
+    $recommendations = array();
+    $current_user_favorites = get_user_favorites($user_id, 'user');
+    $favorited_user_ids = array();
+    
+    foreach ($current_user_favorites as $fav) {
+        $favorited_user_ids[] = $fav->item_id;
+    }
+    
+    foreach ($users as $user) {
+        // Skip if already favorited
+        if (in_array($user->ID, $favorited_user_ids)) {
+            continue;
+        }
+        
+        $user_data = get_user_profile_data($user->ID);
+        if (!$user_data) {
+            continue;
+        }
+        
+        $score = 0;
+        $matching_genres = array();
+        
+        // Calculate relevance score
+        // 1. Match by music genres (if available)
+        if (!empty($current_music_genres) && !empty($user_data['music_genres'])) {
+            $common_genres = array_intersect($current_music_genres, $user_data['music_genres']);
+            $matching_genres = $common_genres;
+            $score += count($common_genres) * 10; // 10 points per matching genre
+        }
+        
+        // 2. Match by location (bonus points)
+        if (!empty($current_ville) && !empty($user_data['ville'])) {
+            if (strtolower($current_ville) === strtolower($user_data['ville'])) {
+                $score += 20; // 20 bonus points for same city
+            }
+        }
+        
+        // 3. Has profile photo (bonus)
+        if (!empty($user_data['profile_photo_url'])) {
+            $score += 5;
+        }
+        
+        // 4. Has biography (bonus)
+        if (!empty($user_data['biographie'])) {
+            $score += 3;
+        }
+        
+        // Only include users with some relevance
+        if ($score > 0 || empty($current_music_genres)) {
+            $recommendations[] = array(
+                'user_data' => $user_data,
+                'score' => $score,
+                'matching_genres' => $matching_genres
+            );
+        }
+    }
+    
+    // Sort by score (highest first)
+    usort($recommendations, function($a, $b) {
+        return $b['score'] - $a['score'];
+    });
+    
+    // Limit results
+    $recommendations = array_slice($recommendations, 0, $limit);
+    
+    return $recommendations;
 }
 
 // Add custom fields to user profile in admin
@@ -1136,9 +1534,9 @@ function verify_messaging_tables() {
     $messages_table = $wpdb->prefix . 'enlace_messages';
     $conversations_table = $wpdb->prefix . 'enlace_conversations';
     
-    // Check if tables exist
-    $messages_exists = $wpdb->get_var("SHOW TABLES LIKE '$messages_table'") == $messages_table;
-    $conversations_exists = $wpdb->get_var("SHOW TABLES LIKE '$conversations_table'") == $conversations_table;
+    // Check if tables exist using prepared statement
+    $messages_exists = $wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s", $messages_table)) == $messages_table;
+    $conversations_exists = $wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s", $conversations_table)) == $conversations_table;
     
     if (!$messages_exists || !$conversations_exists) {
         create_messages_table();
@@ -1557,7 +1955,7 @@ function verify_favorites_table() {
     global $wpdb;
     $table = $wpdb->prefix . 'enlace_favorites';
     
-    $table_exists = $wpdb->get_var("SHOW TABLES LIKE '$table'") == $table;
+    $table_exists = $wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s", $table)) == $table;
     
     if (!$table_exists) {
         create_favorites_table();
@@ -1835,7 +2233,7 @@ function verify_production_comments_table() {
     global $wpdb;
     $table = $wpdb->prefix . 'enlace_production_comments';
     
-    $table_exists = $wpdb->get_var("SHOW TABLES LIKE '$table'") == $table;
+    $table_exists = $wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s", $table)) == $table;
     
     if (!$table_exists) {
         create_production_comments_table();

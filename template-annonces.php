@@ -66,22 +66,22 @@ $annonces_query = new WP_Query($args);
                         
                         <div class="mb-3">
                             <label for="annonce_title" class="form-label">Titre <span class="required">*</span></label>
-                            <input type="text" class="form-control" name="annonce_title" id="annonce_title" required>
+                            <input type="text" class="form-control" name="annonce_title" id="annonce_title" autocomplete="off" required>
                         </div>
 
                         <div class="mb-3">
                             <label for="annonce_content" class="form-label">Description <span class="required">*</span></label>
-                            <textarea class="form-control" name="annonce_content" id="annonce_content" rows="5" required></textarea>
+                            <textarea class="form-control" name="annonce_content" id="annonce_content" rows="5" autocomplete="off" required></textarea>
                         </div>
 
                         <div class="mb-3">
                             <label for="annonce_localisation" class="form-label">Localisation</label>
-                            <input type="text" class="form-control" name="annonce_localisation" id="annonce_localisation" placeholder="localisation">
+                            <input type="text" class="form-control" name="annonce_localisation" id="annonce_localisation" autocomplete="address-level2" placeholder="localisation">
                         </div>
 
                         <div class="mb-3">
                             <label for="annonce_service_type" class="form-label">Type de service</label>
-                            <select class="form-control" name="annonce_service_type" id="annonce_service_type">
+                            <select class="form-control" name="annonce_service_type" id="annonce_service_type" autocomplete="off">
                                 <option value="offer">J'offre un service</option>
                                 <option value="seek">Je cherche un service</option>
                             </select>
@@ -114,7 +114,7 @@ $annonces_query = new WP_Query($args);
                     $author_profile_url = home_url('/userprofil?user_id=' . $author_id);
                 ?>
                     <div class="col-md-6 col-lg-4">
-                        <div class="card annonce-card h-100" data-annonce-id="<?php echo get_the_ID(); ?>" data-author-id="<?php echo esc_attr($author_id); ?>" data-author-name="<?php echo esc_attr($author_name); ?>" data-author-url="<?php echo esc_url($author_profile_url); ?>">
+                        <div class="card annonce-card h-100" data-annonce-id="<?php echo absint(get_the_ID()); ?>" data-author-id="<?php echo absint($author_id); ?>" data-author-name="<?php echo esc_attr($author_name); ?>" data-author-url="<?php echo esc_url($author_profile_url); ?>">
                         <div class="annonce-card-image">
                             <?php if ($thumbnail_url) : ?>
                                 <img src="<?php echo esc_url($thumbnail_url); ?>" alt="<?php echo esc_attr(get_the_title()); ?>">
@@ -132,11 +132,11 @@ $annonces_query = new WP_Query($args);
                                 <?php if (is_user_logged_in()) : 
                                     $is_favorited = is_favorited(get_current_user_id(), 'annonce', get_the_ID());
                                 ?>
-                                <button class="annonce-bookmark-btn <?php echo $is_favorited ? 'favorited' : ''; ?>" 
+                                <button class="annonce-bookmark-btn <?php echo esc_attr($is_favorited ? 'favorited' : ''); ?>" 
                                         data-item-type="annonce" 
-                                        data-item-id="<?php echo get_the_ID(); ?>" 
-                                        aria-label="<?php echo $is_favorited ? 'Retirer des favoris' : 'Ajouter aux favoris'; ?>">
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="<?php echo $is_favorited ? 'currentColor' : 'none'; ?>" xmlns="http://www.w3.org/2000/svg">
+                                        data-item-id="<?php echo absint(get_the_ID()); ?>" 
+                                        aria-label="<?php echo esc_attr($is_favorited ? 'Retirer des favoris' : 'Ajouter aux favoris'); ?>">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="<?php echo esc_attr($is_favorited ? 'currentColor' : 'none'); ?>" xmlns="http://www.w3.org/2000/svg">
                                         <path d="M19 21L12 16L5 21V5C5 4.46957 5.21071 3.96086 5.58579 3.58579C5.96086 3.21071 6.46957 3 7 3H17C17.5304 3 18.0391 3.21071 18.4142 3.58579C18.7893 3.96086 19 4.46957 19 5V21Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                                     </svg>
                                 </button>
@@ -144,17 +144,12 @@ $annonces_query = new WP_Query($args);
                             </div>
                             <p class="annonce-card-description"><?php echo esc_html(wp_trim_words(get_the_content(), 20)); ?></p>
                             <div class="annonce-card-author">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M20 21V19C20 17.9391 19.5786 16.9217 18.8284 16.1716C18.0783 15.4214 17.0609 15 16 15H8C6.93913 15 5.92172 15.4214 5.17157 16.1716C4.42143 16.9217 4 17.9391 4 19V21M16 7C16 9.20914 14.2091 11 12 11C9.79086 11 8 9.20914 8 7C8 4.79086 9.79086 3 12 3C14.2091 3 16 4.79086 16 7Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                                </svg>
+                                <?php the_icon('UserIcon', array('width' => '16', 'height' => '16')); ?>
                                 <span><?php echo esc_html($author_name); ?></span>
                             </div>
                             <?php if ($localisation) : ?>
                                 <div class="annonce-card-location">
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                        <path d="M21 10C21 17 12 23 12 23C12 23 3 17 3 10C3 7.61305 3.94821 5.32387 5.63604 3.63604C7.32387 1.94821 9.61305 1 12 1C14.3869 1 16.6761 1.94821 18.364 3.63604C20.0518 5.32387 21 7.61305 21 10Z" stroke="currentColor" stroke-width="1.5"/>
-                                        <circle cx="12" cy="10" r="3" stroke="currentColor" stroke-width="1.5"/>
-                                    </svg>
+                                    <?php the_icon('MapPinIcon', array('width' => '16', 'height' => '16')); ?>
                                     <span><?php echo esc_html($localisation); ?></span>
                                 </div>
                             <?php endif; ?>

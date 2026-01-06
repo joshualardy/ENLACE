@@ -1,6 +1,14 @@
 {
+  "name": "enlace-theme",
+  "version": "1.0.0",
+  "description": "ENLACE WordPress Theme",
+  "scripts": {
+    "extract-icons": "node scripts/extract-heroicons.js"
+  },
   "dependencies": {
-    "gsap": "^3.13.0",
-    "motion": "^12.23.25"
+    "@heroicons/react": "^2.1.0"
+  },
+  "devDependencies": {
+    "fs-extra": "^11.1.1"
   }
 }

@@ -33,6 +33,44 @@ $users_args = array(
 $all_users = get_users($users_args);
 $filtered_users = array();
 
+// Helper function to get user activity score for sorting
+function get_user_activity_score($user_id) {
+    $score = 0;
+    
+    // Check if profile is new (registered in last 14 days)
+    $user = get_userdata($user_id);
+    if ($user) {
+        $registered = strtotime($user->user_registered);
+        $fourteen_days_ago = strtotime('-14 days');
+        if ($registered >= $fourteen_days_ago) {
+            $score += 10; // New profiles get priority
+        }
+    }
+    
+    // Check last active
+    $last_active = get_user_meta($user_id, 'last_active', true);
+    if ($last_active) {
+        $last_active_time = strtotime($last_active);
+        $thirty_days_ago = strtotime('-30 days');
+        $seven_days_ago = strtotime('-7 days');
+        
+        if ($last_active_time >= $seven_days_ago) {
+            $score += 5; // Very active
+        } elseif ($last_active_time >= $thirty_days_ago) {
+            $score += 2; // Active
+        }
+    }
+    
+    // Check profile completeness
+    $profile_photo = get_user_meta($user_id, 'profile_photo_url', true);
+    $biographie = get_user_meta($user_id, 'biographie', true);
+    if ($profile_photo && !empty($biographie)) {
+        $score += 3; // Complete profile
+    }
+    
+    return $score;
+}
+
 // Filter users based on criteria
 foreach ($all_users as $user) {
     $user_id = $user->ID;
@@ -85,6 +123,17 @@ foreach ($all_users as $user) {
     $filtered_users[] = $user;
 }
 
+// Sort filtered users by activity score (intelligent curation)
+usort($filtered_users, function($a, $b) {
+    $score_a = get_user_activity_score($a->ID);
+    $score_b = get_user_activity_score($b->ID);
+    if ($score_a === $score_b) {
+        // If same score, sort by registration date (newest first)
+        return strtotime($b->user_registered) - strtotime($a->user_registered);
+    }
+    return $score_b - $score_a;
+});
+
 // Get unique villes for filter dropdown
 $all_villes = array();
 foreach ($all_users as $user) {
@@ -95,13 +144,50 @@ foreach ($all_users as $user) {
 }
 $unique_villes = array_unique($all_villes);
 sort($unique_villes);
+
+// Map for service and genre labels (for contextual subtitle)
+$service_labels_map = array(
+    'beatmaker' => 'Beatmakers et producteurs',
+    'chanteur' => 'Chanteurs et chanteuses',
+    'organisateur' => 'Organisateurs d\'événements',
+    'dj' => 'DJ',
+    'ingenieur' => 'Ingénieurs son',
+    'compositeur' => 'Compositeurs',
+    'musicien' => 'Musiciens'
+);
+
+// Build contextual subtitle
+$contextual_subtitle = '';
+if (!empty($search_query)) {
+    $contextual_subtitle = 'Résultats pour "' . esc_html($search_query) . '"';
+} elseif (!empty($ville_filter) && !empty($filter_value)) {
+    $talent_label = '';
+    if (isset($service_labels_map[$filter_value])) {
+        $talent_label = $service_labels_map[$filter_value];
+    } else {
+        $talent_label = $filter_value; // Genre or other
+    }
+    $contextual_subtitle = $talent_label . ' à ' . esc_html($ville_filter);
+} elseif (!empty($ville_filter)) {
+    $contextual_subtitle = 'Profils à ' . esc_html($ville_filter);
+} elseif (!empty($filter_value)) {
+    if (isset($service_labels_map[$filter_value])) {
+        $contextual_subtitle = $service_labels_map[$filter_value] . ' disponibles';
+    } else {
+        $contextual_subtitle = 'Profils ' . esc_html($filter_value);
+    }
+} else {
+    $contextual_subtitle = 'Profils actifs sur ENLACE';
+}
 ?>
 
 <div class="decouvrir-page">
     <div class="container">
         <!-- Page Title -->
         <h1 class="decouvrir-page-title">Découvrir</h1>
-        <p class="decouvrir-page-subtitle">Trouve les talents qui correspondent à tes projets</p>
+        <?php if (!empty($contextual_subtitle)) : ?>
+            <p class="decouvrir-page-subtitle"><?php echo esc_html($contextual_subtitle); ?></p>
+        <?php endif; ?>
 
         <!-- Search and Filters Section -->
         <div class="decouvrir-filters-section">
@@ -115,10 +201,11 @@ sort($unique_villes);
                         <input type="hidden" name="filter_value" value="<?php echo esc_attr($filter_value); ?>">
                     <?php endif; ?>
                     <div class="decouvrir-search-input-wrapper">
+                        <label for="decouvrir_search" class="sr-only">Rechercher un nom, un talent</label>
                         <svg class="decouvrir-search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path d="M21 21L15 15M17 10C17 13.866 13.866 17 10 17C6.13401 17 3 13.866 3 10C3 6.13401 6.13401 3 10 3C13.866 3 17 6.13401 17 10Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
-                        <input type="text" name="search" class="decouvrir-search-input" placeholder="Rechercher un nom, un talent..." value="<?php echo esc_attr($search_query); ?>">
+                        <input type="search" name="search" id="decouvrir_search" class="decouvrir-search-input" autocomplete="off" placeholder="Rechercher un nom, un talent..." value="<?php echo esc_attr($search_query); ?>">
                         <?php if (!empty($search_query)) : ?>
                             <button type="button" class="decouvrir-search-clear" onclick="this.form.search.value=''; this.form.submit();">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -134,8 +221,8 @@ sort($unique_villes);
             <div class="decouvrir-filters-row">
                 <!-- Ville Filter -->
                 <div class="decouvrir-filter-group">
-                    <label class="decouvrir-filter-label">Ville</label>
-                    <select name="ville" class="decouvrir-filter-select" onchange="updateFilter('ville', this.value)">
+                    <label for="decouvrir_ville_filter" class="decouvrir-filter-label">Ville</label>
+                    <select name="ville" id="decouvrir_ville_filter" class="decouvrir-filter-select" autocomplete="off" onchange="updateFilter('ville', this.value)">
                         <option value="">Toutes les villes</option>
                         <?php foreach ($unique_villes as $ville) : ?>
                             <option value="<?php echo esc_attr($ville); ?>" <?php selected($ville_filter, $ville); ?>>
@@ -147,8 +234,8 @@ sort($unique_villes);
 
                 <!-- Talent/Specialty Filter (combines services and genres) -->
                 <div class="decouvrir-filter-group">
-                    <label class="decouvrir-filter-label">Talent</label>
-                        <select name="talent" class="decouvrir-filter-select" onchange="updateTalentFilter(this.value)">
+                    <label for="decouvrir_talent_filter" class="decouvrir-filter-label">Talent</label>
+                        <select name="talent" id="decouvrir_talent_filter" class="decouvrir-filter-select" autocomplete="off" onchange="updateTalentFilter(this.value)">
                         <option value="">Tous les talents</option>
                         <optgroup label="Services">
                             <option value="service:beatmaker" <?php echo (!empty($talent_filter) && $talent_filter === 'service:beatmaker') || (!empty($filter_value) && $filter_value === 'beatmaker') ? 'selected' : ''; ?>>Beatmaker / Producteur</option>
@@ -184,9 +271,60 @@ sort($unique_villes);
 
             <!-- Results Count -->
             <div class="decouvrir-results-count">
-                <span><?php echo count($filtered_users); ?> profil<?php echo count($filtered_users) > 1 ? 's' : ''; ?> trouvé<?php echo count($filtered_users) > 1 ? 's' : ''; ?></span>
+                <?php 
+                $results_count = count($filtered_users);
+                if ($results_count === 0) {
+                    $count_text = 'Aucun profil';
+                } elseif ($results_count === 1) {
+                    $count_text = '1 profil';
+                } else {
+                    $count_text = $results_count . ' profils';
+                }
+                
+                // Add context based on filters
+                if (!empty($search_query) || !empty($ville_filter) || !empty($filter_value)) {
+                    $count_text .= ' correspondant à tes critères';
+                } else {
+                    $count_text .= ' à découvrir';
+                }
+                ?>
+                <span><?php echo esc_html($count_text); ?></span>
+                <?php if ($results_count > 0 && empty($search_query) && empty($ville_filter) && empty($filter_value)) : ?>
+                    <span class="decouvrir-sort-indicator"> — Triés par pertinence</span>
+                <?php endif; ?>
             </div>
         </div>
+
+        <!-- Editorial Context Block -->
+        <?php if (!empty($filtered_users)) : ?>
+            <div class="decouvrir-editorial-context">
+                <?php
+                $context_text = '';
+                if (!empty($search_query)) {
+                    $context_text = 'Résultats pour "' . esc_html($search_query) . '". Affine ta recherche si besoin.';
+                } elseif (!empty($ville_filter) && !empty($filter_value)) {
+                    $talent_label = isset($service_labels_map[$filter_value]) ? $service_labels_map[$filter_value] : $filter_value;
+                    $context_text = $talent_label . ' à ' . esc_html($ville_filter) . '. Profils correspondant à tes critères.';
+                } elseif (!empty($ville_filter)) {
+                    $context_text = 'Profils à ' . esc_html($ville_filter) . '. Explore les talents locaux disponibles.';
+                } elseif (!empty($filter_value)) {
+                    if (isset($service_labels_map[$filter_value])) {
+                        $context_text = $service_labels_map[$filter_value] . ' disponibles sur la plateforme. Contacte-les pour discuter de ton projet.';
+                    } else {
+                        $context_text = 'Profils ' . esc_html($filter_value) . '. Explore les talents disponibles.';
+                    }
+                } else {
+                    $context_text = 'Profils actifs sur ENLACE. Contacte directement les professionnels qui correspondent à tes besoins.';
+                }
+                ?>
+                <p><?php echo esc_html($context_text); ?></p>
+            </div>
+        <?php endif; ?>
+
+        <!-- Editorial breathing space (if many results) -->
+        <?php if (count($filtered_users) > 10) : ?>
+            <div class="decouvrir-editorial-break"></div>
+        <?php endif; ?>
 
         <!-- Users Grid -->
         <div class="decouvrir-users-grid">
@@ -203,10 +341,55 @@ sort($unique_villes);
                     $ville = $profile_data['ville'];
                     $service_type = $profile_data['service_type'];
                     $filters_labels = $profile_data['filters_labels'];
+                    $filters_raw = $profile_data['filters']; // Raw filter values for clickable tags
                     $music_genres = $profile_data['music_genres'];
+                    
+                    // Check if profile is new (registered in last 7 days)
+                    $user_registered = strtotime($user->user_registered);
+                    $seven_days_ago = strtotime('-7 days');
+                    $is_new_profile = $user_registered >= $seven_days_ago;
+                    
+                    // Check if profile is active (last active in last 30 days)
+                    $last_active = get_user_meta($user_id, 'last_active', true);
+                    $is_active_profile = false;
+                    $last_active_relative = '';
+                    if ($last_active) {
+                        $last_active_time = strtotime($last_active);
+                        $thirty_days_ago = strtotime('-30 days');
+                        if ($last_active_time >= $thirty_days_ago) {
+                            $is_active_profile = true;
+                            $days_ago = floor((time() - $last_active_time) / (60 * 60 * 24));
+                            if ($days_ago === 0) {
+                                $last_active_relative = "Aujourd'hui";
+                            } elseif ($days_ago === 1) {
+                                $last_active_relative = "Hier";
+                            } elseif ($days_ago < 7) {
+                                $last_active_relative = "Il y a " . $days_ago . " jours";
+                            } elseif ($days_ago < 30) {
+                                $weeks_ago = floor($days_ago / 7);
+                                $last_active_relative = "Il y a " . $weeks_ago . " semaine" . ($weeks_ago > 1 ? 's' : '');
+                            }
+                        }
+                    }
+                    
+                    // Check if profile is curated (high activity score)
+                    $activity_score = get_user_activity_score($user_id);
+                    $is_curated = $activity_score >= 8; // High activity or new + complete
+                    
+                    // Check if bio is truncated
+                    $bio_word_count = str_word_count($biographie);
+                    $bio_is_truncated = $bio_word_count > 20;
                 ?>
                     <div class="decouvrir-user-card decouvrir-user-card-<?php echo esc_attr($service_type); ?>" onclick="window.location.href='<?php echo esc_url($profile_url); ?>'" style="cursor: pointer;">
                         <div class="decouvrir-user-card-image">
+                            <?php if ($is_new_profile) : ?>
+                                <span class="decouvrir-profile-badge decouvrir-profile-badge-new">Nouveau</span>
+                            <?php elseif ($is_active_profile && !$is_new_profile) : ?>
+                                <span class="decouvrir-profile-badge decouvrir-profile-badge-active">Actif</span>
+                            <?php endif; ?>
+                            <?php if ($is_curated && !$is_new_profile && !$is_active_profile) : ?>
+                                <span class="decouvrir-profile-badge decouvrir-profile-badge-curated">Sélection</span>
+                            <?php endif; ?>
                             <?php if ($profile_photo) : ?>
                                 <img src="<?php echo esc_url($profile_photo); ?>" alt="<?php echo esc_attr($full_name); ?>">
                             <?php else : ?>
@@ -218,7 +401,27 @@ sort($unique_villes);
                             <?php endif; ?>
                         </div>
                         <div class="decouvrir-user-card-content">
-                            <h3 class="decouvrir-user-card-name"><?php echo esc_html($full_name); ?></h3>
+                            <div class="decouvrir-user-card-header">
+                                <div class="decouvrir-user-card-name-wrapper">
+                                    <h3 class="decouvrir-user-card-name"><?php echo esc_html($full_name); ?></h3>
+                                    <?php if (!empty($last_active_relative) && $is_active_profile) : ?>
+                                        <span class="decouvrir-user-last-active" title="Dernière activité"><?php echo esc_html($last_active_relative); ?></span>
+                                    <?php endif; ?>
+                                </div>
+                                <span class="decouvrir-user-intention">
+                                    <?php if ($service_type === 'offer') : ?>
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                        </svg>
+                                        Propose
+                                    <?php else : ?>
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M19 12H5M5 12L12 19M5 12L12 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                        </svg>
+                                        Recherche
+                                    <?php endif; ?>
+                                </span>
+                            </div>
                             <?php if (!empty($ville)) : ?>
                                 <div class="decouvrir-user-card-location">
                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -229,22 +432,60 @@ sort($unique_villes);
                                 </div>
                             <?php endif; ?>
                             <?php if (!empty($biographie)) : ?>
-                                <p class="decouvrir-user-card-bio"><?php echo esc_html(wp_trim_words($biographie, 20)); ?></p>
+                                <p class="decouvrir-user-card-bio <?php echo $bio_is_truncated ? 'decouvrir-bio-truncated' : ''; ?>">
+                                    <?php echo esc_html(wp_trim_words($biographie, 20)); ?>
+                                    <?php if ($bio_is_truncated) : ?>
+                                        <span class="decouvrir-bio-indicator" title="Lire la suite sur le profil">...</span>
+                                    <?php endif; ?>
+                                </p>
                             <?php endif; ?>
                             <div class="decouvrir-user-card-tags">
                                 <?php if ($service_type === 'offer' && !empty($filters_labels)) : ?>
-                                    <?php foreach (array_slice($filters_labels, 0, 3) as $label) : ?>
-                                        <span class="decouvrir-user-tag"><?php echo esc_html($label); ?></span>
+                                    <?php 
+                                    // Build mapping of labels to raw filter values
+                                    $filter_label_to_value = array();
+                                    if (is_array($filters_raw) && !empty($filters_raw)) {
+                                        foreach ($filters_raw as $raw_value) {
+                                            if (isset($service_labels_map[$raw_value])) {
+                                                $filter_label_to_value[$service_labels_map[$raw_value]] = $raw_value;
+                                            }
+                                        }
+                                    }
+                                    
+                                    // Show first 3 filters
+                                    $filters_to_show = array_slice($filters_labels, 0, 3);
+                                    foreach ($filters_to_show as $label) : 
+                                        $filter_key = isset($filter_label_to_value[$label]) ? $filter_label_to_value[$label] : '';
+                                        $is_active_filter = !empty($filter_value) && $filter_key === $filter_value;
+                                        $tag_class = $is_active_filter ? 'decouvrir-tag-active' : (!empty($filter_key) ? 'decouvrir-tag-clickable' : '');
+                                    ?>
+                                        <span class="decouvrir-user-tag <?php echo esc_attr($tag_class); ?>" 
+                                              <?php if (!empty($filter_key)) : ?>
+                                              data-filter-type="service" 
+                                              data-filter-value="<?php echo esc_attr($filter_key); ?>"
+                                              onclick="event.stopPropagation(); handleTagClick('service', '<?php echo esc_js($filter_key); ?>');"
+                                              <?php endif; ?>>
+                                            <?php echo esc_html($label); ?>
+                                        </span>
                                     <?php endforeach; ?>
                                     <?php if (count($filters_labels) > 3) : ?>
-                                        <span class="decouvrir-user-tag">+<?php echo count($filters_labels) - 3; ?></span>
+                                        <span class="decouvrir-user-tag decouvrir-tag-more">+<?php echo count($filters_labels) - 3; ?></span>
                                     <?php endif; ?>
                                 <?php elseif ($service_type === 'seek' && !empty($music_genres)) : ?>
-                                    <?php foreach (array_slice($music_genres, 0, 3) as $genre) : ?>
-                                        <span class="decouvrir-user-tag"><?php echo esc_html($genre); ?></span>
+                                    <?php 
+                                    $genres_to_show = array_slice($music_genres, 0, 3);
+                                    foreach ($genres_to_show as $genre) : 
+                                        $is_active_filter = !empty($filter_value) && $genre === $filter_value;
+                                    ?>
+                                        <span class="decouvrir-user-tag <?php echo $is_active_filter ? 'decouvrir-tag-active' : 'decouvrir-tag-clickable'; ?>" 
+                                              data-filter-type="genre" 
+                                              data-filter-value="<?php echo esc_attr($genre); ?>"
+                                              onclick="event.stopPropagation(); handleTagClick('genre', '<?php echo esc_js($genre); ?>');">
+                                            <?php echo esc_html($genre); ?>
+                                        </span>
                                     <?php endforeach; ?>
                                     <?php if (count($music_genres) > 3) : ?>
-                                        <span class="decouvrir-user-tag">+<?php echo count($music_genres) - 3; ?></span>
+                                        <span class="decouvrir-user-tag decouvrir-tag-more">+<?php echo count($music_genres) - 3; ?></span>
                                     <?php endif; ?>
                                 <?php endif; ?>
                             </div>
@@ -267,7 +508,15 @@ sort($unique_villes);
                         <path d="M21 21L15 15M17 10C17 13.866 13.866 17 10 17C6.13401 17 3 13.866 3 10C3 6.13401 6.13401 3 10 3C13.866 3 17 6.13401 17 10Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
                     <h3>Aucun profil trouvé</h3>
-                    <p>Essayez de modifier vos critères de recherche</p>
+                    <?php if (!empty($search_query)) : ?>
+                        <p>Aucun résultat pour "<?php echo esc_html($search_query); ?>".</p>
+                        <p class="decouvrir-no-results-suggestion">Essayez un autre terme ou explorez par <a href="<?php echo esc_url(home_url('/decouvrir')); ?>">ville ou talent</a>.</p>
+                    <?php elseif (!empty($ville_filter) || !empty($filter_value)) : ?>
+                        <p>Aucun profil ne correspond à ces critères.</p>
+                        <p class="decouvrir-no-results-suggestion"><a href="<?php echo esc_url(home_url('/decouvrir')); ?>">Voir tous les profils disponibles</a></p>
+                    <?php else : ?>
+                        <p>Aucun profil disponible pour le moment.</p>
+                    <?php endif; ?>
                 </div>
             <?php endif; ?>
         </div>
@@ -310,6 +559,30 @@ function updateTalentFilter(talentValue) {
     params.delete('filter_type');
     params.delete('filter_value');
     
+    window.location.href = url.pathname + '?' + params.toString();
+}
+
+// Handle tag clicks for filtering
+function handleTagClick(filterType, filterValue) {
+    if (!filterValue) return;
+    
+    const url = new URL(window.location.href);
+    const params = new URLSearchParams(url.search);
+    
+    // Set the talent filter based on type
+    if (filterType === 'service') {
+        params.set('talent', 'service:' + filterValue);
+    } else if (filterType === 'genre') {
+        params.set('talent', 'genre:' + filterValue);
+    }
+    
+    // Remove old filter params
+    params.delete('service_type');
+    params.delete('filter_type');
+    params.delete('filter_value');
+    
+    // Scroll to top and reload
+    window.scrollTo({ top: 0, behavior: 'smooth' });
     window.location.href = url.pathname + '?' + params.toString();
 }
 

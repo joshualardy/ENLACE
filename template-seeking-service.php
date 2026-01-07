@@ -191,79 +191,71 @@ display_registration_error_message();
                         <div class="mb-4">
                             <label for="genre-pop" class="form-label service-label mb-3">Genres musicaux préférés <span class="required">*</span></label>
                             
-                            <!-- Music Genres Options Grid - Bootstrap -->
-                            <div class="row g-3">
-                                <div class="col-md-6 col-lg-4">
-                                    <div class="form-check service-filter-checkbox-wrapper">
-                                        <input type="checkbox" class="form-check-input service-filter-checkbox" name="music_genres[]" id="genre-pop" value="Pop">
-                                        <label for="genre-pop" class="form-check-label service-filter-label">
-                                            <span class="service-filter-star">☆</span>
+                            <!-- Music Genres Options Grid - Modern Chips Style -->
+                            <div class="music-genres-container">
+                                <div class="form-check music-genre-checkbox-wrapper">
+                                    <input type="checkbox" class="form-check-input music-genre-checkbox" name="music_genres[]" id="genre-pop" value="Pop">
+                                    <label for="genre-pop" class="form-check-label music-genre-label">
+                                        <span class="music-genre-content">
                                             Pop
-                                        </label>
-                                    </div>
+                                        </span>
+                                    </label>
                                 </div>
-                                <div class="col-md-6 col-lg-4">
-                                    <div class="form-check service-filter-checkbox-wrapper">
-                                        <input type="checkbox" class="form-check-input service-filter-checkbox" name="music_genres[]" id="genre-rock" value="Rock">
-                                        <label for="genre-rock" class="form-check-label service-filter-label">
-                                            <span class="service-filter-star">☆</span>
+                                <div class="form-check music-genre-checkbox-wrapper">
+                                    <input type="checkbox" class="form-check-input music-genre-checkbox" name="music_genres[]" id="genre-rock" value="Rock">
+                                    <label for="genre-rock" class="form-check-label music-genre-label">
+                                        <span class="music-genre-content">
                                             Rock
-                                        </label>
-                                    </div>
+                                        </span>
+                                    </label>
                                 </div>
-                                <div class="col-md-6 col-lg-4">
-                                    <div class="form-check service-filter-checkbox-wrapper">
-                                        <input type="checkbox" class="form-check-input service-filter-checkbox" name="music_genres[]" id="genre-electro" value="Electro / House / Techno">
-                                        <label for="genre-electro" class="form-check-label service-filter-label">
-                                            <span class="service-filter-star">☆</span>
+                                <div class="form-check music-genre-checkbox-wrapper">
+                                    <input type="checkbox" class="form-check-input music-genre-checkbox" name="music_genres[]" id="genre-electro" value="Electro / House / Techno">
+                                    <label for="genre-electro" class="form-check-label music-genre-label">
+                                        <span class="music-genre-content">
                                             Electro / House / Techno
-                                        </label>
-                                    </div>
+                                        </span>
+                                    </label>
                                 </div>
-                                <div class="col-md-6 col-lg-4">
-                                    <div class="form-check service-filter-checkbox-wrapper">
-                                        <input type="checkbox" class="form-check-input service-filter-checkbox" name="music_genres[]" id="genre-classique" value="Classique">
-                                        <label for="genre-classique" class="form-check-label service-filter-label">
-                                            <span class="service-filter-star">☆</span>
+                                <div class="form-check music-genre-checkbox-wrapper">
+                                    <input type="checkbox" class="form-check-input music-genre-checkbox" name="music_genres[]" id="genre-classique" value="Classique">
+                                    <label for="genre-classique" class="form-check-label music-genre-label">
+                                        <span class="music-genre-content">
                                             Classique
-                                        </label>
-                                    </div>
+                                        </span>
+                                    </label>
                                 </div>
-                                <div class="col-md-6 col-lg-4">
-                                    <div class="form-check service-filter-checkbox-wrapper">
-                                        <input type="checkbox" class="form-check-input service-filter-checkbox" name="music_genres[]" id="genre-jazz" value="Jazz">
-                                        <label for="genre-jazz" class="form-check-label service-filter-label">
-                                            <span class="service-filter-star">☆</span>
+                                <div class="form-check music-genre-checkbox-wrapper">
+                                    <input type="checkbox" class="form-check-input music-genre-checkbox" name="music_genres[]" id="genre-jazz" value="Jazz">
+                                    <label for="genre-jazz" class="form-check-label music-genre-label">
+                                        <span class="music-genre-content">
                                             Jazz
-                                        </label>
-                                    </div>
+                                        </span>
+                                    </label>
                                 </div>
-                                <div class="col-md-6 col-lg-4">
-                                    <div class="form-check service-filter-checkbox-wrapper">
-                                        <input type="checkbox" class="form-check-input service-filter-checkbox" name="music_genres[]" id="genre-metal" value="Metal">
-                                        <label for="genre-metal" class="form-check-label service-filter-label">
-                                            <span class="service-filter-star">☆</span>
+                                <div class="form-check music-genre-checkbox-wrapper">
+                                    <input type="checkbox" class="form-check-input music-genre-checkbox" name="music_genres[]" id="genre-metal" value="Metal">
+                                    <label for="genre-metal" class="form-check-label music-genre-label">
+                                        <span class="music-genre-content">
                                             Metal
-                                        </label>
-                                    </div>
+                                        </span>
+                                    </label>
                                 </div>
-                                <div class="col-md-6 col-lg-4">
-                                    <div class="form-check service-filter-checkbox-wrapper">
-                                        <input type="checkbox" class="form-check-input service-filter-checkbox" name="music_genres[]" id="genre-reggaeton" value="Reggaeton / Afro">
-                                        <label for="genre-reggaeton" class="form-check-label service-filter-label">
-                                            <span class="service-filter-star">☆</span>
+                                <div class="form-check music-genre-checkbox-wrapper">
+                                    <input type="checkbox" class="form-check-input music-genre-checkbox" name="music_genres[]" id="genre-reggaeton" value="Reggaeton / Afro">
+                                    <label for="genre-reggaeton" class="form-check-label music-genre-label">
+                                        <span class="music-genre-content">
                                             Reggaeton / Afro
-                                        </label>
-                                    </div>
+                                        </span>
+                                    </label>
                                 </div>
-                                <div class="col-md-6 col-lg-4">
-                                    <div class="form-check service-filter-checkbox-wrapper">
-                                        <input type="checkbox" class="form-check-input service-filter-checkbox" name="music_genres[]" id="genre-autre" value="Autre">
-                                        <label for="genre-autre" class="form-check-label service-filter-label">
-                                            <span class="service-filter-star">☆</span>
+                                <div class="form-check music-genre-checkbox-wrapper">
+                                    <input type="checkbox" class="form-check-input music-genre-checkbox" name="music_genres[]" id="genre-autre" value="Autre">
+                                    <label for="genre-autre" class="form-check-label music-genre-label">
+                                        <span class="music-genre-content">
                                             Autre
-                                        </label>
-                                    </div>
+                                        </span>
+                                    </label>
                                 </div>
                             </div>
                             <span class="field-error mt-2" id="music_genres_error" role="alert" aria-live="polite"></span>

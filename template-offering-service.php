@@ -259,84 +259,63 @@ display_registration_error_message();
                         <div class="mb-4">
                             <label for="filter-beatmaker" class="form-label service-label mb-3">Filtres <span class="required">*</span></label>
                             
-                            <!-- Filter Options Grid - Bootstrap -->
-                            <div class="row g-2 service-filters-row">
-                                <div class="col-md-6 col-lg-4">
-                                    <div class="form-check service-filter-checkbox-wrapper">
-                                        <input type="checkbox" class="form-check-input service-filter-checkbox" name="filters[]" id="filter-beatmaker" value="beatmaker">
-                                        <label for="filter-beatmaker" class="form-check-label service-filter-label service-filter-button">
-                                            <span class="service-filter-button-content">
-                                                <span class="service-filter-icon">★</span>
-                                                <span class="service-filter-text">Beatmaker / Producteur</span>
-                                            </span>
-                                        </label>
-                                    </div>
+                            <!-- Filter Options - Modern Chips Style -->
+                            <div class="service-filters-container">
+                                <div class="form-check service-filter-checkbox-wrapper">
+                                    <input type="checkbox" class="form-check-input service-filter-checkbox" name="filters[]" id="filter-beatmaker" value="beatmaker">
+                                    <label for="filter-beatmaker" class="form-check-label service-filter-label">
+                                        <span class="service-filter-content">
+                                            Beatmaker / Producteur
+                                        </span>
+                                    </label>
                                 </div>
-                                <div class="col-md-6 col-lg-4">
-                                    <div class="form-check service-filter-checkbox-wrapper">
-                                        <input type="checkbox" class="form-check-input service-filter-checkbox" name="filters[]" id="filter-chanteur" value="chanteur">
-                                        <label for="filter-chanteur" class="form-check-label service-filter-label service-filter-button">
-                                            <span class="service-filter-button-content">
-                                                <span class="service-filter-icon">★</span>
-                                                <span class="service-filter-text">Chanteur / Chanteuse</span>
-                                            </span>
-                                        </label>
-                                    </div>
+                                <div class="form-check service-filter-checkbox-wrapper">
+                                    <input type="checkbox" class="form-check-input service-filter-checkbox" name="filters[]" id="filter-chanteur" value="chanteur">
+                                    <label for="filter-chanteur" class="form-check-label service-filter-label">
+                                        <span class="service-filter-content">
+                                            Chanteur / Chanteuse
+                                        </span>
+                                    </label>
                                 </div>
-                                <div class="col-md-6 col-lg-4">
-                                    <div class="form-check service-filter-checkbox-wrapper">
-                                        <input type="checkbox" class="form-check-input service-filter-checkbox" name="filters[]" id="filter-organisateur" value="organisateur">
-                                        <label for="filter-organisateur" class="form-check-label service-filter-label service-filter-button">
-                                            <span class="service-filter-button-content">
-                                                <span class="service-filter-icon">★</span>
-                                                <span class="service-filter-text">Organisateur d'événements</span>
-                                            </span>
-                                        </label>
-                                    </div>
+                                <div class="form-check service-filter-checkbox-wrapper">
+                                    <input type="checkbox" class="form-check-input service-filter-checkbox" name="filters[]" id="filter-organisateur" value="organisateur">
+                                    <label for="filter-organisateur" class="form-check-label service-filter-label">
+                                        <span class="service-filter-content">
+                                            Organisateur d'événements
+                                        </span>
+                                    </label>
                                 </div>
-                                <div class="col-md-6 col-lg-4">
-                                    <div class="form-check service-filter-checkbox-wrapper">
-                                        <input type="checkbox" class="form-check-input service-filter-checkbox" name="filters[]" id="filter-dj" value="dj">
-                                        <label for="filter-dj" class="form-check-label service-filter-label service-filter-button">
-                                            <span class="service-filter-button-content">
-                                                <span class="service-filter-icon">★</span>
-                                                <span class="service-filter-text">DJ</span>
-                                            </span>
-                                        </label>
-                                    </div>
+                                <div class="form-check service-filter-checkbox-wrapper">
+                                    <input type="checkbox" class="form-check-input service-filter-checkbox" name="filters[]" id="filter-dj" value="dj">
+                                    <label for="filter-dj" class="form-check-label service-filter-label">
+                                        <span class="service-filter-content">
+                                            DJ
+                                        </span>
+                                    </label>
                                 </div>
-                                <div class="col-md-6 col-lg-4">
-                                    <div class="form-check service-filter-checkbox-wrapper">
-                                        <input type="checkbox" class="form-check-input service-filter-checkbox" name="filters[]" id="filter-ingenieur" value="ingenieur">
-                                        <label for="filter-ingenieur" class="form-check-label service-filter-label service-filter-button">
-                                            <span class="service-filter-button-content">
-                                                <span class="service-filter-icon">★</span>
-                                                <span class="service-filter-text">Ingénieur son</span>
-                                            </span>
-                                        </label>
-                                    </div>
+                                <div class="form-check service-filter-checkbox-wrapper">
+                                    <input type="checkbox" class="form-check-input service-filter-checkbox" name="filters[]" id="filter-ingenieur" value="ingenieur">
+                                    <label for="filter-ingenieur" class="form-check-label service-filter-label">
+                                        <span class="service-filter-content">
+                                            Ingénieur son
+                                        </span>
+                                    </label>
                                 </div>
-                                <div class="col-md-6 col-lg-4">
-                                    <div class="form-check service-filter-checkbox-wrapper">
-                                        <input type="checkbox" class="form-check-input service-filter-checkbox" name="filters[]" id="filter-compositeur" value="compositeur">
-                                        <label for="filter-compositeur" class="form-check-label service-filter-label service-filter-button">
-                                            <span class="service-filter-button-content">
-                                                <span class="service-filter-icon">★</span>
-                                                <span class="service-filter-text">Compositeur</span>
-                                            </span>
-                                        </label>
-                                    </div>
+                                <div class="form-check service-filter-checkbox-wrapper">
+                                    <input type="checkbox" class="form-check-input service-filter-checkbox" name="filters[]" id="filter-compositeur" value="compositeur">
+                                    <label for="filter-compositeur" class="form-check-label service-filter-label">
+                                        <span class="service-filter-content">
+                                            Compositeur
+                                        </span>
+                                    </label>
                                 </div>
-                                <div class="col-md-6 col-lg-4">
-                                    <div class="form-check service-filter-checkbox-wrapper">
-                                        <input type="checkbox" class="form-check-input service-filter-checkbox" name="filters[]" id="filter-musicien" value="musicien">
-                                        <label for="filter-musicien" class="form-check-label service-filter-label service-filter-button">
-                                            <span class="service-filter-button-content">
-                                                <span class="service-filter-icon">★</span>
-                                                <span class="service-filter-text">Musicien</span>
-                                            </span>
-                                        </label>
-                                    </div>
+                                <div class="form-check service-filter-checkbox-wrapper">
+                                    <input type="checkbox" class="form-check-input service-filter-checkbox" name="filters[]" id="filter-musicien" value="musicien">
+                                    <label for="filter-musicien" class="form-check-label service-filter-label">
+                                        <span class="service-filter-content">
+                                            Musicien
+                                        </span>
+                                    </label>
                                 </div>
                             </div>
                             <span class="field-error mt-2" id="filters_error" role="alert" aria-live="polite"></span>
@@ -355,50 +334,50 @@ display_registration_error_message();
                             <p class="form-step-description">Ajoutez vos productions pour montrer votre travail (optionnel)</p>
 
                             <!-- Productions Section -->
-                            <div class="mb-4 productions-registration-section">
-                            <label for="production_title_0" class="form-label service-label mb-3">Productions (optionnel)</label>
-                            <p class="form-text text-muted mb-3">Ajoutez une production pour montrer votre travail. Vous pourrez en ajouter d'autres plus tard.</p>
+                            <div class="productions-registration-section">
+                            <label for="production_title_0" class="form-label service-label">Productions (optionnel)</label>
+                            <p class="form-text text-muted">Ajoutez une production pour montrer votre travail. Vous pourrez en ajouter d'autres plus tard.</p>
                             
                             <div class="production-form-item" data-production-index="0">
-                                <div class="mb-3">
+                                <div class="production-field">
                                     <label for="production_title_0" class="form-label">Titre de la production</label>
                                     <input type="text" class="form-control service-input" name="productions[0][title]" id="production_title_0" autocomplete="off" placeholder="Ex: Mon premier single">
                                 </div>
                                 
-                                <div class="mb-3">
+                                <div class="production-field">
                                     <label for="production_genre_0" class="form-label">Genre</label>
                                     <input type="text" class="form-control service-input" name="productions[0][genre]" id="production_genre_0" autocomplete="off" placeholder="Ex: Indie Rock, Rock Alternatif">
                                 </div>
                                 
-                                <div class="mb-3">
+                                <div class="production-field">
                                     <label for="production_description_0" class="form-label">Description</label>
                                     <textarea class="form-control service-input" name="productions[0][description]" id="production_description_0" rows="3" autocomplete="off" placeholder="Décrivez votre production..."></textarea>
                                 </div>
                                 
-                                <div class="row g-3 mb-3">
-                                    <div class="col-md-6">
+                                <div class="production-files-row">
+                                    <div class="production-file-field">
                                         <label for="production_audio_0" class="form-label">Fichier audio (MP3, WAV, OGG)</label>
                                         <input type="file" class="form-control service-input" name="production_audio_0" id="production_audio_0" accept="audio/*">
                                         <small class="form-text text-muted">Max 50MB</small>
                                     </div>
-                                    <div class="col-md-6">
+                                    <div class="production-file-field">
                                         <label for="production_video_0" class="form-label">Fichier vidéo (MP4, WebM)</label>
                                         <input type="file" class="form-control service-input" name="production_video_0" id="production_video_0" accept="video/*">
                                         <small class="form-text text-muted">Max 50MB</small>
                                     </div>
                                 </div>
                                 
-                                <div class="mb-3">
+                                <div class="production-field">
                                     <label for="production_soundcloud_0" class="form-label">Lien SoundCloud (optionnel)</label>
                                     <input type="url" class="form-control service-input" name="productions[0][soundcloud_url]" id="production_soundcloud_0" autocomplete="url" placeholder="https://soundcloud.com/...">
                                 </div>
                                 
-                                <div class="mb-3">
+                                <div class="production-field">
                                     <label for="production_spotify_0" class="form-label">Lien Spotify (optionnel)</label>
                                     <input type="url" class="form-control service-input" name="productions[0][spotify_url]" id="production_spotify_0" autocomplete="url" placeholder="https://open.spotify.com/...">
                                 </div>
                                 
-                                <div class="mb-3">
+                                <div class="production-field">
                                     <label for="production_youtube_0" class="form-label">Lien YouTube (optionnel)</label>
                                     <input type="url" class="form-control service-input" name="productions[0][youtube_url]" id="production_youtube_0" autocomplete="url" placeholder="https://www.youtube.com/...">
                                 </div>

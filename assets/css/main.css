@@ -5579,18 +5579,29 @@ blockquote {
     flex-direction: column;
     border: 1px solid var(--border-soft);
     height: 100%;
-    box-shadow: none;
+    box-shadow: var(--shadow-sm);
 }
 
 .annonce-card:hover,
 .decouvrir-user-card:hover {
     transform: translateY(-2px);
-    box-shadow: var(--shadow-card);
+    box-shadow: var(--shadow-md);
     border-color: var(--accent-border-hover);
 }
 
+/* Zone image - Hauteur cohérente et élégante */
 .annonce-card-image {
-    height: 200px;
+    height: 180px;
+    overflow: hidden;
+    background-color: var(--bg-main);
+    flex-shrink: 0;
+}
+
+.annonce-card-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
 }
 
 .annonce-card-placeholder {
@@ -5600,34 +5611,67 @@ blockquote {
     align-items: center;
     justify-content: center;
     color: var(--text-muted);
+    background-color: var(--bg-main);
+    opacity: 0.6;
 }
 
+.annonce-card-placeholder svg {
+    width: 48px;
+    height: 48px;
+}
+
+/* Zone contenu - Padding confortable */
+.annonce-card-content {
+    padding: var(--spacing-lg);
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    gap: var(--spacing-md);
+}
+
+/* Header avec titre et bookmark */
 .annonce-card-header {
-    margin-bottom: var(--spacing-md);
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--spacing-sm);
+    margin: 0;
 }
 
+/* Titre - Hiérarchie dominante mais moins massif */
 .annonce-card-title {
     color: var(--text-main);
+    font-size: var(--font-size-lg);
+    font-weight: 600;
+    line-height: var(--line-height-tight);
+    margin: 0;
+    flex: 1;
+    max-width: calc(100% - 2.5rem);
+    letter-spacing: var(--letter-spacing-tight);
 }
 
+/* Bouton bookmark - Discret et élégant */
 .annonce-bookmark-btn {
     background: transparent;
     border: none;
     color: var(--text-muted);
     cursor: pointer;
-    padding: 0.5rem;
-    margin-left: 1rem;
+    padding: var(--spacing-xs);
+    margin: 0;
     transition: all var(--transition-base);
     flex-shrink: 0;
     display: flex;
     align-items: center;
     justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-sm);
 }
 
 .annonce-bookmark-btn:hover {
-    background: transparent;
+    background: rgba(26, 35, 50, 0.05);
     color: var(--color-primary);
-    transform: scale(1.1);
+    transform: scale(1.05);
 }
 
 .annonce-bookmark-btn.favorited {
@@ -5636,49 +5680,67 @@ blockquote {
 }
 
 .annonce-bookmark-btn.favorited:hover {
-    background: transparent;
+    background: rgba(26, 35, 50, 0.05);
     color: var(--color-primary-dark);
 }
 
 .annonce-bookmark-btn svg {
-    width: 20px;
-    height: 20px;
+    width: 18px;
+    height: 18px;
     transition: all var(--transition-base);
 }
 
+/* Description - Secondaire, limitée visuellement */
 .annonce-card-description {
-    color: var(--text-muted);
-    font-size: 0.95rem;
-    line-height: 1.6;
-    margin-bottom: 1rem;
+    color: var(--text-secondary);
+    font-size: var(--font-size-sm);
+    line-height: var(--line-height-relaxed);
+    margin: 0;
     flex: 1;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
+/* Zone meta - Auteur et localisation regroupés (tertiaires) */
 .annonce-card-author {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: var(--spacing-xs);
     color: var(--text-muted);
-    font-size: 0.9rem;
-    margin-bottom: 0.75rem;
+    font-size: var(--font-size-xs);
+    margin: 0;
+    margin-top: auto;
+    padding-top: var(--spacing-md);
+    border-top: 1px solid var(--border-soft);
 }
 
 .annonce-card-author svg {
     flex-shrink: 0;
+    width: 14px;
+    height: 14px;
     color: var(--text-muted);
+    opacity: 0.7;
 }
 
 .annonce-card-location {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: var(--spacing-xs);
     color: var(--text-muted);
-    font-size: 0.9rem;
-    margin-top: auto;
+    font-size: var(--font-size-xs);
+    margin: 0;
+    margin-top: var(--spacing-xs);
 }
 
 .annonce-card-location svg {
     flex-shrink: 0;
+    width: 14px;
+    height: 14px;
+    color: var(--text-muted);
+    opacity: 0.7;
 }
 
 /* Add Announcement Form */
@@ -7645,12 +7707,16 @@ button:active {
     transition: all var(--transition-fast);
 }
 
-/* Cards avec hover amélioré */
+/* Cards avec hover amélioré - Subtil et élégant */
 .card:hover,
-.annonce-card:hover,
 .info-card:hover {
     transform: translateY(-4px);
     box-shadow: var(--shadow-lg);
+}
+
+/* Hover spécifique pour annonce-card - Déjà défini plus haut, éviter la surcharge */
+.annonce-card:hover {
+    /* Styles définis dans la section annonce-card principale pour cohérence */
 }
 
 /* Focus states améliorés pour accessibilité */

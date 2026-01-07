@@ -27,6 +27,16 @@ if (isset($_GET['user_id']) && is_numeric($_GET['user_id'])) {
 // Get user profile data
 $profile_data = get_user_profile_data($profile_user_id);
 
+// Get user ratings data
+$user_ratings_data = get_user_average_rating($profile_data['id']);
+$user_ratings = get_user_ratings($profile_data['id'], 5, 0); // Get first 5 ratings
+
+// Get current user's rating for this profile (if logged in and viewing another user)
+$my_rating = null;
+if (is_user_logged_in() && get_current_user_id() != $profile_data['id']) {
+    $my_rating = get_user_rating_by_rater($profile_data['id'], get_current_user_id());
+}
+
 // Track profile view (if viewing another user's profile)
 if ($profile_user_id && $profile_user_id != get_current_user_id()) {
     track_profile_view($profile_user_id);
@@ -78,9 +88,27 @@ if (isset($_GET['password_change'])) {
             <div class="container">
                 <div class="profile-header-info">
                     <!-- Rating Stars -->
-                    <div class="profile-rating">
-                        <span class="profile-stars">★★★★★</span>
-                    </div>
+                    <?php if ($user_ratings_data['total'] > 0) : ?>
+                        <div class="profile-rating">
+                            <div class="profile-rating-stars">
+                                <?php 
+                                $avg_rating = round($user_ratings_data['average']);
+                                for ($i = 1; $i <= 5; $i++) : 
+                                    echo $i <= $avg_rating ? '★' : '☆';
+                                endfor; 
+                                ?>
+                            </div>
+                            <span class="profile-rating-text">
+                                <?php echo number_format($user_ratings_data['average'], 1); ?> 
+                                (<?php echo $user_ratings_data['total']; ?> 
+                                <?php echo $user_ratings_data['total'] > 1 ? 'évaluations' : 'évaluation'; ?>)
+                            </span>
+                        </div>
+                    <?php else : ?>
+                        <div class="profile-rating">
+                            <span class="profile-rating-text">Aucune évaluation</span>
+                        </div>
+                    <?php endif; ?>
                     
                     <!-- User Name -->
                     <h1 class="profile-name"><?php echo esc_html($profile_data['full_name']); ?></h1>
@@ -129,6 +157,9 @@ if (isset($_GET['password_change'])) {
                         Recommandations
                     </button>
                 <?php endif; ?>
+                <button type="button" data-tab="ratings" class="profile-tab <?php echo $active_tab === 'ratings' ? 'active' : ''; ?>">
+                    Évaluations <span class="tab-count"><?php echo $user_ratings_data['total']; ?></span>
+                </button>
             </nav>
             
             <!-- Edit Profile Form (Hidden by default) -->
@@ -989,8 +1020,274 @@ if (isset($_GET['password_change'])) {
             <!-- End Recommendations Tab -->
             <?php endif; ?>
             
+            <!-- Tab Content: Ratings -->
+            <div class="profile-tab-content <?php echo $active_tab === 'ratings' ? 'active' : ''; ?>" data-tab-content="ratings">
+                <div class="ratings-section">
+                    <div class="ratings-header">
+                        <h2 class="ratings-title">Évaluations</h2>
+                        <?php if ($user_ratings_data['total'] > 0) : ?>
+                            <div class="ratings-summary">
+                                <div class="ratings-average">
+                                    <span class="ratings-average-number"><?php echo number_format($user_ratings_data['average'], 1); ?></span>
+                                    <div class="ratings-average-stars">
+                                        <?php 
+                                        $avg_rating = round($user_ratings_data['average']);
+                                        for ($i = 1; $i <= 5; $i++) : 
+                                            echo $i <= $avg_rating ? '★' : '☆';
+                                        endfor; 
+                                        ?>
+                                    </div>
+                                    <span class="ratings-total">sur <?php echo $user_ratings_data['total']; ?> 
+                                        <?php echo $user_ratings_data['total'] > 1 ? 'évaluations' : 'évaluation'; ?>
+                                    </span>
+                                </div>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                    
+                    <!-- Rating Form (only if logged in and viewing another user's profile) -->
+                    <?php if (is_user_logged_in() && get_current_user_id() != $profile_data['id'] && can_user_rate(get_current_user_id(), $profile_data['id'])) : ?>
+                        <div class="rating-form-wrapper">
+                            <h3 class="rating-form-title"><?php echo $my_rating ? 'Modifier votre évaluation' : 'Évaluer cet utilisateur'; ?></h3>
+                            <form id="rating-form" class="rating-form">
+                                <?php wp_nonce_field('enlace_ratings', 'rating_nonce'); ?>
+                                <input type="hidden" name="rated_user_id" value="<?php echo esc_attr($profile_data['id']); ?>">
+                                
+                                <div class="rating-stars-input">
+                                    <label class="rating-stars-label">Note :</label>
+                                    <div class="rating-stars-selector">
+                                        <?php for ($i = 5; $i >= 1; $i--) : ?>
+                                            <input type="radio" name="rating" id="rating-<?php echo $i; ?>" value="<?php echo $i; ?>" 
+                                                   <?php echo ($my_rating && $my_rating['rating'] == $i) ? 'checked' : ''; ?> required>
+                                            <label for="rating-<?php echo $i; ?>" class="rating-star-label">
+                                                <?php 
+                                                for ($j = 1; $j <= 5; $j++) {
+                                                    echo $j <= $i ? '★' : '☆';
+                                                }
+                                                ?>
+                                            </label>
+                                        <?php endfor; ?>
+                                    </div>
+                                </div>
+                                
+                                <div class="rating-comment-input">
+                                    <label for="rating-comment" class="rating-comment-label">Commentaire (optionnel) :</label>
+                                    <textarea name="comment" id="rating-comment" class="rating-comment-textarea" rows="4" 
+                                              placeholder="Partagez votre expérience avec cet utilisateur..."><?php echo $my_rating ? esc_textarea($my_rating['comment']) : ''; ?></textarea>
+                                </div>
+                                
+                                <div class="rating-form-actions">
+                                    <button type="submit" class="btn btn-primary rating-submit-btn">
+                                        <?php echo $my_rating ? 'Modifier l\'évaluation' : 'Envoyer l\'évaluation'; ?>
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    <?php endif; ?>
+                    
+                    <!-- Ratings List -->
+                    <div class="ratings-list">
+                        <?php if (empty($user_ratings)) : ?>
+                            <div class="ratings-empty">
+                                <p>Aucune évaluation pour le moment.</p>
+                                <?php if (is_user_logged_in() && get_current_user_id() != $profile_data['id']) : ?>
+                                    <p class="ratings-empty-hint">Soyez le premier à évaluer cet utilisateur !</p>
+                                <?php endif; ?>
+                            </div>
+                        <?php else : ?>
+                            <?php foreach ($user_ratings as $rating) : ?>
+                                <div class="rating-item">
+                                    <div class="rating-item-header">
+                                        <div class="rating-item-user">
+                                            <?php if (!empty($rating['rater']['photo'])) : ?>
+                                                <img src="<?php echo esc_url($rating['rater']['photo']); ?>" 
+                                                     alt="<?php echo esc_attr($rating['rater']['name']); ?>" 
+                                                     class="rating-item-avatar">
+                                            <?php else : ?>
+                                                <div class="rating-item-avatar-placeholder">
+                                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                                        <path d="M20 21V19C20 17.9391 19.5786 16.9217 18.8284 16.1716C18.0783 15.4214 17.0609 15 16 15H8C6.93913 15 5.92172 15.4214 5.17157 16.1716C4.42143 16.9217 4 17.9391 4 19V21M16 7C16 9.20914 14.2091 11 12 11C9.79086 11 8 9.20914 8 7C8 4.79086 9.79086 3 12 3C14.2091 3 16 4.79086 16 7Z" stroke="currentColor" stroke-width="1.5"/>
+                                                    </svg>
+                                                </div>
+                                            <?php endif; ?>
+                                            <div class="rating-item-user-info">
+                                                <h4 class="rating-item-user-name"><?php echo esc_html($rating['rater']['name']); ?></h4>
+                                                <span class="rating-item-date">
+                                                    <?php echo human_time_diff(strtotime($rating['created_at']), current_time('timestamp')); ?>
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="rating-item-stars">
+                                            <?php for ($i = 1; $i <= 5; $i++) : ?>
+                                                <?php echo $i <= $rating['rating'] ? '★' : '☆'; ?>
+                                            <?php endfor; ?>
+                                        </div>
+                                    </div>
+                                    <?php if (!empty($rating['comment'])) : ?>
+                                        <div class="rating-item-comment">
+                                            <p><?php echo nl2br(esc_html($rating['comment'])); ?></p>
+                                        </div>
+                                    <?php endif; ?>
+                                </div>
+                            <?php endforeach; ?>
+                            
+                            <?php if ($user_ratings_data['total'] > 5) : ?>
+                                <div class="ratings-load-more">
+                                    <button type="button" class="btn btn-secondary" id="load-more-ratings" 
+                                            data-user-id="<?php echo esc_attr($profile_data['id']); ?>" 
+                                            data-offset="5">
+                                        Charger plus d'évaluations
+                                    </button>
+                                </div>
+                            <?php endif; ?>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
+            <!-- End Ratings Tab -->
+            
         </div>
     </div>
 </div>
+
+<script>
+jQuery(document).ready(function($) {
+    // Rating form submission
+    $('#rating-form').on('submit', function(e) {
+        e.preventDefault();
+        
+        const form = $(this);
+        const submitBtn = form.find('.rating-submit-btn');
+        const originalText = submitBtn.text();
+        
+        // Disable button
+        submitBtn.prop('disabled', true).text('Envoi en cours...');
+        
+        const formData = {
+            action: 'submit_rating',
+            nonce: '<?php echo wp_create_nonce('enlace_ratings'); ?>',
+            rated_user_id: form.find('input[name="rated_user_id"]').val(),
+            rating: form.find('input[name="rating"]:checked').val(),
+            comment: form.find('#rating-comment').val()
+        };
+        
+        $.ajax({
+            url: '<?php echo admin_url('admin-ajax.php'); ?>',
+            type: 'POST',
+            data: formData,
+            success: function(response) {
+                if (response.success) {
+                    // Show success message
+                    alert('Évaluation enregistrée avec succès !');
+                    // Reload page to show updated ratings
+                    location.reload();
+                } else {
+                    alert(response.data.message || 'Erreur lors de l\'enregistrement.');
+                    submitBtn.prop('disabled', false).text(originalText);
+                }
+            },
+            error: function() {
+                alert('Erreur de connexion.');
+                submitBtn.prop('disabled', false).text(originalText);
+            }
+        });
+    });
+    
+    // Load more ratings
+    $('#load-more-ratings').on('click', function() {
+        const btn = $(this);
+        const userId = btn.data('user-id');
+        const offset = btn.data('offset');
+        const originalText = btn.text();
+        
+        btn.prop('disabled', true).text('Chargement...');
+        
+        $.ajax({
+            url: '<?php echo admin_url('admin-ajax.php'); ?>',
+            type: 'POST',
+            data: {
+                action: 'get_user_ratings',
+                user_id: userId,
+                limit: 10,
+                offset: offset
+            },
+            success: function(response) {
+                if (response.success && response.data.ratings.length > 0) {
+                    // Append new ratings
+                    response.data.ratings.forEach(function(rating) {
+                        const ratingHtml = `
+                            <div class="rating-item">
+                                <div class="rating-item-header">
+                                    <div class="rating-item-user">
+                                        ${rating.rater.photo ? 
+                                            `<img src="${rating.rater.photo}" alt="${rating.rater.name}" class="rating-item-avatar">` :
+                                            `<div class="rating-item-avatar-placeholder">
+                                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                                    <path d="M20 21V19C20 17.9391 19.5786 16.9217 18.8284 16.1716C18.0783 15.4214 17.0609 15 16 15H8C6.93913 15 5.92172 15.4214 5.17157 16.1716C4.42143 16.9217 4 17.9391 4 19V21M16 7C16 9.20914 14.2091 11 12 11C9.79086 11 8 9.20914 8 7C8 4.79086 9.79086 3 12 3C14.2091 3 16 4.79086 16 7Z" stroke="currentColor" stroke-width="1.5"/>
+                                                </svg>
+                                            </div>`
+                                        }
+                                        <div class="rating-item-user-info">
+                                            <h4 class="rating-item-user-name">${rating.rater.name}</h4>
+                                            <span class="rating-item-date">${rating.created_at}</span>
+                                        </div>
+                                    </div>
+                                    <div class="rating-item-stars">
+                                        ${'★'.repeat(rating.rating)}${'☆'.repeat(5 - rating.rating)}
+                                    </div>
+                                </div>
+                                ${rating.comment ? `
+                                    <div class="rating-item-comment">
+                                        <p>${rating.comment.replace(/\n/g, '<br>')}</p>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        `;
+                        $('.ratings-list').append(ratingHtml);
+                    });
+                    
+                    // Update offset
+                    const newOffset = offset + response.data.ratings.length;
+                    btn.data('offset', newOffset);
+                    
+                    // Hide button if no more ratings
+                    if (response.data.ratings.length < 10) {
+                        btn.hide();
+                    } else {
+                        btn.prop('disabled', false).text(originalText);
+                    }
+                } else {
+                    btn.hide();
+                }
+            },
+            error: function() {
+                alert('Erreur lors du chargement.');
+                btn.prop('disabled', false).text(originalText);
+            }
+        });
+    });
+    
+    // Star rating hover effect
+    $('.rating-stars-selector input[type="radio"]').on('change', function() {
+        const rating = parseInt($(this).val());
+        $('.rating-stars-selector label').each(function(index) {
+            const labelRating = 5 - index;
+            if (labelRating <= rating) {
+                $(this).addClass('selected');
+            } else {
+                $(this).removeClass('selected');
+            }
+        });
+    });
+    
+    // Initialize selected stars on page load
+    const selectedRating = $('.rating-stars-selector input[type="radio"]:checked').val();
+    if (selectedRating) {
+        $('.rating-stars-selector input[type="radio"]').filter(function() {
+            return parseInt($(this).val()) <= parseInt(selectedRating);
+        }).next('label').addClass('selected');
+    }
+});
+</script>
 
 <?php get_footer(); ?>

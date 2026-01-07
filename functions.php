@@ -52,7 +52,8 @@ function theme_scripts()
         'ajaxurl' => admin_url('admin-ajax.php'),
         'nonce' => wp_create_nonce('enlace_messaging'),
         'favorites_nonce' => wp_create_nonce('enlace_favorites'),
-        'production_comments_nonce' => wp_create_nonce('enlace_production_comments')
+        'production_comments_nonce' => wp_create_nonce('enlace_production_comments'),
+        'ratings_nonce' => wp_create_nonce('enlace_ratings')
     ));
 }
 add_action('wp_enqueue_scripts', 'theme_scripts');
@@ -2512,6 +2513,342 @@ function ajax_delete_production_comment() {
     }
 }
 add_action('wp_ajax_delete_production_comment', 'ajax_delete_production_comment');
+
+// ============================================
+// RATING SYSTEM (SYSTÈME D'ÉVALUATION)
+// ============================================
+
+// Create ratings table on theme activation
+function create_ratings_table() {
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'enlace_ratings';
+    $charset_collate = $wpdb->get_charset_collate();
+
+    $sql = "CREATE TABLE IF NOT EXISTS $table_name (
+        id bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+        rated_user_id bigint(20) UNSIGNED NOT NULL,
+        rater_user_id bigint(20) UNSIGNED NOT NULL,
+        rating tinyint(1) UNSIGNED NOT NULL,
+        comment text DEFAULT NULL,
+        created_at datetime DEFAULT CURRENT_TIMESTAMP,
+        updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        PRIMARY KEY (id),
+        UNIQUE KEY user_rating (rated_user_id, rater_user_id),
+        KEY rated_user_id (rated_user_id),
+        KEY rater_user_id (rater_user_id),
+        KEY rating (rating),
+        KEY created_at (created_at)
+    ) $charset_collate;";
+
+    require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+    dbDelta($sql);
+}
+add_action('after_switch_theme', 'create_ratings_table');
+
+// Verify ratings table exists on init
+function verify_ratings_table() {
+    global $wpdb;
+    $table = $wpdb->prefix . 'enlace_ratings';
+    
+    $table_exists = $wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s", $table)) == $table;
+    
+    if (!$table_exists) {
+        create_ratings_table();
+    }
+}
+add_action('init', 'verify_ratings_table', 1);
+
+// Add or update rating
+function add_user_rating($rated_user_id, $rater_user_id, $rating, $comment = '') {
+    global $wpdb;
+    
+    verify_ratings_table();
+    
+    // Validate rating (1-5)
+    $rating = intval($rating);
+    if ($rating < 1 || $rating > 5) {
+        return false;
+    }
+    
+    // Cannot rate yourself
+    if ($rated_user_id == $rater_user_id) {
+        return false;
+    }
+    
+    // Verify both users exist
+    if (!get_userdata($rated_user_id) || !get_userdata($rater_user_id)) {
+        return false;
+    }
+    
+    $table = $wpdb->prefix . 'enlace_ratings';
+    
+    // Check if rating already exists
+    $existing = $wpdb->get_row($wpdb->prepare(
+        "SELECT id FROM $table WHERE rated_user_id = %d AND rater_user_id = %d",
+        $rated_user_id, $rater_user_id
+    ));
+    
+    if ($existing) {
+        // Update existing rating
+        $result = $wpdb->update(
+            $table,
+            array(
+                'rating' => $rating,
+                'comment' => sanitize_textarea_field($comment),
+                'updated_at' => current_time('mysql')
+            ),
+            array(
+                'rated_user_id' => $rated_user_id,
+                'rater_user_id' => $rater_user_id
+            ),
+            array('%d', '%s', '%s'),
+            array('%d', '%d')
+        );
+        
+        return $result !== false ? $existing->id : false;
+    } else {
+        // Insert new rating
+        $result = $wpdb->insert(
+            $table,
+            array(
+                'rated_user_id' => $rated_user_id,
+                'rater_user_id' => $rater_user_id,
+                'rating' => $rating,
+                'comment' => sanitize_textarea_field($comment),
+                'created_at' => current_time('mysql'),
+                'updated_at' => current_time('mysql')
+            ),
+            array('%d', '%d', '%d', '%s', '%s', '%s')
+        );
+        
+        return $result !== false ? $wpdb->insert_id : false;
+    }
+}
+
+// Get user average rating
+function get_user_average_rating($user_id) {
+    global $wpdb;
+    
+    verify_ratings_table();
+    
+    $table = $wpdb->prefix . 'enlace_ratings';
+    
+    $result = $wpdb->get_row($wpdb->prepare(
+        "SELECT 
+            AVG(rating) as average_rating,
+            COUNT(*) as total_ratings
+        FROM $table 
+        WHERE rated_user_id = %d",
+        $user_id
+    ));
+    
+    if ($result && $result->total_ratings > 0) {
+        return array(
+            'average' => round(floatval($result->average_rating), 2),
+            'total' => intval($result->total_ratings)
+        );
+    }
+    
+    return array('average' => 0, 'total' => 0);
+}
+
+// Get user ratings with details
+function get_user_ratings($user_id, $limit = 10, $offset = 0) {
+    global $wpdb;
+    
+    verify_ratings_table();
+    
+    $table = $wpdb->prefix . 'enlace_ratings';
+    
+    $ratings = $wpdb->get_results($wpdb->prepare(
+        "SELECT 
+            r.*,
+            u.display_name as rater_name,
+            u.user_login as rater_username
+        FROM $table r
+        LEFT JOIN {$wpdb->users} u ON r.rater_user_id = u.ID
+        WHERE r.rated_user_id = %d
+        ORDER BY r.created_at DESC
+        LIMIT %d OFFSET %d",
+        $user_id, $limit, $offset
+    ));
+    
+    $results = array();
+    foreach ($ratings as $rating) {
+        $rater_profile = get_user_profile_data($rating->rater_user_id);
+        $results[] = array(
+            'id' => $rating->id,
+            'rating' => intval($rating->rating),
+            'comment' => $rating->comment,
+            'created_at' => $rating->created_at,
+            'updated_at' => $rating->updated_at,
+            'rater' => array(
+                'id' => $rating->rater_user_id,
+                'name' => $rater_profile ? $rater_profile['full_name'] : $rating->rater_name,
+                'username' => $rating->rater_username,
+                'photo' => $rater_profile ? $rater_profile['profile_photo_url'] : ''
+            )
+        );
+    }
+    
+    return $results;
+}
+
+// Get rating by specific user
+function get_user_rating_by_rater($rated_user_id, $rater_user_id) {
+    global $wpdb;
+    
+    verify_ratings_table();
+    
+    $table = $wpdb->prefix . 'enlace_ratings';
+    
+    $rating = $wpdb->get_row($wpdb->prepare(
+        "SELECT * FROM $table 
+        WHERE rated_user_id = %d AND rater_user_id = %d",
+        $rated_user_id, $rater_user_id
+    ));
+    
+    if ($rating) {
+        return array(
+            'id' => $rating->id,
+            'rating' => intval($rating->rating),
+            'comment' => $rating->comment,
+            'created_at' => $rating->created_at,
+            'updated_at' => $rating->updated_at
+        );
+    }
+    
+    return null;
+}
+
+// Check if user can rate another user (optional: require conversation first)
+function can_user_rate($rater_user_id, $rated_user_id) {
+    // Cannot rate yourself
+    if ($rater_user_id == $rated_user_id) {
+        return false;
+    }
+    
+    // Both users must exist
+    if (!get_userdata($rater_user_id) || !get_userdata($rated_user_id)) {
+        return false;
+    }
+    
+    // Optional: Require at least one message exchange
+    // Uncomment this if you want to require conversation before rating
+    /*
+    global $wpdb;
+    $conversations_table = $wpdb->prefix . 'enlace_conversations';
+    $messages_table = $wpdb->prefix . 'enlace_messages';
+    
+    // Check if there's a conversation with at least one message
+    $conversation = $wpdb->get_row($wpdb->prepare(
+        "SELECT c.id FROM $conversations_table c
+        INNER JOIN $messages_table m ON m.conversation_id = c.id
+        WHERE ((c.user1_id = %d AND c.user2_id = %d) OR (c.user1_id = %d AND c.user2_id = %d))
+        LIMIT 1",
+        $rater_user_id, $rated_user_id, $rated_user_id, $rater_user_id
+    ));
+    
+    if (!$conversation) {
+        return false;
+    }
+    */
+    
+    return true;
+}
+
+// AJAX: Submit rating
+function ajax_submit_rating() {
+    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'enlace_ratings')) {
+        wp_send_json_error(array('message' => 'Erreur de sécurité. Veuillez rafraîchir la page.'));
+        return;
+    }
+    
+    if (!is_user_logged_in()) {
+        wp_send_json_error(array('message' => 'Vous devez être connecté.'));
+        return;
+    }
+    
+    $rater_user_id = get_current_user_id();
+    $rated_user_id = isset($_POST['rated_user_id']) ? intval($_POST['rated_user_id']) : 0;
+    $rating = isset($_POST['rating']) ? intval($_POST['rating']) : 0;
+    $comment = isset($_POST['comment']) ? trim($_POST['comment']) : '';
+    
+    if (empty($rated_user_id) || $rating < 1 || $rating > 5) {
+        wp_send_json_error(array('message' => 'Données invalides.'));
+        return;
+    }
+    
+    // Check if user can rate
+    if (!can_user_rate($rater_user_id, $rated_user_id)) {
+        wp_send_json_error(array('message' => 'Vous ne pouvez pas évaluer cet utilisateur.'));
+        return;
+    }
+    
+    $rating_id = add_user_rating($rated_user_id, $rater_user_id, $rating, $comment);
+    
+    if ($rating_id) {
+        $average_data = get_user_average_rating($rated_user_id);
+        wp_send_json_success(array(
+            'rating_id' => $rating_id,
+            'average_rating' => $average_data['average'],
+            'total_ratings' => $average_data['total'],
+            'message' => 'Évaluation enregistrée avec succès.'
+        ));
+    } else {
+        wp_send_json_error(array('message' => 'Erreur lors de l\'enregistrement de l\'évaluation.'));
+    }
+}
+add_action('wp_ajax_submit_rating', 'ajax_submit_rating');
+
+// AJAX: Get ratings for a user
+function ajax_get_user_ratings() {
+    $user_id = isset($_POST['user_id']) ? intval($_POST['user_id']) : 0;
+    $limit = isset($_POST['limit']) ? intval($_POST['limit']) : 10;
+    $offset = isset($_POST['offset']) ? intval($_POST['offset']) : 0;
+    
+    if (empty($user_id)) {
+        wp_send_json_error(array('message' => 'ID utilisateur requis.'));
+        return;
+    }
+    
+    $ratings = get_user_ratings($user_id, $limit, $offset);
+    $average_data = get_user_average_rating($user_id);
+    
+    wp_send_json_success(array(
+        'ratings' => $ratings,
+        'average_rating' => $average_data['average'],
+        'total_ratings' => $average_data['total']
+    ));
+}
+add_action('wp_ajax_get_user_ratings', 'ajax_get_user_ratings');
+add_action('wp_ajax_nopriv_get_user_ratings', 'ajax_get_user_ratings');
+
+// AJAX: Get current user's rating for another user
+function ajax_get_my_rating() {
+    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'enlace_ratings')) {
+        wp_send_json_error(array('message' => 'Erreur de sécurité.'));
+        return;
+    }
+    
+    if (!is_user_logged_in()) {
+        wp_send_json_success(array('rating' => null));
+        return;
+    }
+    
+    $rater_user_id = get_current_user_id();
+    $rated_user_id = isset($_POST['rated_user_id']) ? intval($_POST['rated_user_id']) : 0;
+    
+    if (empty($rated_user_id)) {
+        wp_send_json_error(array('message' => 'ID utilisateur requis.'));
+        return;
+    }
+    
+    $rating = get_user_rating_by_rater($rated_user_id, $rater_user_id);
+    
+    wp_send_json_success(array('rating' => $rating));
+}
+add_action('wp_ajax_get_my_rating', 'ajax_get_my_rating');
 
 // ============================================
 // AI CHATBOT SYSTEM

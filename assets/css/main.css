@@ -3171,13 +3171,13 @@ blockquote {
 .stepper-step.active .stepper-step-number {
     background-color: var(--color-primary);
     border-color: var(--color-primary);
-    color: var(--text-primary);
+    color: var(--text-dark);
 }
 
 .stepper-step.completed .stepper-step-number {
     background-color: var(--color-success);
     border-color: var(--color-success);
-    color: var(--text-primary);
+    color: var(--text-dark);
     position: relative;
 }
 
@@ -3189,6 +3189,7 @@ blockquote {
     left: 50%;
     transform: translate(-50%, -50%);
     line-height: 1;
+    color: var(--text-dark);
 }
 
 /* Masquer le numéro quand il y a un checkmark */
@@ -3198,6 +3199,7 @@ blockquote {
 
 .stepper-step.completed .stepper-step-number::after {
     font-size: var(--font-size-lg);
+    color: var(--text-dark);
 }
 
 .stepper-step-label {
@@ -3284,8 +3286,19 @@ blockquote {
 .form-navigation {
     display: flex;
     justify-content: space-between;
+    align-items: center;
     gap: var(--spacing-md);
+    flex-wrap: wrap;
     margin-top: var(--spacing-2xl);
+}
+
+.form-navigation:has(.btn-skip) {
+    justify-content: flex-start;
+}
+
+.form-navigation:has(.btn-skip) .btn-skip,
+.form-navigation:has(.btn-skip) .btn-submit {
+    margin-left: auto;
 }
 
 .form-navigation .btn {
@@ -3312,12 +3325,34 @@ blockquote {
 .btn-submit {
     background-color: var(--color-primary);
     border: none;
-    color: var(--text-primary);
+    color: var(--text-dark);
 }
 
 .btn-next:hover,
 .btn-submit:hover {
     background-color: var(--color-primary-dark);
+}
+
+.btn-skip {
+    background-color: transparent;
+    border: 2px solid var(--border-color);
+    color: var(--text-secondary);
+}
+
+.btn-skip:hover {
+    border-color: var(--text-muted);
+    color: var(--text-primary);
+    background-color: rgba(0, 0, 0, 0.02);
+}
+
+/* Navigation avec bouton skip - alignement spécial */
+.form-navigation .btn-previous {
+    margin-right: auto;
+}
+
+.form-navigation .btn-skip {
+    margin-left: auto;
+    margin-right: var(--spacing-sm);
 }
 
 /* Error messages - Accessible and clear */
@@ -3459,6 +3494,16 @@ blockquote {
     width: 100%;
     padding: 0;
     margin: 0;
+}
+
+/* Fix white text on white background for offering-service page */
+.service-container .stepper-step.active .stepper-step-number,
+.service-container .stepper-step.completed .stepper-step-number {
+    color: var(--text-dark);
+}
+
+.service-container .stepper-step.completed .stepper-step-number::after {
+    color: var(--text-dark);
 }
 
 .service-container .container-fluid,
@@ -3603,7 +3648,7 @@ blockquote {
     border-radius: 50%;
     overflow: hidden;
 
-    border: 3px dashed rgba(255, 255, 255, 0.4);
+    border: 3px dashed var(--border-color);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -3613,7 +3658,7 @@ blockquote {
 
 .service-photo-preview.has-image,
 .seeking-photo-preview.has-image {
-    border: 3px solid rgba(255, 255, 255, 0.6);
+    border: 3px solid var(--border-color);
     border-style: solid;
 }
 
@@ -3632,7 +3677,7 @@ blockquote {
 .seeking-photo-upload-icon {
     width: 48px;
     height: 48px;
-    color: rgba(255, 255, 255, 0.7);
+    color: var(--blue-brand);
     transition: all var(--transition-base);
 }
 
@@ -3644,7 +3689,7 @@ blockquote {
 
 .service-photo-upload-text,
 .seeking-photo-upload-text {
-    color: rgba(255, 255, 255, 0.8);
+    color: var(--blue-brand);
     font-size: 0.85rem;
     font-weight: 500;
     text-align: center;
@@ -3673,7 +3718,7 @@ blockquote {
 
 .service-photo-label,
 .seeking-photo-text {
-    color: rgba(255, 255, 255, 0.7);
+    color: var(--blue-brand);
     font-size: 0.875rem;
     display: block;
     margin-top: 0.5rem;
@@ -3706,18 +3751,101 @@ blockquote {
     display: none;
 }
 
-/* Legacy support - will be overridden by Bootstrap styles above */
-.service-filter-label {
-    color: var(--text-primary);
-    font-size: 0.9rem;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-sm);
+/* Upgrade Button Style for Filters */
+.service-filter-checkbox-wrapper {
     margin: 0;
-    font-family: var(--font-body);
+    padding: 0;
 }
 
+.service-filter-label.service-filter-button {
+    display: block;
+    width: 100%;
+    padding: 0;
+    margin: 0;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+
+.service-filter-button-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-sm);
+    padding: 0.875rem 1.25rem;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(26, 35, 50, 0.08);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.service-filter-button-content::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+    transition: left 0.5s ease;
+}
+
+.service-filter-label.service-filter-button:hover .service-filter-button-content::before {
+    left: 100%;
+}
+
+.service-filter-icon {
+    font-size: 1rem;
+    color: var(--text-muted);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: inline-block;
+    transform: scale(1);
+}
+
+.service-filter-text {
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    font-weight: 500;
+    font-family: var(--font-body);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Hover State */
+.service-filter-label.service-filter-button:hover .service-filter-button-content {
+    background: rgba(255, 255, 255, 0.8);
+    border-color: rgba(26, 35, 50, 0.12);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.12);
+    transform: translateY(-1px);
+}
+
+.service-filter-label.service-filter-button:hover .service-filter-icon {
+    color: var(--blue-brand);
+    transform: scale(1.1);
+}
+
+/* Checked/Active State */
+.service-filter-checkbox:checked + .service-filter-label .service-filter-button-content {
+    background: linear-gradient(135deg, rgba(26, 35, 50, 0.95) 0%, rgba(26, 35, 50, 0.9) 100%);
+    border-color: var(--blue-brand);
+    box-shadow: 0 4px 20px rgba(26, 35, 50, 0.2), 0 2px 8px rgba(26, 35, 50, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    transform: translateY(-1px);
+}
+
+.service-filter-checkbox:checked + .service-filter-label .service-filter-icon {
+    color: var(--accent);
+    transform: scale(1.15);
+}
+
+.service-filter-checkbox:checked + .service-filter-label .service-filter-text {
+    color: var(--text-dark);
+    font-weight: 600;
+}
+
+/* Legacy support - keep old class names for compatibility */
 .service-filter-star {
     font-size: 1.2rem;
     color: var(--text-muted);
@@ -7905,7 +8033,7 @@ html {
     font-weight: 400;
     padding: var(--spacing-sm) 0;
     position: relative;
-    transition: all var(--transition-base);
+    transition: color var(--transition-base);
     white-space: nowrap;
     display: inline-flex;
     align-items: center;
@@ -7914,11 +8042,7 @@ html {
 }
 
 .profile-tab:hover:not(.active) {
-    color: var(--text-primary);
-    background-color: rgba(15, 22, 35, 0.03);
-    padding-left: var(--spacing-xs);
-    padding-right: var(--spacing-xs);
-    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
 }
 
 .profile-tab.active {

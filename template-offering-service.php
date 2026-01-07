@@ -190,7 +190,7 @@ display_registration_error_message();
             <div class="col-md-7 service-form-panel">
                 <div class="service-form-wrapper">
                     <!-- Stepper -->
-                    <div class="registration-stepper" role="progressbar" aria-valuenow="3" aria-valuemin="1" aria-valuemax="3" aria-label="Progression de l'inscription">
+                    <div class="registration-stepper" role="progressbar" aria-valuenow="3" aria-valuemin="1" aria-valuemax="4" aria-label="Progression de l'inscription">
                         <div class="stepper-step completed">
                             <div class="stepper-step-number">1</div>
                             <div class="stepper-step-label">Identité</div>
@@ -199,19 +199,25 @@ display_registration_error_message();
                             <div class="stepper-step-number">2</div>
                             <div class="stepper-step-label">Contact</div>
                         </div>
-                        <div class="stepper-step active">
+                        <div class="stepper-step active" data-step="3">
                             <div class="stepper-step-number">3</div>
                             <div class="stepper-step-label">Profil</div>
+                        </div>
+                        <div class="stepper-step" data-step="4">
+                            <div class="stepper-step-number">4</div>
+                            <div class="stepper-step-label">Productions</div>
                         </div>
                     </div>
 
                     <form method="post" action="<?php echo esc_url($_SERVER['REQUEST_URI']); ?>" class="service-form" id="offering-form" enctype="multipart/form-data" novalidate>
                         <?php wp_nonce_field('offering_action', 'offering_nonce'); ?>
                         
-                        <h2 class="form-step-title">Profil</h2>
-                        <p class="form-step-description">Présentez-vous et votre activité</p>
+                        <!-- Step 3: Profil -->
+                        <div class="form-step active" id="step-3" data-step="3">
+                            <h2 class="form-step-title">Profil</h2>
+                            <p class="form-step-description">Présentez-vous et votre activité</p>
 
-                        <!-- Photo Upload Section -->
+                            <!-- Photo Upload Section -->
                         <div class="service-photo-section mb-4">
                             <div class="service-photo-upload-wrapper">
                                 <input type="file" name="profile_photo" id="profile_photo" accept="image/*" class="service-photo-input" style="display: none;">
@@ -258,63 +264,77 @@ display_registration_error_message();
                                 <div class="col-md-6 col-lg-4">
                                     <div class="form-check service-filter-checkbox-wrapper">
                                         <input type="checkbox" class="form-check-input service-filter-checkbox" name="filters[]" id="filter-beatmaker" value="beatmaker">
-                                        <label for="filter-beatmaker" class="form-check-label service-filter-label">
-                                            <span class="service-filter-star">☆</span>
-                                            Beatmaker / Producteur
+                                        <label for="filter-beatmaker" class="form-check-label service-filter-label service-filter-button">
+                                            <span class="service-filter-button-content">
+                                                <span class="service-filter-icon">★</span>
+                                                <span class="service-filter-text">Beatmaker / Producteur</span>
+                                            </span>
                                         </label>
                                     </div>
                                 </div>
                                 <div class="col-md-6 col-lg-4">
                                     <div class="form-check service-filter-checkbox-wrapper">
                                         <input type="checkbox" class="form-check-input service-filter-checkbox" name="filters[]" id="filter-chanteur" value="chanteur">
-                                        <label for="filter-chanteur" class="form-check-label service-filter-label">
-                                            <span class="service-filter-star">☆</span>
-                                            Chanteur / Chanteuse
+                                        <label for="filter-chanteur" class="form-check-label service-filter-label service-filter-button">
+                                            <span class="service-filter-button-content">
+                                                <span class="service-filter-icon">★</span>
+                                                <span class="service-filter-text">Chanteur / Chanteuse</span>
+                                            </span>
                                         </label>
                                     </div>
                                 </div>
                                 <div class="col-md-6 col-lg-4">
                                     <div class="form-check service-filter-checkbox-wrapper">
                                         <input type="checkbox" class="form-check-input service-filter-checkbox" name="filters[]" id="filter-organisateur" value="organisateur">
-                                        <label for="filter-organisateur" class="form-check-label service-filter-label">
-                                            <span class="service-filter-star">☆</span>
-                                            Organisateur d'événements
+                                        <label for="filter-organisateur" class="form-check-label service-filter-label service-filter-button">
+                                            <span class="service-filter-button-content">
+                                                <span class="service-filter-icon">★</span>
+                                                <span class="service-filter-text">Organisateur d'événements</span>
+                                            </span>
                                         </label>
                                     </div>
                                 </div>
                                 <div class="col-md-6 col-lg-4">
                                     <div class="form-check service-filter-checkbox-wrapper">
                                         <input type="checkbox" class="form-check-input service-filter-checkbox" name="filters[]" id="filter-dj" value="dj">
-                                        <label for="filter-dj" class="form-check-label service-filter-label">
-                                            <span class="service-filter-star">☆</span>
-                                            DJ
+                                        <label for="filter-dj" class="form-check-label service-filter-label service-filter-button">
+                                            <span class="service-filter-button-content">
+                                                <span class="service-filter-icon">★</span>
+                                                <span class="service-filter-text">DJ</span>
+                                            </span>
                                         </label>
                                     </div>
                                 </div>
                                 <div class="col-md-6 col-lg-4">
                                     <div class="form-check service-filter-checkbox-wrapper">
                                         <input type="checkbox" class="form-check-input service-filter-checkbox" name="filters[]" id="filter-ingenieur" value="ingenieur">
-                                        <label for="filter-ingenieur" class="form-check-label service-filter-label">
-                                            <span class="service-filter-star">☆</span>
-                                            Ingénieur son
+                                        <label for="filter-ingenieur" class="form-check-label service-filter-label service-filter-button">
+                                            <span class="service-filter-button-content">
+                                                <span class="service-filter-icon">★</span>
+                                                <span class="service-filter-text">Ingénieur son</span>
+                                            </span>
                                         </label>
                                     </div>
                                 </div>
                                 <div class="col-md-6 col-lg-4">
                                     <div class="form-check service-filter-checkbox-wrapper">
                                         <input type="checkbox" class="form-check-input service-filter-checkbox" name="filters[]" id="filter-compositeur" value="compositeur">
-                                        <label for="filter-compositeur" class="form-check-label service-filter-label">
-                                            <span class="service-filter-star">☆</span>
-                                            Compositeur
+                                        <label for="filter-compositeur" class="form-check-label service-filter-label service-filter-button">
+                                            <span class="service-filter-button-content">
+                                                <span class="service-filter-icon">★</span>
+                                                <span class="service-filter-text">Compositeur</span>
+                                            </span>
                                         </label>
                                     </div>
                                 </div>
                                 <div class="col-md-6 col-lg-4">
                                     <div class="form-check service-filter-checkbox-wrapper">
                                         <input type="checkbox" class="form-check-input service-filter-checkbox" name="filters[]" id="filter-musicien" value="musicien">
-                                        <label for="filter-musicien" class="form-check-label service-filter-label">
-                                            <span class="service-filter-star">☆</span>
-                                            Musicien
+                                        <label for="filter-musicien" class="form-check-label service-filter-label service-filter-button">
+                                            <span class="service-filter-button-content">
+                                                <span class="service-filter-icon">★</span>
+                                                <span class="service-filter-text">Musicien</span>
+                                            </span>
                                         </label>
                                     </div>
                                 </div>
@@ -322,8 +342,20 @@ display_registration_error_message();
                             <span class="field-error mt-2" id="filters_error" role="alert" aria-live="polite"></span>
                         </div>
 
-                        <!-- Productions Section (Optional) -->
-                        <div class="mb-4 productions-registration-section">
+                        <!-- Navigation Step 3 -->
+                        <div class="form-navigation mt-4">
+                            <a href="<?php echo home_url('/signup-step2'); ?>" class="btn btn-previous">Précédent</a>
+                            <button type="button" class="btn btn-next" id="btn-next-step-3">Suivant</button>
+                        </div>
+                        </div>
+
+                        <!-- Step 4: Productions (Optional) -->
+                        <div class="form-step" id="step-4" data-step="4">
+                            <h2 class="form-step-title">Productions</h2>
+                            <p class="form-step-description">Ajoutez vos productions pour montrer votre travail (optionnel)</p>
+
+                            <!-- Productions Section -->
+                            <div class="mb-4 productions-registration-section">
                             <label for="production_title_0" class="form-label service-label mb-3">Productions (optionnel)</label>
                             <p class="form-text text-muted mb-3">Ajoutez une production pour montrer votre travail. Vous pourrez en ajouter d'autres plus tard.</p>
                             
@@ -375,6 +407,17 @@ display_registration_error_message();
                             <button type="button" class="btn btn-sm btn-outline-secondary" id="add-another-production" style="display: none;">
                                 + Ajouter une autre production
                             </button>
+                            </div>
+
+                            <!-- Navigation Step 4 -->
+                            <div class="form-navigation mt-4">
+                                <button type="button" class="btn btn-previous" id="btn-previous-step-4">Précédent</button>
+                                <button type="button" class="btn btn-skip" id="btn-skip-productions">Passer cette étape</button>
+                                <button type="submit" name="offering_submit" class="btn btn-submit" id="offering-submit-btn">
+                                    <span class="btn-text">Terminer l'inscription</span>
+                                    <span class="spinner-border spinner-border-sm d-none" role="status" aria-live="polite"></span>
+                                </button>
+                            </div>
                         </div>
                         
                         <script>
@@ -432,15 +475,6 @@ display_registration_error_message();
                             }
                         });
                         </script>
-
-                        <!-- Submit Button -->
-                        <div class="form-navigation">
-                            <a href="<?php echo home_url('/signup-step2'); ?>" class="btn btn-previous">Précédent</a>
-                            <button type="submit" name="offering_submit" class="btn btn-submit" id="offering-submit-btn">
-                                <span class="btn-text">Terminer l'inscription</span>
-                                <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
-                            </button>
-                        </div>
                     </form>
                 </div>
             </div>
@@ -452,6 +486,81 @@ display_registration_error_message();
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('offering-form');
     const submitBtn = document.getElementById('offering-submit-btn');
+    
+    // Navigation entre les étapes
+    let currentStep = 3;
+    const steps = {
+        3: document.getElementById('step-3'),
+        4: document.getElementById('step-4')
+    };
+    
+    function showStep(stepNumber) {
+        // Cacher toutes les étapes
+        Object.keys(steps).forEach(step => {
+            if (steps[step]) {
+                steps[step].classList.remove('active');
+            }
+        });
+        
+        // Afficher l'étape actuelle
+        if (steps[stepNumber]) {
+            steps[stepNumber].classList.add('active');
+        }
+        
+        // Mettre à jour le stepper
+        const stepperSteps = document.querySelectorAll('.stepper-step[data-step]');
+        stepperSteps.forEach(step => {
+            const stepNum = parseInt(step.getAttribute('data-step'));
+            step.classList.remove('active', 'completed');
+            
+            if (stepNum < stepNumber) {
+                step.classList.add('completed');
+            } else if (stepNum === stepNumber) {
+                step.classList.add('active');
+            }
+        });
+        
+        // Mettre à jour aria-valuenow
+        const stepper = document.querySelector('.registration-stepper');
+        if (stepper) {
+            stepper.setAttribute('aria-valuenow', stepNumber);
+        }
+        
+        currentStep = stepNumber;
+        
+        // Scroll en haut du formulaire
+        form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    
+    // Bouton Suivant - Étape 3
+    const btnNextStep3 = document.getElementById('btn-next-step-3');
+    if (btnNextStep3) {
+        btnNextStep3.addEventListener('click', function(e) {
+            e.preventDefault();
+            if (validateStep3()) {
+                showStep(4);
+            }
+        });
+    }
+    
+    // Bouton Précédent - Étape 4
+    const btnPreviousStep4 = document.getElementById('btn-previous-step-4');
+    if (btnPreviousStep4) {
+        btnPreviousStep4.addEventListener('click', function(e) {
+            e.preventDefault();
+            showStep(3);
+        });
+    }
+    
+    // Bouton Passer - Étape 4 (skip)
+    const btnSkipProductions = document.getElementById('btn-skip-productions');
+    if (btnSkipProductions) {
+        btnSkipProductions.addEventListener('click', function(e) {
+            e.preventDefault();
+            // Soumettre le formulaire sans valider les productions
+            form.submit();
+        });
+    }
     
     // Validation de l'étape 3
     function validateStep3() {
@@ -540,12 +649,35 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Gestion de la soumission
     form.addEventListener('submit', function(e) {
-        if (!validateStep3()) {
-            e.preventDefault();
-            const firstError = form.querySelector('.is-invalid');
-            if (firstError) {
-                firstError.focus();
+        // Si on est sur l'étape 3, valider avant de soumettre
+        if (currentStep === 3) {
+            if (!validateStep3()) {
+                e.preventDefault();
+                const firstError = form.querySelector('.is-invalid');
+                if (firstError) {
+                    firstError.focus();
+                }
+                return false;
             }
+            // Si l'étape 3 est valide et qu'on est encore dessus, aller à l'étape 4
+            e.preventDefault();
+            showStep(4);
+            return false;
+        }
+        
+        // Si on est sur l'étape 4, valider l'étape 3 d'abord (obligatoire)
+        if (currentStep === 4) {
+            if (!validateStep3()) {
+                e.preventDefault();
+                showStep(3);
+                const firstError = form.querySelector('.is-invalid');
+                if (firstError) {
+                    firstError.focus();
+                }
+                return false;
+            }
+            // L'étape 4 est optionnelle, on peut soumettre
+            return true;
         }
     });
 });

@@ -16,13 +16,13 @@
        ============================================ */
     
     /* 🔵 Bleus (base) - LIGHT MODE */
-    --bg-main: #F4F6FA;                           /* Fond global clair (background principal) */
+    --bg-main: #1A2332;                           /* Fond global bleu (background principal) */
     --blue-brand: #1A2332;                        /* Bleu brand (titres forts, CTA principaux, liens importants) */
     
     /* ⚪ Surfaces - LIGHT MODE */
-    --surface: #FFFAFA;                           /* Surface claire principale (cards, panels, search, blocs importants) */
-    --surface-hover: #F8F9FA;                     /* Surface claire secondaire (hover, variation, featured) */
-    --surface-white: #FFFAFA;                     /* Fond clair pour cards standard */
+    --surface: #1F2A3F;                           /* Surface bleue principale (cards, panels, search, blocs importants) */
+    --surface-hover: #15202A;                     /* Surface bleue secondaire (hover, variation, featured) */
+    --surface-white: #1F2A3F;                     /* Fond bleu pour cards standard */
     
     /* 🟡 Accent élégant – GOLD */
     --accent: #C9A24D;                            /* Gold doux (accent unique) - soulignements, hover CTA, icônes actives, bordures fines */
@@ -31,14 +31,14 @@
     --accent-border-hover: rgba(201, 162, 77, 0.5); /* Bordure gold hover */
     
     /* 🖤 Textes - LIGHT MODE */
-    --text-main: #0F1623;                         /* Texte principal sur fond clair - contraste renforcé */
+    --text-main: #FFFAFA;                         /* Texte principal sur fond bleu - blanc cassé pour contraste */
     --text-dark: #FFFAFA;                         /* Texte sur fond sombre - blanc cassé pour meilleur contraste */
-    --text-secondary: #4B5563;                    /* Texte secondaire sur fond clair - plus sombre pour meilleur contraste */
-    --text-muted: #9CA3AF;                        /* Texte secondaire / meta sur fond clair - plus clair pour meilleur contraste */
+    --text-secondary: #E8ECF4;                    /* Texte secondaire sur fond bleu - gris clair pour meilleur contraste */
+    --text-muted: #C9D1DB;                        /* Texte secondaire / meta sur fond bleu - gris moyen pour meilleur contraste */
     
     /* Bordures - LIGHT MODE */
-    --border-soft: rgba(26, 35, 50, 0.1);         /* Bordures subtiles pour fond clair */
-    --border-dark: rgba(26, 35, 50, 0.1);         /* Bordures subtiles pour fond clair */
+    --border-soft: rgba(255, 250, 250, 0.2);         /* Bordures subtiles pour fond bleu */
+    --border-dark: rgba(255, 250, 250, 0.3);         /* Bordures plus visibles pour fond bleu */
     
     /* ✨ Effets & profondeur */
     --shadow: 0 10px 30px rgba(0, 0, 0, 0.28);    /* Ombre principale - douce et diffuse */
@@ -58,7 +58,7 @@
     --bg-primary: var(--bg-main);
     --bg-secondary: var(--surface);
     --bg-secondary-solid: var(--surface-white);
-    --bg-overlay: rgba(244, 246, 250, 0.9);
+    --bg-overlay: rgba(26, 35, 50, 0.9);
     --bg-dark: var(--surface);
     
     /* Texte - Mapping vers nouvelle palette */
@@ -332,10 +332,10 @@
 .bg-textured-light {
     position: relative;
     background: 
-        radial-gradient(circle at 25% 35%, rgba(244, 246, 250, 0.9) 0%, transparent 50%),
-        radial-gradient(circle at 75% 65%, rgba(255, 255, 255, 0.8) 0%, transparent 50%),
-        radial-gradient(circle at 50% 50%, rgba(230, 235, 245, 0.7) 0%, transparent 60%),
-        linear-gradient(135deg, #F4F6FA 0%, #FFFAFA 25%, #E8ECF4 50%, #F4F6FA 75%, #F9FAFC 100%);
+        radial-gradient(circle at 25% 35%, rgba(26, 35, 50, 0.9) 0%, transparent 50%),
+        radial-gradient(circle at 75% 65%, rgba(31, 42, 63, 0.8) 0%, transparent 50%),
+        radial-gradient(circle at 50% 50%, rgba(21, 32, 42, 0.7) 0%, transparent 60%),
+        linear-gradient(135deg, #1A2332 0%, #1F2A3F 25%, #15202A 50%, #1A2332 75%, #1F2A3F 100%);
     background-size: 180% 180%, 200% 200%, 190% 190%, 100% 100%;
     background-position: 0% 0%, 100% 100%, 50% 50%, 0% 0%;
     animation: bgTextureShift 18s ease-in-out infinite;
@@ -1101,7 +1101,7 @@ body.home .main-header.navbar-on-light .nav-link:focus {
     justify-content: center;
     flex-shrink: 0;
     margin-right: var(--spacing-sm);
-    color: #0F1623 !important;
+    color: #FFFAFA !important;
     opacity: 1 !important;
     visibility: visible !important;
     background: transparent !important;
@@ -1111,15 +1111,15 @@ body.home .main-header.navbar-on-light .nav-link:focus {
     width: 100% !important;
     height: 100% !important;
     display: block !important;
-    fill: #0F1623 !important;
-    color: #0F1623 !important;
+    fill: #FFFAFA !important;
+    color: #FFFAFA !important;
     opacity: 1 !important;
     visibility: visible !important;
 }
 
 /* Override any fill="currentColor" attributes */
 .main-header .dropdown-item-icon svg[fill="currentColor"] {
-    fill: #0F1623 !important;
+    fill: #FFFAFA !important;
 }
 
 .main-header .dropdown-item-icon svg path,
@@ -1128,8 +1128,8 @@ body.home .main-header.navbar-on-light .nav-link:focus {
 .main-header .dropdown-item-icon svg polygon,
 .main-header .dropdown-item-icon svg polyline,
 .main-header .dropdown-item-icon svg * {
-    fill: #0F1623 !important;
-    stroke: #0F1623 !important;
+    fill: #FFFAFA !important;
+    stroke: #FFFAFA !important;
     opacity: 1 !important;
     visibility: visible !important;
 }
@@ -1139,14 +1139,14 @@ body.home .main-header.navbar-on-light .nav-link:focus {
 .main-header .dropdown-item-icon svg path[fill-rule],
 .main-header .dropdown-item-icon svg path:not([fill]),
 .main-header .dropdown-item-icon svg path {
-    fill: #0F1623 !important;
+    fill: #FFFAFA !important;
     stroke: none !important;
 }
 
 /* Ultimate fallback - force all SVG content to be visible */
 .main-header .dropdown-item-icon > * {
-    fill: #0F1623 !important;
-    color: #0F1623 !important;
+    fill: #FFFAFA !important;
+    color: #FFFAFA !important;
     opacity: 1 !important;
     visibility: visible !important;
 }
@@ -3594,7 +3594,7 @@ blockquote {
     border-radius: 8px;
     padding: 0.75rem 1rem;
     font-size: 1rem;
-    color: #333;
+    color: #FFFAFA;
     width: 100%;
 }
 
@@ -3603,13 +3603,13 @@ blockquote {
 
     border: none;
     box-shadow: 0 0 0 0.2rem rgba(255, 255, 255, 0.25);
-    color: #333;
+    color: #FFFAFA;
     outline: none;
 }
 
 .service-input::placeholder,
 .seeking-input::placeholder {
-    color: #999;
+    color: #C9D1DB;
 }
 
 /* Common Photo Upload Styles (shared between service and seeking) */
@@ -4452,7 +4452,7 @@ blockquote {
     background-color: var(--accent);
     border: 1px solid var(--accent);
     border-radius: var(--radius-full);
-    color: #0F1623;
+    color: #FFFAFA;
     font-size: 0.875rem;
     font-weight: 600;
     transition: all var(--transition-base);
@@ -6220,7 +6220,7 @@ blockquote {
 
 .decouvrir-search-input {
     width: 100%;
-    background-color: #FFFAFA;
+    background-color: #1F2A3F;
     border: 1px solid var(--border-dark);
     border-radius: var(--radius-lg);
     padding: 1rem 1rem 1rem 3.5rem;
@@ -6266,7 +6266,7 @@ blockquote {
     flex-wrap: wrap;
     margin-bottom: var(--spacing-lg);
     padding: var(--spacing-xl);
-    background-color: #FFFAFA;
+    background-color: #1F2A3F;
     border: 1px solid var(--border-dark);
     border-radius: var(--radius-lg);
 }
@@ -6755,7 +6755,7 @@ blockquote {
     background-color: var(--accent);
     border: 1px solid var(--accent);
     border-radius: var(--radius-full);
-    color: #0F1623;
+    color: #FFFAFA;
     font-size: 0.8rem;
     font-weight: 600;
     transition: all var(--transition-base);
@@ -7283,7 +7283,7 @@ blockquote {
 }
 
 .messagerie-message-bubble {
-    background-color: #FFFAFA;
+    background-color: #1F2A3F;
     border: 1px solid rgba(26, 35, 50, 0.08);
     border-radius: 18px;
     padding: 0.75rem 1rem;
@@ -8803,7 +8803,7 @@ html {
     bottom: 3px;
     
     /* Bouton circulaire élégant */
-    background: #FFFAFA;
+    background: #1F2A3F;
     border: 1px solid rgba(0, 0, 0, 0.1);
     box-shadow: 
         0 2px 4px rgba(0, 0, 0, 0.1),
@@ -8824,7 +8824,7 @@ html {
 
 .settings-toggle-switch input:checked + .settings-toggle-slider:before {
     transform: translateX(24px);
-    background: #FFFAFA;
+    background: #1F2A3F;
     box-shadow: 
         0 2px 4px rgba(0, 0, 0, 0.15),
         0 1px 2px rgba(0, 0, 0, 0.1);

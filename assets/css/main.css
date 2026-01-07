@@ -20,9 +20,9 @@
     --blue-brand: #1A2332;                        /* Bleu brand (titres forts, CTA principaux, liens importants) */
     
     /* ⚪ Surfaces - LIGHT MODE */
-    --surface: #FFFFFF;                           /* Surface claire principale (cards, panels, search, blocs importants) */
+    --surface: #FFFAFA;                           /* Surface claire principale (cards, panels, search, blocs importants) */
     --surface-hover: #F8F9FA;                     /* Surface claire secondaire (hover, variation, featured) */
-    --surface-white: #FFFFFF;                     /* Fond clair pour cards standard */
+    --surface-white: #FFFAFA;                     /* Fond clair pour cards standard */
     
     /* 🟡 Accent élégant – GOLD */
     --accent: #C9A24D;                            /* Gold doux (accent unique) - soulignements, hover CTA, icônes actives, bordures fines */
@@ -32,7 +32,7 @@
     
     /* 🖤 Textes - LIGHT MODE */
     --text-main: #0F1623;                         /* Texte principal sur fond clair - contraste renforcé */
-    --text-dark: #FFFFFF;                         /* Texte sur fond sombre - blanc pur pour meilleur contraste */
+    --text-dark: #FFFAFA;                         /* Texte sur fond sombre - blanc cassé pour meilleur contraste */
     --text-secondary: #4B5563;                    /* Texte secondaire sur fond clair - plus sombre pour meilleur contraste */
     --text-muted: #9CA3AF;                        /* Texte secondaire / meta sur fond clair - plus clair pour meilleur contraste */
     
@@ -335,7 +335,7 @@
         radial-gradient(circle at 25% 35%, rgba(244, 246, 250, 0.9) 0%, transparent 50%),
         radial-gradient(circle at 75% 65%, rgba(255, 255, 255, 0.8) 0%, transparent 50%),
         radial-gradient(circle at 50% 50%, rgba(230, 235, 245, 0.7) 0%, transparent 60%),
-        linear-gradient(135deg, #F4F6FA 0%, #FFFFFF 25%, #E8ECF4 50%, #F4F6FA 75%, #F9FAFC 100%);
+        linear-gradient(135deg, #F4F6FA 0%, #FFFAFA 25%, #E8ECF4 50%, #F4F6FA 75%, #F9FAFC 100%);
     background-size: 180% 180%, 200% 200%, 190% 190%, 100% 100%;
     background-position: 0% 0%, 100% 100%, 50% 50%, 0% 0%;
     animation: bgTextureShift 18s ease-in-out infinite;
@@ -3034,7 +3034,7 @@ blockquote {
 .register-quote .quote-line-1,
 .register-quote .quote-line-2 {
     margin: 0;
-    color: #fff;
+    color: #FFFAFA;
 }
 
 /* Right Panel: Form */
@@ -3861,12 +3861,12 @@ blockquote {
 
 .seeking-filter-checkbox:checked {
 
-    border-color: #fff;
+    border-color: #FFFAFA;
 
 }
 
 .seeking-filter-label {
-    color: #fff;
+    color: #FFFAFA;
     font-size: 0.9rem;
     cursor: pointer;
     display: flex;
@@ -3879,12 +3879,12 @@ blockquote {
 
 .seeking-filter-star {
     font-size: 1.2rem;
-    color: #fff;
+    color: #FFFAFA;
     display: inline-block;
 }
 
 .seeking-filter-checkbox:checked + .seeking-filter-label .seeking-filter-star {
-    color: #fff;
+    color: #FFFAFA;
 }
 
 .seeking-filter-checkbox:checked + .seeking-filter-label {
@@ -4165,11 +4165,11 @@ blockquote {
 
 .contact-modal-close:hover {
 
-    color: #fff;
+    color: #FFFAFA;
 }
 
 .contact-modal-title {
-    color: #fff;
+    color: #FFFAFA;
     font-size: 1.75rem;
     font-weight: 600;
     margin: 0 0 2rem 0;
@@ -4205,13 +4205,13 @@ blockquote {
 }
 
 .contact-info-value {
-    color: #fff;
+    color: #FFFAFA;
     font-size: 1rem;
     flex: 1;
 }
 
 .contact-link {
-    color: #fff;
+    color: #FFFAFA;
     text-decoration: none;
     transition: color 0.3s;
 }
@@ -4505,7 +4505,7 @@ blockquote {
 }
 
 .profile-edit-form-title {
-    color: #fff;
+    color: #FFFAFA;
     font-size: 1.75rem;
     font-weight: 600;
     margin: 0;
@@ -4514,7 +4514,7 @@ blockquote {
 .profile-edit-form-close {
 
     border: none;
-    color: #fff;
+    color: #FFFAFA;
     font-size: 2rem;
     line-height: 1;
     cursor: pointer;
@@ -4539,7 +4539,7 @@ blockquote {
 }
 
 .profile-edit-label {
-    color: #fff;
+    color: #FFFAFA;
     font-weight: 500;
     margin-bottom: 0.75rem;
     font-size: 0.95rem;
@@ -4630,7 +4630,7 @@ blockquote {
 }
 
 .profile-edit-filter-label {
-    color: #fff;
+    color: #FFFAFA;
     font-size: 0.9rem;
     cursor: pointer;
     display: flex;
@@ -4645,7 +4645,7 @@ blockquote {
 
 .profile-edit-filter-star {
     font-size: 1.2rem;
-    color: #fff;
+    color: #FFFAFA;
 }
 
 .profile-edit-filter-checkbox:checked + .profile-edit-filter-label .profile-edit-filter-star {
@@ -6092,7 +6092,7 @@ blockquote {
 
 .decouvrir-search-input {
     width: 100%;
-    background-color: #FFFFFF;
+    background-color: #FFFAFA;
     border: 1px solid var(--border-dark);
     border-radius: var(--radius-lg);
     padding: 1rem 1rem 1rem 3.5rem;
@@ -6138,7 +6138,7 @@ blockquote {
     flex-wrap: wrap;
     margin-bottom: var(--spacing-lg);
     padding: var(--spacing-xl);
-    background-color: #FFFFFF;
+    background-color: #FFFAFA;
     border: 1px solid var(--border-dark);
     border-radius: var(--radius-lg);
 }
@@ -6841,7 +6841,7 @@ blockquote {
 
 .messagerie-unread-badge {
     background-color: var(--accent);
-    color: #FFFFFF;
+    color: #FFFAFA;
     border-radius: var(--radius-full);
     padding: 0.25rem 0.75rem;
     font-size: 0.875rem;
@@ -6912,7 +6912,7 @@ blockquote {
     top: -2px;
     right: -2px;
     background-color: var(--accent);
-    color: #FFFFFF;
+    color: #FFFAFA;
     border-radius: var(--radius-full);
     min-width: 20px;
     height: 20px;
@@ -6921,7 +6921,7 @@ blockquote {
     justify-content: center;
     font-size: 0.7rem;
     font-weight: 600;
-    border: 2px solid #FFFFFF;
+    border: 2px solid #FFFAFA;
     padding: 0 4px;
 }
 
@@ -7155,7 +7155,7 @@ blockquote {
 }
 
 .messagerie-message-bubble {
-    background-color: #FFFFFF;
+    background-color: #FFFAFA;
     border: 1px solid rgba(26, 35, 50, 0.08);
     border-radius: 18px;
     padding: 0.75rem 1rem;
@@ -7168,12 +7168,12 @@ blockquote {
     background-color: var(--accent);
     border-color: var(--accent);
     border-bottom-right-radius: 4px;
-    color: #FFFFFF;
+    color: #FFFAFA;
     box-shadow: 0 2px 4px rgba(201, 162, 77, 0.2);
 }
 
 .messagerie-message.own .messagerie-message-text {
-    color: #FFFFFF;
+    color: #FFFAFA;
 }
 
 .messagerie-message.own .messagerie-message-time {
@@ -7265,7 +7265,7 @@ blockquote {
 
 .messagerie-send-btn {
     background-color: var(--accent);
-    color: #FFFFFF;
+    color: #FFFAFA;
     border: none;
     border-radius: 50%;
     width: 48px;
@@ -8679,7 +8679,7 @@ html {
     bottom: 3px;
     
     /* Bouton circulaire élégant */
-    background: #FFFFFF;
+    background: #FFFAFA;
     border: 1px solid rgba(0, 0, 0, 0.1);
     box-shadow: 
         0 2px 4px rgba(0, 0, 0, 0.1),
@@ -8700,7 +8700,7 @@ html {
 
 .settings-toggle-switch input:checked + .settings-toggle-slider:before {
     transform: translateX(24px);
-    background: #FFFFFF;
+    background: #FFFAFA;
     box-shadow: 
         0 2px 4px rgba(0, 0, 0, 0.15),
         0 1px 2px rgba(0, 0, 0, 0.1);

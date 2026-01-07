@@ -121,11 +121,12 @@
     --transition-base: 220ms ease;
     --transition-slow: 500ms ease;
     
-    /* Typographie - Urbain + Élégant Premium */
-    --font-heading: 'Anton', sans-serif;              /* Titres principaux - Urbain, impactant */
+    /* Typographie - Système hiérarchique élégant */
+    --font-heading: 'Playfair Display', serif;       /* Titres - Serif élégante (prestige, culture, artistique) */
     --font-elegant: 'Playfair Display', serif;       /* Sous-titres, citations, accents élégants */
     --font-display: 'Playfair Display SC', serif;    /* Display premium (titres élégants) */
-    --font-body: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;  /* Corps de texte - Moderne, lisible */
+    --font-functional: 'Anton', sans-serif;          /* Éléments fonctionnels, boutons, informations clés - Impact et lisibilité */
+    --font-body: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;  /* Textes et contenus informatifs - Moderne, lisible, confort de lecture */
     --font-accent: 'Fugaz One', sans-serif;          /* Accents (conservé pour compatibilité) */
     
     /* Hiérarchie typographique - Premium Urbain + Élégant */
@@ -716,7 +717,7 @@ body.home #main-content {
    TYPOGRAPHY - Premium Urbain
    ============================================ */
 
-/* Headings - Anton (Urbain, Impactant) */
+/* Headings - Playfair Display (Serif élégante - prestige, culture, artistique) */
 h1, h2, h3, h4, h5, h6,
 .h1, .h2, .h3, .h4, .h5, .h6 {
     font-family: var(--font-heading);
@@ -745,7 +746,7 @@ h1, .h1 {
     letter-spacing: var(--letter-spacing-tight);
     margin-bottom: var(--spacing-2xl);
     font-weight: 400;
-    font-family: var(--font-heading); /* Anton */
+    font-family: var(--font-heading); /* Playfair Display */
 }
 
 h2, .h2 {
@@ -753,8 +754,8 @@ h2, .h2 {
     line-height: var(--line-height-relaxed);
     margin-bottom: var(--spacing-xl);
     font-weight: 400;
-    font-family: var(--font-elegant); /* Playfair Display */
-    font-style: italic;
+    font-family: var(--font-heading); /* Playfair Display */
+    font-style: normal;
 }
 
 h3, .h3 {
@@ -959,9 +960,9 @@ body.home .main-header .nav-logo {
 }
 
 .main-header .nav-link {
-    font-family: var(--font-body);
+    font-family: var(--font-functional); /* Anton - Éléments fonctionnels */
     font-weight: 400;
-    text-transform: none;
+    text-transform: uppercase;
     font-size: var(--font-size-base);
     letter-spacing: var(--letter-spacing-wide);
     padding: var(--spacing-sm) var(--spacing-lg) !important;
@@ -1563,11 +1564,11 @@ footer {
    BUTTONS - Premium Urbain
    ============================================ */
 
-/* Base button styles - Minimaliste Premium (inspiration Akke) */
+/* Base button styles - Anton (Éléments fonctionnels - Impact et lisibilité) */
 .btn,
 button[type="submit"],
 button[type="button"] {
-    font-family: var(--font-body); /* Inter */
+    font-family: var(--font-functional); /* Anton */
     font-size: clamp(0.875rem, 1vw, 1rem); /* 14px mobile - 16px desktop */
     font-weight: 400;
     line-height: 1.5;
@@ -1582,7 +1583,7 @@ button[type="button"] {
     justify-content: center;
     gap: var(--spacing-sm);
     text-decoration: none;
-    text-transform: none;
+    text-transform: uppercase;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     position: relative;
@@ -4511,10 +4512,10 @@ blockquote {
 .info-card-label {
     color: var(--text-muted);
     font-size: 0.875rem;
-    font-weight: 500;
+    font-weight: 400;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    font-family: var(--font-body);
+    font-family: var(--font-functional); /* Anton */
 }
 
 .info-card-value {
@@ -6451,7 +6452,9 @@ blockquote {
 .decouvrir-active-filters-label {
     color: var(--text-secondary);
     font-size: 0.875rem;
-    font-weight: 500;
+    font-weight: 400;
+    font-family: var(--font-functional); /* Anton */
+    text-transform: uppercase;
     white-space: nowrap;
 }
 
@@ -6471,7 +6474,9 @@ blockquote {
     color: var(--text-dark);
     border-radius: var(--radius-full);
     font-size: 0.875rem;
-    font-weight: 500;
+    font-weight: 400;
+    font-family: var(--font-functional); /* Anton */
+    text-transform: uppercase;
     transition: all var(--transition-base);
 }
 
@@ -6859,7 +6864,9 @@ blockquote {
     border-radius: var(--radius-full);
     color: #FFFAFA;
     font-size: 0.8rem;
-    font-weight: 600;
+    font-weight: 400;
+    font-family: var(--font-functional); /* Anton */
+    text-transform: uppercase;
     transition: all var(--transition-base);
 }
 
@@ -8424,8 +8431,8 @@ html {
     padding: var(--spacing-xs) var(--spacing-md);
     border-radius: var(--radius-full);
     font-size: var(--font-size-xs);
-    font-weight: 500;
-    font-family: var(--font-body);
+    font-weight: 400;
+    font-family: var(--font-functional); /* Anton */
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }

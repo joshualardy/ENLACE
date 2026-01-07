@@ -260,7 +260,7 @@ display_registration_error_message();
                             <label for="filter-beatmaker" class="form-label service-label mb-3">Filtres <span class="required">*</span></label>
                             
                             <!-- Filter Options Grid - Bootstrap -->
-                            <div class="row g-3">
+                            <div class="row g-2 service-filters-row">
                                 <div class="col-md-6 col-lg-4">
                                     <div class="form-check service-filter-checkbox-wrapper">
                                         <input type="checkbox" class="form-check-input service-filter-checkbox" name="filters[]" id="filter-beatmaker" value="beatmaker">

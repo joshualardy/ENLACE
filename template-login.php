@@ -25,23 +25,16 @@ get_header();
                         <img src="<?php echo esc_url(get_template_directory_uri() . '/assets/images/Logos/logo_blanc.svg'); ?>" alt="ENLACE Logo" class="login-logo-img">
                     </div>
                     <?php
+                    // Display alert messages using unified helper function
                     if (isset($_GET['login']) && $_GET['login'] == 'failed') {
-                        echo '<div class="alert alert-danger alert-dismissible fade show" role="alert">';
-                        echo '<strong>Erreur :</strong> Nom d\'utilisateur ou mot de passe invalide.';
-                        echo '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>';
-                        echo '</div>';
+                        echo display_alert_message('error', 'Nom d\'utilisateur ou mot de passe invalide.', 'Erreur :');
                     }
                     if (isset($_GET['login']) && $_GET['login'] == 'empty') {
-                        echo '<div class="alert alert-warning alert-dismissible fade show" role="alert">';
-                        echo '<strong>Attention :</strong> Veuillez remplir tous les champs.';
-                        echo '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>';
-                        echo '</div>';
+                        echo display_alert_message('warning', 'Veuillez remplir tous les champs.', 'Attention :');
                     }
                     if (is_user_logged_in()) {
-                        echo '<div class="alert alert-info alert-dismissible fade show" role="alert">';
-                        echo 'Vous êtes déjà connecté. <a href="' . wp_logout_url(home_url()) . '" class="alert-link">Se déconnecter</a>';
-                        echo '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>';
-                        echo '</div>';
+                        $logout_link = '<a href="' . esc_url(wp_logout_url(home_url())) . '" class="alert-link">Se déconnecter</a>';
+                        echo display_alert_message('info', 'Vous êtes déjà connecté. ' . $logout_link);
                     } else {
                     ?>
 
@@ -65,7 +58,7 @@ get_header();
                                 </label>
                             </div>
 
-                            <button type="submit" name="login_submit" class="btn btn-login w-100">Connexion</button>
+                            <button type="submit" name="login_submit" class="btn btn-login w-100" aria-label="Se connecter">Connexion</button>
                         </form>
 
                         <p class="register-link text-center mt-3">Vous n'avez pas de compte ? <a href="<?php echo esc_url(home_url('/signup')); ?>">S'inscrire</a></p>

@@ -52,6 +52,12 @@
                                             Mon compte
                                         </a>
                                     </li>
+                                    <li>
+                                        <a class="dropdown-item" href="<?php echo esc_url(home_url('/settings')); ?>">
+                                            <span class="dropdown-item-icon"><?php the_icon('Cog6ToothIcon', array('width' => '16', 'height' => '16')); ?></span>
+                                            Paramètres
+                                        </a>
+                                    </li>
                                     <li><hr class="dropdown-divider"></li>
                                     <li>
                                         <a class="dropdown-item" href="<?php echo esc_url(wp_logout_url(home_url())); ?>">

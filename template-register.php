@@ -33,34 +33,21 @@ get_header();
                         $error_message = isset($error_messages[$_GET['message']]) ? $error_messages[$_GET['message']] : '';
                     }
                     
+                    // Use unified alert function
                     if (!empty($error_message)) {
-                        echo '<div class="alert alert-danger alert-dismissible fade show" role="alert">';
-                        echo '<strong>Erreur :</strong> ' . esc_html($error_message);
-                        echo '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>';
-                        echo '</div>';
+                        echo display_alert_message('error', esc_html($error_message), 'Erreur :');
                     } elseif (!empty($error_fields)) {
-                        echo '<div class="alert alert-warning alert-dismissible fade show" role="alert">';
-                        echo '<strong>Attention :</strong> Veuillez corriger les erreurs dans les champs indiqués ci-dessous.';
-                        echo '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>';
-                        echo '</div>';
+                        echo display_alert_message('warning', 'Veuillez corriger les erreurs dans les champs indiqués ci-dessous.', 'Attention :');
                     } else {
-                        echo '<div class="alert alert-danger alert-dismissible fade show" role="alert">';
-                        echo '<strong>Erreur :</strong> L\'inscription a échoué. Veuillez réessayer.';
-                        echo '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>';
-                        echo '</div>';
+                        echo display_alert_message('error', 'L\'inscription a échoué. Veuillez réessayer.', 'Erreur :');
                     }
                 }
                 if (isset($_GET['registration']) && $_GET['registration'] == 'success') {
-                    echo '<div class="alert alert-success alert-dismissible fade show" role="alert">';
-                    echo '<strong>Succès !</strong> Inscription réussie ! Vous pouvez maintenant vous connecter.';
-                    echo '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>';
-                    echo '</div>';
+                    echo display_alert_message('success', 'Inscription réussie ! Vous pouvez maintenant vous connecter.', 'Succès !');
                 }
                 if (is_user_logged_in()) {
-                    echo '<div class="alert alert-info alert-dismissible fade show" role="alert">';
-                    echo 'Vous êtes déjà connecté. <a href="' . wp_logout_url(home_url()) . '" class="alert-link">Se déconnecter</a>';
-                    echo '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>';
-                    echo '</div>';
+                    $logout_link = '<a href="' . esc_url(wp_logout_url(home_url())) . '" class="alert-link">Se déconnecter</a>';
+                    echo display_alert_message('info', 'Vous êtes déjà connecté. ' . $logout_link);
                 } else {
                 ?>
 

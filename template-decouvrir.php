@@ -6,21 +6,32 @@
 
 get_header();
 
+// Map for service labels (used throughout the template)
+$service_labels_map = array(
+    'beatmaker' => 'Beatmakers et producteurs',
+    'chanteur' => 'Chanteurs et chanteuses',
+    'organisateur' => 'Organisateurs d\'événements',
+    'dj' => 'DJ',
+    'ingenieur' => 'Ingénieurs son',
+    'compositeur' => 'Compositeurs',
+    'musicien' => 'Musiciens'
+);
+
 // Get filter parameters from URL
 $search_query = isset($_GET['search']) ? sanitize_text_field($_GET['search']) : '';
 $ville_filter = isset($_GET['ville']) ? sanitize_text_field($_GET['ville']) : '';
 $talent_filter = isset($_GET['talent']) ? sanitize_text_field($_GET['talent']) : '';
+$genre_filter = isset($_GET['genre']) ? sanitize_text_field($_GET['genre']) : '';
 
-// Parse talent filter (format: "service:beatmaker" or "genre:Pop")
-$filter_value = '';
-if (!empty($talent_filter)) {
-    $parts = explode(':', $talent_filter, 2);
-    if (count($parts) === 2) {
-        $filter_value = $parts[1];
+// Fallback for old URL format (support legacy URLs)
+$filter_value = isset($_GET['filter_value']) ? sanitize_text_field($_GET['filter_value']) : '';
+if (!empty($filter_value) && empty($talent_filter) && empty($genre_filter)) {
+    // Try to determine if it's a service or genre
+    if (isset($service_labels_map[$filter_value])) {
+        $talent_filter = $filter_value;
+    } else {
+        $genre_filter = $filter_value;
     }
-} else {
-    // Fallback for old URL format
-    $filter_value = isset($_GET['filter_value']) ? sanitize_text_field($_GET['filter_value']) : '';
 }
 
 // Get all users with profiles
@@ -104,18 +115,20 @@ foreach ($all_users as $user) {
         }
     }
     
-    // Filter by talent (service or genre) - no service_type distinction needed
-    if (!empty($filter_value)) {
-        // Check if it's a service filter
+    // Filter by talent (service)
+    if (!empty($talent_filter)) {
         $filters = get_user_meta($user_id, 'filters', true);
-        $has_service = is_array($filters) && in_array($filter_value, $filters);
-        
-        // Check if it's a genre filter
+        $has_service = is_array($filters) && in_array($talent_filter, $filters);
+        if (!$has_service) {
+            continue;
+        }
+    }
+    
+    // Filter by genre musical
+    if (!empty($genre_filter)) {
         $music_genres = get_user_meta($user_id, 'music_genres', true);
-        $has_genre = is_array($music_genres) && in_array($filter_value, $music_genres);
-        
-        // User must have either the service or the genre
-        if (!$has_service && !$has_genre) {
+        $has_genre = is_array($music_genres) && in_array($genre_filter, $music_genres);
+        if (!$has_genre) {
             continue;
         }
     }
@@ -145,37 +158,34 @@ foreach ($all_users as $user) {
 $unique_villes = array_unique($all_villes);
 sort($unique_villes);
 
-// Map for service and genre labels (for contextual subtitle)
-$service_labels_map = array(
-    'beatmaker' => 'Beatmakers et producteurs',
-    'chanteur' => 'Chanteurs et chanteuses',
-    'organisateur' => 'Organisateurs d\'événements',
-    'dj' => 'DJ',
-    'ingenieur' => 'Ingénieurs son',
-    'compositeur' => 'Compositeurs',
-    'musicien' => 'Musiciens'
-);
-
 // Build contextual subtitle
 $contextual_subtitle = '';
 if (!empty($search_query)) {
     $contextual_subtitle = 'Résultats pour "' . esc_html($search_query) . '"';
-} elseif (!empty($ville_filter) && !empty($filter_value)) {
-    $talent_label = '';
-    if (isset($service_labels_map[$filter_value])) {
-        $talent_label = $service_labels_map[$filter_value];
-    } else {
-        $talent_label = $filter_value; // Genre or other
+} elseif (!empty($ville_filter) && (!empty($talent_filter) || !empty($genre_filter))) {
+    $parts = array();
+    if (!empty($talent_filter) && isset($service_labels_map[$talent_filter])) {
+        $parts[] = $service_labels_map[$talent_filter];
     }
-    $contextual_subtitle = $talent_label . ' à ' . esc_html($ville_filter);
+    if (!empty($genre_filter)) {
+        $parts[] = $genre_filter;
+    }
+    if (!empty($parts)) {
+        $contextual_subtitle = implode(' - ', $parts) . ' à ' . esc_html($ville_filter);
+    } else {
+        $contextual_subtitle = 'Profils à ' . esc_html($ville_filter);
+    }
 } elseif (!empty($ville_filter)) {
     $contextual_subtitle = 'Profils à ' . esc_html($ville_filter);
-} elseif (!empty($filter_value)) {
-    if (isset($service_labels_map[$filter_value])) {
-        $contextual_subtitle = $service_labels_map[$filter_value] . ' disponibles';
-    } else {
-        $contextual_subtitle = 'Profils ' . esc_html($filter_value);
+} elseif (!empty($talent_filter) || !empty($genre_filter)) {
+    $parts = array();
+    if (!empty($talent_filter) && isset($service_labels_map[$talent_filter])) {
+        $parts[] = $service_labels_map[$talent_filter] . ' disponibles';
     }
+    if (!empty($genre_filter)) {
+        $parts[] = 'Profils ' . esc_html($genre_filter);
+    }
+    $contextual_subtitle = !empty($parts) ? implode(' - ', $parts) : 'Profils filtrés';
 } else {
     $contextual_subtitle = 'Profils actifs sur ENLACE';
 }
@@ -197,11 +207,14 @@ if (!empty($search_query)) {
                     <?php if (!empty($ville_filter)) : ?>
                         <input type="hidden" name="ville" value="<?php echo esc_attr($ville_filter); ?>">
                     <?php endif; ?>
-                    <?php if (!empty($filter_value)) : ?>
-                        <input type="hidden" name="filter_value" value="<?php echo esc_attr($filter_value); ?>">
+                    <?php if (!empty($talent_filter)) : ?>
+                        <input type="hidden" name="talent" value="<?php echo esc_attr($talent_filter); ?>">
                     <?php endif; ?>
+                    <?php if (!empty($genre_filter)) : ?>
+                        <input type="hidden" name="genre" value="<?php echo esc_attr($genre_filter); ?>">
+                    <?php endif; ?>`
                     <div class="decouvrir-search-input-wrapper">
-                        <label for="decouvrir_search" class="sr-only">Rechercher un nom, un talent</label>
+                        <label for="decouvrir_search" class="sr-only"></label>
                         <svg class="decouvrir-search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path d="M21 21L15 15M17 10C17 13.866 13.866 17 10 17C6.13401 17 3 13.866 3 10C3 6.13401 6.13401 3 10 3C13.866 3 17 6.13401 17 10Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
@@ -232,35 +245,39 @@ if (!empty($search_query)) {
                     </select>
                 </div>
 
-                <!-- Talent/Specialty Filter (combines services and genres) -->
+                <!-- Talent Filter (services) -->
                 <div class="decouvrir-filter-group">
                     <label for="decouvrir_talent_filter" class="decouvrir-filter-label">Talent</label>
-                        <select name="talent" id="decouvrir_talent_filter" class="decouvrir-filter-select" autocomplete="off" onchange="updateTalentFilter(this.value)">
+                    <select name="talent" id="decouvrir_talent_filter" class="decouvrir-filter-select" autocomplete="off" onchange="updateFilter('talent', this.value)">
                         <option value="">Tous les talents</option>
-                        <optgroup label="Services">
-                            <option value="service:beatmaker" <?php echo (!empty($talent_filter) && $talent_filter === 'service:beatmaker') || (!empty($filter_value) && $filter_value === 'beatmaker') ? 'selected' : ''; ?>>Beatmaker / Producteur</option>
-                            <option value="service:chanteur" <?php echo (!empty($talent_filter) && $talent_filter === 'service:chanteur') || (!empty($filter_value) && $filter_value === 'chanteur') ? 'selected' : ''; ?>>Chanteur / Chanteuse</option>
-                            <option value="service:organisateur" <?php echo (!empty($talent_filter) && $talent_filter === 'service:organisateur') || (!empty($filter_value) && $filter_value === 'organisateur') ? 'selected' : ''; ?>>Organisateur d'événements</option>
-                            <option value="service:dj" <?php echo (!empty($talent_filter) && $talent_filter === 'service:dj') || (!empty($filter_value) && $filter_value === 'dj') ? 'selected' : ''; ?>>DJ</option>
-                            <option value="service:ingenieur" <?php echo (!empty($talent_filter) && $talent_filter === 'service:ingenieur') || (!empty($filter_value) && $filter_value === 'ingenieur') ? 'selected' : ''; ?>>Ingénieur son</option>
-                            <option value="service:compositeur" <?php echo (!empty($talent_filter) && $talent_filter === 'service:compositeur') || (!empty($filter_value) && $filter_value === 'compositeur') ? 'selected' : ''; ?>>Compositeur</option>
-                            <option value="service:musicien" <?php echo (!empty($talent_filter) && $talent_filter === 'service:musicien') || (!empty($filter_value) && $filter_value === 'musicien') ? 'selected' : ''; ?>>Musicien</option>
-                        </optgroup>
-                        <optgroup label="Genres musicaux">
-                            <option value="genre:Pop" <?php echo (!empty($talent_filter) && $talent_filter === 'genre:Pop') || (!empty($filter_value) && $filter_value === 'Pop') ? 'selected' : ''; ?>>Pop</option>
-                            <option value="genre:Rock" <?php echo (!empty($talent_filter) && $talent_filter === 'genre:Rock') || (!empty($filter_value) && $filter_value === 'Rock') ? 'selected' : ''; ?>>Rock</option>
-                            <option value="genre:Electro / House / Techno" <?php echo (!empty($talent_filter) && $talent_filter === 'genre:Electro / House / Techno') || (!empty($filter_value) && $filter_value === 'Electro / House / Techno') ? 'selected' : ''; ?>>Electro / House / Techno</option>
-                            <option value="genre:Classique" <?php echo (!empty($talent_filter) && $talent_filter === 'genre:Classique') || (!empty($filter_value) && $filter_value === 'Classique') ? 'selected' : ''; ?>>Classique</option>
-                            <option value="genre:Jazz" <?php echo (!empty($talent_filter) && $talent_filter === 'genre:Jazz') || (!empty($filter_value) && $filter_value === 'Jazz') ? 'selected' : ''; ?>>Jazz</option>
-                            <option value="genre:Metal" <?php echo (!empty($talent_filter) && $talent_filter === 'genre:Metal') || (!empty($filter_value) && $filter_value === 'Metal') ? 'selected' : ''; ?>>Metal</option>
-                            <option value="genre:Reggaeton / Afro" <?php echo (!empty($talent_filter) && $talent_filter === 'genre:Reggaeton / Afro') || (!empty($filter_value) && $filter_value === 'Reggaeton / Afro') ? 'selected' : ''; ?>>Reggaeton / Afro</option>
-                            <option value="genre:Autre" <?php echo (!empty($talent_filter) && $talent_filter === 'genre:Autre') || (!empty($filter_value) && $filter_value === 'Autre') ? 'selected' : ''; ?>>Autre</option>
-                        </optgroup>
+                        <option value="beatmaker" <?php echo (!empty($talent_filter) && $talent_filter === 'beatmaker') ? 'selected' : ''; ?>>Beatmaker / Producteur</option>
+                        <option value="chanteur" <?php echo (!empty($talent_filter) && $talent_filter === 'chanteur') ? 'selected' : ''; ?>>Chanteur / Chanteuse</option>
+                        <option value="organisateur" <?php echo (!empty($talent_filter) && $talent_filter === 'organisateur') ? 'selected' : ''; ?>>Organisateur d'événements</option>
+                        <option value="dj" <?php echo (!empty($talent_filter) && $talent_filter === 'dj') ? 'selected' : ''; ?>>DJ</option>
+                        <option value="ingenieur" <?php echo (!empty($talent_filter) && $talent_filter === 'ingenieur') ? 'selected' : ''; ?>>Ingénieur son</option>
+                        <option value="compositeur" <?php echo (!empty($talent_filter) && $talent_filter === 'compositeur') ? 'selected' : ''; ?>>Compositeur</option>
+                        <option value="musicien" <?php echo (!empty($talent_filter) && $talent_filter === 'musicien') ? 'selected' : ''; ?>>Musicien</option>
                     </select>
                 </div>
 
-                <!-- Clear Filters Button -->
-                <?php if (!empty($search_query) || !empty($ville_filter) || !empty($filter_value)) : ?>
+                <!-- Genre Musical Filter -->
+                <div class="decouvrir-filter-group">
+                    <label for="decouvrir_genre_filter" class="decouvrir-filter-label">Genre musical</label>
+                    <select name="genre" id="decouvrir_genre_filter" class="decouvrir-filter-select" autocomplete="off" onchange="updateFilter('genre', this.value)">
+                        <option value="">Tous les genres</option>
+                        <option value="Pop" <?php echo (!empty($genre_filter) && $genre_filter === 'Pop') ? 'selected' : ''; ?>>Pop</option>
+                        <option value="Rock" <?php echo (!empty($genre_filter) && $genre_filter === 'Rock') ? 'selected' : ''; ?>>Rock</option>
+                        <option value="Electro / House / Techno" <?php echo (!empty($genre_filter) && $genre_filter === 'Electro / House / Techno') ? 'selected' : ''; ?>>Electro / House / Techno</option>
+                        <option value="Classique" <?php echo (!empty($genre_filter) && $genre_filter === 'Classique') ? 'selected' : ''; ?>>Classique</option>
+                        <option value="Jazz" <?php echo (!empty($genre_filter) && $genre_filter === 'Jazz') ? 'selected' : ''; ?>>Jazz</option>
+                        <option value="Metal" <?php echo (!empty($genre_filter) && $genre_filter === 'Metal') ? 'selected' : ''; ?>>Metal</option>
+                        <option value="Reggaeton / Afro" <?php echo (!empty($genre_filter) && $genre_filter === 'Reggaeton / Afro') ? 'selected' : ''; ?>>Reggaeton / Afro</option>
+                        <option value="Autre" <?php echo (!empty($genre_filter) && $genre_filter === 'Autre') ? 'selected' : ''; ?>>Autre</option>
+                    </select>
+                </div>
+
+                    <!-- Clear Filters Button -->
+                <?php if (!empty($search_query) || !empty($ville_filter) || !empty($talent_filter) || !empty($genre_filter)) : ?>
                     <div class="decouvrir-filter-actions">
                         <a href="<?php echo esc_url(home_url('/decouvrir')); ?>" class="decouvrir-clear-filters">
                             Réinitialiser les filtres
@@ -268,6 +285,55 @@ if (!empty($search_query)) {
                     </div>
                 <?php endif; ?>
             </div>
+
+            <!-- Active Filters Badges -->
+            <?php if (!empty($search_query) || !empty($ville_filter) || !empty($talent_filter) || !empty($genre_filter)) : ?>
+                <div class="decouvrir-active-filters">
+                    <span class="decouvrir-active-filters-label">Filtres actifs :</span>
+                    <div class="decouvrir-active-filters-badges">
+                        <?php if (!empty($search_query)) : ?>
+                            <span class="decouvrir-filter-badge" data-filter-type="search" data-filter-value="<?php echo esc_attr($search_query); ?>">
+                                "<?php echo esc_html($search_query); ?>"
+                                <button type="button" class="decouvrir-filter-badge-remove" onclick="removeFilter('search', '<?php echo esc_js($search_query); ?>')" aria-label="Retirer ce filtre">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    </svg>
+                                </button>
+                            </span>
+                        <?php endif; ?>
+                        <?php if (!empty($ville_filter)) : ?>
+                            <span class="decouvrir-filter-badge" data-filter-type="ville" data-filter-value="<?php echo esc_attr($ville_filter); ?>">
+                                <?php echo esc_html($ville_filter); ?>
+                                <button type="button" class="decouvrir-filter-badge-remove" onclick="removeFilter('ville', '<?php echo esc_js($ville_filter); ?>')" aria-label="Retirer ce filtre">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    </svg>
+                                </button>
+                            </span>
+                        <?php endif; ?>
+                        <?php if (!empty($talent_filter) && isset($service_labels_map[$talent_filter])) : ?>
+                            <span class="decouvrir-filter-badge" data-filter-type="talent" data-filter-value="<?php echo esc_attr($talent_filter); ?>">
+                                <?php echo esc_html($service_labels_map[$talent_filter]); ?>
+                                <button type="button" class="decouvrir-filter-badge-remove" onclick="removeFilter('talent', '<?php echo esc_js($talent_filter); ?>')" aria-label="Retirer ce filtre">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    </svg>
+                                </button>
+                            </span>
+                        <?php endif; ?>
+                        <?php if (!empty($genre_filter)) : ?>
+                            <span class="decouvrir-filter-badge" data-filter-type="genre" data-filter-value="<?php echo esc_attr($genre_filter); ?>">
+                                <?php echo esc_html($genre_filter); ?>
+                                <button type="button" class="decouvrir-filter-badge-remove" onclick="removeFilter('genre', '<?php echo esc_js($genre_filter); ?>')" aria-label="Retirer ce filtre">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    </svg>
+                                </button>
+                            </span>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            <?php endif; ?>
 
             <!-- Results Count -->
             <div class="decouvrir-results-count">
@@ -282,14 +348,14 @@ if (!empty($search_query)) {
                 }
                 
                 // Add context based on filters
-                if (!empty($search_query) || !empty($ville_filter) || !empty($filter_value)) {
+                if (!empty($search_query) || !empty($ville_filter) || !empty($talent_filter) || !empty($genre_filter)) {
                     $count_text .= ' correspondant à tes critères';
                 } else {
                     $count_text .= ' à découvrir';
                 }
                 ?>
                 <span><?php echo esc_html($count_text); ?></span>
-                <?php if ($results_count > 0 && empty($search_query) && empty($ville_filter) && empty($filter_value)) : ?>
+                <?php if ($results_count > 0 && empty($search_query) && empty($ville_filter) && empty($talent_filter) && empty($genre_filter)) : ?>
                     <span class="decouvrir-sort-indicator"> — Triés par pertinence</span>
                 <?php endif; ?>
             </div>
@@ -302,17 +368,30 @@ if (!empty($search_query)) {
                 $context_text = '';
                 if (!empty($search_query)) {
                     $context_text = 'Résultats pour "' . esc_html($search_query) . '". Affine ta recherche si besoin.';
-                } elseif (!empty($ville_filter) && !empty($filter_value)) {
-                    $talent_label = isset($service_labels_map[$filter_value]) ? $service_labels_map[$filter_value] : $filter_value;
-                    $context_text = $talent_label . ' à ' . esc_html($ville_filter) . '. Profils correspondant à tes critères.';
+                } elseif (!empty($ville_filter) && (!empty($talent_filter) || !empty($genre_filter))) {
+                    $parts = array();
+                    if (!empty($talent_filter) && isset($service_labels_map[$talent_filter])) {
+                        $parts[] = $service_labels_map[$talent_filter];
+                    }
+                    if (!empty($genre_filter)) {
+                        $parts[] = $genre_filter;
+                    }
+                    if (!empty($parts)) {
+                        $context_text = implode(' - ', $parts) . ' à ' . esc_html($ville_filter) . '. Profils correspondant à tes critères.';
+                    } else {
+                        $context_text = 'Profils à ' . esc_html($ville_filter) . '. Explore les talents locaux disponibles.';
+                    }
                 } elseif (!empty($ville_filter)) {
                     $context_text = 'Profils à ' . esc_html($ville_filter) . '. Explore les talents locaux disponibles.';
-                } elseif (!empty($filter_value)) {
-                    if (isset($service_labels_map[$filter_value])) {
-                        $context_text = $service_labels_map[$filter_value] . ' disponibles sur la plateforme. Contacte-les pour discuter de ton projet.';
-                    } else {
-                        $context_text = 'Profils ' . esc_html($filter_value) . '. Explore les talents disponibles.';
+                } elseif (!empty($talent_filter) || !empty($genre_filter)) {
+                    $parts = array();
+                    if (!empty($talent_filter) && isset($service_labels_map[$talent_filter])) {
+                        $parts[] = $service_labels_map[$talent_filter] . ' disponibles sur la plateforme. Contacte-les pour discuter de ton projet.';
                     }
+                    if (!empty($genre_filter)) {
+                        $parts[] = 'Profils ' . esc_html($genre_filter) . '. Explore les talents disponibles.';
+                    }
+                    $context_text = !empty($parts) ? implode(' ', $parts) : 'Profils filtrés.';
                 } else {
                     $context_text = 'Profils actifs sur ENLACE. Contacte directement les professionnels qui correspondent à tes besoins.';
                 }
@@ -456,14 +535,14 @@ if (!empty($search_query)) {
                                     $filters_to_show = array_slice($filters_labels, 0, 3);
                                     foreach ($filters_to_show as $label) : 
                                         $filter_key = isset($filter_label_to_value[$label]) ? $filter_label_to_value[$label] : '';
-                                        $is_active_filter = !empty($filter_value) && $filter_key === $filter_value;
+                                        $is_active_filter = !empty($talent_filter) && $filter_key === $talent_filter;
                                         $tag_class = $is_active_filter ? 'decouvrir-tag-active' : (!empty($filter_key) ? 'decouvrir-tag-clickable' : '');
                                     ?>
                                         <span class="decouvrir-user-tag <?php echo esc_attr($tag_class); ?>" 
                                               <?php if (!empty($filter_key)) : ?>
-                                              data-filter-type="service" 
+                                              data-filter-type="talent" 
                                               data-filter-value="<?php echo esc_attr($filter_key); ?>"
-                                              onclick="event.stopPropagation(); handleTagClick('service', '<?php echo esc_js($filter_key); ?>');"
+                                              onclick="event.stopPropagation(); handleTagClick('talent', '<?php echo esc_js($filter_key); ?>');"
                                               <?php endif; ?>>
                                             <?php echo esc_html($label); ?>
                                         </span>
@@ -475,7 +554,7 @@ if (!empty($search_query)) {
                                     <?php 
                                     $genres_to_show = array_slice($music_genres, 0, 3);
                                     foreach ($genres_to_show as $genre) : 
-                                        $is_active_filter = !empty($filter_value) && $genre === $filter_value;
+                                        $is_active_filter = !empty($genre_filter) && $genre === $genre_filter;
                                     ?>
                                         <span class="decouvrir-user-tag <?php echo $is_active_filter ? 'decouvrir-tag-active' : 'decouvrir-tag-clickable'; ?>" 
                                               data-filter-type="genre" 
@@ -510,8 +589,8 @@ if (!empty($search_query)) {
                     <h3>Aucun profil trouvé</h3>
                     <?php if (!empty($search_query)) : ?>
                         <p>Aucun résultat pour "<?php echo esc_html($search_query); ?>".</p>
-                        <p class="decouvrir-no-results-suggestion">Essayez un autre terme ou explorez par <a href="<?php echo esc_url(home_url('/decouvrir')); ?>">ville ou talent</a>.</p>
-                    <?php elseif (!empty($ville_filter) || !empty($filter_value)) : ?>
+                        <p class="decouvrir-no-results-suggestion">Essayez un autre terme ou explorez par <a href="<?php echo esc_url(home_url('/decouvrir')); ?>">ville, talent ou genre</a>.</p>
+                    <?php elseif (!empty($ville_filter) || !empty($talent_filter) || !empty($genre_filter)) : ?>
                         <p>Aucun profil ne correspond à ces critères.</p>
                         <p class="decouvrir-no-results-suggestion"><a href="<?php echo esc_url(home_url('/decouvrir')); ?>">Voir tous les profils disponibles</a></p>
                     <?php else : ?>
@@ -534,27 +613,21 @@ function updateFilter(filterName, filterValue) {
         } else {
             params.delete('ville');
         }
+    } else if (filterName === 'talent') {
+        if (filterValue) {
+            params.set('talent', filterValue);
+        } else {
+            params.delete('talent');
+        }
+    } else if (filterName === 'genre') {
+        if (filterValue) {
+            params.set('genre', filterValue);
+        } else {
+            params.delete('genre');
+        }
     }
     
-    // Remove old service_type and filter_type params
-    params.delete('service_type');
-    params.delete('filter_type');
-    params.delete('filter_value');
-    
-    window.location.href = url.pathname + '?' + params.toString();
-}
-
-function updateTalentFilter(talentValue) {
-    const url = new URL(window.location.href);
-    const params = new URLSearchParams(url.search);
-    
-    if (talentValue) {
-        params.set('talent', talentValue);
-    } else {
-        params.delete('talent');
-    }
-    
-    // Remove old filter params
+    // Remove old filter params for backward compatibility
     params.delete('service_type');
     params.delete('filter_type');
     params.delete('filter_value');
@@ -569,14 +642,18 @@ function handleTagClick(filterType, filterValue) {
     const url = new URL(window.location.href);
     const params = new URLSearchParams(url.search);
     
-    // Set the talent filter based on type
-    if (filterType === 'service') {
-        params.set('talent', 'service:' + filterValue);
+    // Set the appropriate filter based on type
+    if (filterType === 'talent') {
+        params.set('talent', filterValue);
+        // Clear genre filter when selecting a talent
+        params.delete('genre');
     } else if (filterType === 'genre') {
-        params.set('talent', 'genre:' + filterValue);
+        params.set('genre', filterValue);
+        // Clear talent filter when selecting a genre
+        params.delete('talent');
     }
     
-    // Remove old filter params
+    // Remove old filter params for backward compatibility
     params.delete('service_type');
     params.delete('filter_type');
     params.delete('filter_value');
@@ -584,6 +661,58 @@ function handleTagClick(filterType, filterValue) {
     // Scroll to top and reload
     window.scrollTo({ top: 0, behavior: 'smooth' });
     window.location.href = url.pathname + '?' + params.toString();
+}
+
+// Remove a specific filter without page reload
+function removeFilter(filterType, filterValue) {
+    const url = new URL(window.location.href);
+    const params = new URLSearchParams(url.search);
+    
+    if (filterType === 'search') {
+        params.delete('search');
+        // Clear search input and submit form to apply changes
+        const searchInput = document.querySelector('#decouvrir_search');
+        const searchForm = document.querySelector('.decouvrir-search-form');
+        if (searchInput) {
+            searchInput.value = '';
+        }
+        if (searchForm) {
+            // Update form action with new params
+            const newUrl = url.pathname + (params.toString() ? '?' + params.toString() : '');
+            searchForm.action = newUrl;
+            searchForm.submit();
+            return;
+        }
+    } else if (filterType === 'ville') {
+        params.delete('ville');
+        // Reset select
+        const villeSelect = document.querySelector('#decouvrir_ville_filter');
+        if (villeSelect) {
+            villeSelect.value = '';
+        }
+    } else if (filterType === 'talent') {
+        params.delete('talent');
+        // Reset select
+        const talentSelect = document.querySelector('#decouvrir_talent_filter');
+        if (talentSelect) {
+            talentSelect.value = '';
+        }
+    } else if (filterType === 'genre') {
+        params.delete('genre');
+        // Reset select
+        const genreSelect = document.querySelector('#decouvrir_genre_filter');
+        if (genreSelect) {
+            genreSelect.value = '';
+        }
+    }
+    
+    // Remove old filter params for backward compatibility
+    params.delete('service_type');
+    params.delete('filter_type');
+    params.delete('filter_value');
+    
+    // Update URL and reload page
+    window.location.href = url.pathname + (params.toString() ? '?' + params.toString() : '');
 }
 
 // Auto-submit search form on Enter

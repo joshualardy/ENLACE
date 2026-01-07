@@ -124,21 +124,13 @@ if (isset($_GET['registration']) && $_GET['registration'] == 'error') {
                 <?php
                 // Afficher les messages d'erreur
                 if (isset($_GET['registration']) && $_GET['registration'] == 'error') {
+                    // Use unified alert function
                     if (!empty($error_message)) {
-                        echo '<div class="alert alert-danger alert-dismissible fade show" role="alert">';
-                        echo '<strong>Erreur :</strong> ' . esc_html($error_message);
-                        echo '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>';
-                        echo '</div>';
+                        echo display_alert_message('error', esc_html($error_message), 'Erreur :');
                     } elseif (!empty($error_fields)) {
-                        echo '<div class="alert alert-warning alert-dismissible fade show" role="alert">';
-                        echo '<strong>Attention :</strong> Veuillez corriger les erreurs dans les champs indiqués ci-dessous.';
-                        echo '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>';
-                        echo '</div>';
+                        echo display_alert_message('warning', 'Veuillez corriger les erreurs dans les champs indiqués ci-dessous.', 'Attention :');
                     } else {
-                        echo '<div class="alert alert-danger alert-dismissible fade show" role="alert">';
-                        echo '<strong>Erreur :</strong> L\'inscription a échoué. Veuillez réessayer.';
-                        echo '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>';
-                        echo '</div>';
+                        echo display_alert_message('error', 'L\'inscription a échoué. Veuillez réessayer.', 'Erreur :');
                     }
                 }
                 ?>

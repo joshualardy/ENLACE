@@ -9,60 +9,6 @@ if (!is_user_logged_in()) {
     exit;
 }
 
-// Ensure session is started
-if (!session_id()) {
-    session_start();
-}
-
-// Check if user is accessing from profile page
-// Allow access if:
-// 1. Referer contains '/userprofil' or 'userprofil'
-// 2. Or if there's a valid settings access token in session (from profile page)
-// 3. Or if coming from a form submission on settings page itself
-$allowed_access = false;
-
-// Check referer
-if (isset($_SERVER['HTTP_REFERER'])) {
-    $referer = $_SERVER['HTTP_REFERER'];
-    // Allow if coming from profile page
-    if (strpos($referer, '/userprofil') !== false || strpos($referer, 'userprofil') !== false) {
-        $allowed_access = true;
-        // Set session token for subsequent requests
-        $_SESSION['settings_access_allowed'] = true;
-        $_SESSION['settings_access_time'] = time();
-    }
-    // Allow if coming from settings page itself (form submissions, navigation)
-    elseif (strpos($referer, '/settings') !== false || strpos($referer, 'settings') !== false) {
-        $allowed_access = true;
-        // Refresh session token
-        $_SESSION['settings_access_allowed'] = true;
-        $_SESSION['settings_access_time'] = time();
-    }
-}
-
-// Check session token (valid for 10 minutes)
-if (!$allowed_access) {
-    if (isset($_SESSION['settings_access_allowed']) && $_SESSION['settings_access_allowed'] === true) {
-        $access_time = isset($_SESSION['settings_access_time']) ? $_SESSION['settings_access_time'] : 0;
-        // Token valid for 10 minutes
-        if (time() - $access_time < 600) {
-            $allowed_access = true;
-            // Refresh token on valid access
-            $_SESSION['settings_access_time'] = time();
-        } else {
-            // Token expired, clear it
-            unset($_SESSION['settings_access_allowed']);
-            unset($_SESSION['settings_access_time']);
-        }
-    }
-}
-
-// If direct access without valid referer or session, redirect to profile
-if (!$allowed_access) {
-    wp_safe_redirect(home_url('/userprofil'));
-    exit;
-}
-
 get_header();
 
 // Get current user profile data
@@ -451,26 +397,6 @@ $active_settings_tab = isset($_GET['section']) ? sanitize_text_field($_GET['sect
                         <input type="hidden" name="_wp_http_referer" value="<?php echo esc_url($_SERVER['REQUEST_URI']); ?>">
                         
                         <div class="settings-form-section">
-                            <h3 class="settings-form-section-title">Apparence</h3>
-                            
-                            <div class="settings-toggle-item">
-                                <div class="settings-toggle-info">
-                                    <h4 class="settings-toggle-title">Mode sombre</h4>
-                                    <p class="settings-toggle-description">Activer le mode sombre pour l'interface</p>
-                                </div>
-                                <button type="button" class="theme-toggle-btn settings-theme-toggle" id="theme-toggle" aria-label="Basculer entre mode clair et sombre" title="Basculer le thème">
-                                    <svg class="theme-icon theme-icon-light" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                        <circle cx="12" cy="12" r="5" stroke="currentColor" stroke-width="2"/>
-                                        <path d="M12 1V3M12 21V23M4.22 4.22L5.64 5.64M18.36 18.36L19.78 19.78M1 12H3M21 12H23M4.22 19.78L5.64 18.36M18.36 5.64L19.78 4.22" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                                    </svg>
-                                    <svg class="theme-icon theme-icon-dark" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="display: none;">
-                                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                    </svg>
-                                </button>
-                            </div>
-                            
-                            <hr class="settings-section-divider">
-                            
                             <h3 class="settings-form-section-title">Notifications</h3>
                             
                             <div class="settings-toggle-item">

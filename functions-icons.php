@@ -12,8 +12,9 @@
  * @return string|false The path to the icon file or false if not found
  */
 function get_icon_path($icon_name) {
-    // Remove 'Icon' suffix if present and convert to lowercase
-    $icon_name = strtolower(str_replace('icon', '', $icon_name));
+    // Remove 'Icon' or 'icon' suffix if present (case-insensitive) and convert to lowercase
+    $icon_name = preg_replace('/icon$/i', '', $icon_name);
+    $icon_name = strtolower($icon_name);
     
     $icon_file = get_template_directory() . '/assets/icons/heroicons/24/solid/' . $icon_name . '.svg';
     
@@ -42,7 +43,8 @@ function get_icon($icon_name, $attributes = array()) {
     
     if (!$icon_path) {
         // Debug: log missing icon
-        $searched_name = strtolower(str_replace('icon', '', $icon_name));
+        $searched_name = preg_replace('/icon$/i', '', $icon_name);
+        $searched_name = strtolower($searched_name);
         $expected_path = get_template_directory() . '/assets/icons/heroicons/24/solid/' . $searched_name . '.svg';
         
         if (defined('WP_DEBUG') && WP_DEBUG) {
@@ -68,6 +70,39 @@ function get_icon($icon_name, $attributes = array()) {
             error_log("Could not read icon file: $icon_path");
         }
         return '';
+    }
+    
+    // Force color replacement - replace currentColor everywhere with actual hex color
+    // This ensures icons are visible even if CSS currentColor doesn't resolve correctly
+    $fill_color = '#0F1623'; // var(--text-main) color
+    
+    // Step 1: Replace fill="currentColor" or fill='currentColor' in SVG tag
+    $svg_content = preg_replace('/(<svg[^>]*)\s+fill\s*=\s*["\']currentColor["\']/i', '${1}', $svg_content);
+    
+    // Step 2: Add explicit fill to ALL path elements (even if they don't have one)
+    // This ensures paths are visible regardless of inheritance
+    $svg_content = preg_replace_callback(
+        '/<path(\s+[^>]*)>/i',
+        function($matches) use ($fill_color) {
+            $attrs = $matches[1];
+            // Remove any existing fill attribute first
+            $attrs = preg_replace('/\s+fill\s*=\s*["\'][^"\']*["\']/i', '', $attrs);
+            // Add our fill color at the beginning of attributes
+            return '<path fill="' . $fill_color . '" style="fill: ' . $fill_color . ' !important;"' . $attrs . '>';
+        },
+        $svg_content
+    );
+    
+    // Step 3: Replace any remaining currentColor references
+    $svg_content = preg_replace('/fill\s*=\s*["\']currentColor["\']/i', 'fill="' . $fill_color . '"', $svg_content);
+    
+    // Step 4: Add style attribute to SVG tag to force color
+    if (preg_match('/<svg([^>]*)>/i', $svg_content, $matches)) {
+        $svg_attrs = $matches[1];
+        // Remove existing style if present and add our style
+        $svg_attrs = preg_replace('/\s+style\s*=\s*["\'][^"\']*["\']/i', '', $svg_attrs);
+        $svg_attrs .= ' style="fill: ' . $fill_color . ' !important; color: ' . $fill_color . ' !important;"';
+        $svg_content = preg_replace('/<svg[^>]*>/i', '<svg' . $svg_attrs . '>', $svg_content, 1);
     }
     
     // Parse SVG to add attributes

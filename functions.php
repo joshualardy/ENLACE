@@ -88,7 +88,48 @@ function get_registration_error_messages() {
     );
 }
 
-// Helper: Display registration error messages
+// Helper: Display alert messages (unified function for all templates)
+/**
+ * Display Bootstrap alert message
+ * 
+ * @param string $type Alert type: 'success', 'error', 'warning', 'info'
+ * @param string $message Alert message
+ * @param string $title Optional alert title
+ * @param bool $dismissible Whether the alert can be dismissed
+ * @return string HTML alert markup
+ */
+function display_alert_message($type = 'info', $message = '', $title = '', $dismissible = true) {
+    if (empty($message)) {
+        return '';
+    }
+    
+    // Map types to Bootstrap classes
+    $type_map = array(
+        'success' => 'alert-success',
+        'error' => 'alert-danger',
+        'danger' => 'alert-danger',
+        'warning' => 'alert-warning',
+        'info' => 'alert-info'
+    );
+    
+    $alert_class = isset($type_map[$type]) ? $type_map[$type] : 'alert-info';
+    $dismissible_class = $dismissible ? ' alert-dismissible fade show' : '';
+    $close_button = $dismissible ? '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>' : '';
+    
+    $output = '<div class="alert ' . esc_attr($alert_class) . $dismissible_class . '" role="alert">';
+    
+    if (!empty($title)) {
+        $output .= '<strong>' . esc_html($title) . '</strong> ';
+    }
+    
+    $output .= esc_html($message);
+    $output .= $close_button;
+    $output .= '</div>';
+    
+    return $output;
+}
+
+// Helper: Display registration error messages (backward compatibility)
 function display_registration_error_message() {
     if (!isset($_GET['registration']) || $_GET['registration'] !== 'error') {
         return;
@@ -100,7 +141,9 @@ function display_registration_error_message() {
         : 'L\'inscription a échoué. Veuillez vérifier tous les champs requis.';
     
     $error_fields = isset($_GET['fields']) ? explode(',', $_GET['fields']) : array();
-    echo '<div class="error-message fixed">' . esc_html($message) . '</div>';
+    
+    // Use new unified function
+    echo display_alert_message('error', $message, 'Erreur :');
     
     // Store error fields for JavaScript to highlight
     if (!empty($error_fields)) {
@@ -2469,4 +2512,405 @@ function ajax_delete_production_comment() {
     }
 }
 add_action('wp_ajax_delete_production_comment', 'ajax_delete_production_comment');
+
+// ============================================
+// AI CHATBOT SYSTEM
+// ============================================
+
+/**
+ * Enqueue AI Chatbot scripts and styles
+ */
+function enqueue_ai_chatbot_assets() {
+    $theme_uri = get_template_directory_uri();
+    
+    // Enqueue CSS
+    wp_enqueue_style(
+        'ai-chatbot-css',
+        $theme_uri . '/assets/css/ai-chatbot.css',
+        array(),
+        get_theme_file_version('/assets/css/ai-chatbot.css')
+    );
+    
+    // Enqueue JS
+    wp_enqueue_script(
+        'ai-chatbot-js',
+        $theme_uri . '/assets/js/ai-chatbot.js',
+        array('jquery'),
+        get_theme_file_version('/assets/js/ai-chatbot.js'),
+        true
+    );
+    
+    // Localize script with AJAX data
+    $theme_uri = get_template_directory_uri();
+    wp_localize_script('ai-chatbot-js', 'aiChatbot', array(
+        'ajaxurl' => admin_url('admin-ajax.php'),
+        'nonce' => wp_create_nonce('ai_chatbot_nonce'),
+        'logoUrl' => $theme_uri . '/assets/images/Logos/logo_blanc.svg'
+    ));
+}
+add_action('wp_enqueue_scripts', 'enqueue_ai_chatbot_assets');
+
+/**
+ * Get AI API Key from wp-config.php or WordPress options
+ * 
+ * @return string|false API key or false if not set
+ */
+function get_ai_api_key() {
+    // First, try to get from wp-config.php constant
+    if (defined('AI_API_KEY') && !empty(AI_API_KEY)) {
+        return AI_API_KEY;
+    }
+    
+    // Fallback to WordPress options (can be set via admin)
+    $api_key = get_option('ai_chatbot_api_key', '');
+    
+    if (!empty($api_key)) {
+        return $api_key;
+    }
+    
+    return false;
+}
+
+/**
+ * Get AI API URL from wp-config.php or WordPress options
+ * 
+ * @return string|false API URL or false if not set
+ */
+function get_ai_api_url() {
+    // First, try to get from wp-config.php constant
+    if (defined('AI_API_URL') && !empty(AI_API_URL)) {
+        return AI_API_URL;
+    }
+    
+    // Fallback to WordPress options
+    $api_url = get_option('ai_chatbot_api_url', '');
+    
+    if (!empty($api_url)) {
+        return $api_url;
+    }
+    
+    // Default to OpenAI API if no URL is set
+    return 'https://api.openai.com/v1/chat/completions';
+}
+
+/**
+ * Get system prompt for the AI chatbot
+ * Can be customized via WordPress option 'ai_chatbot_system_prompt'
+ * 
+ * @param string $page_url Current page URL
+ * @param string $page_title Current page title
+ * @param string $site_lang Site language
+ * @return string System prompt
+ */
+function get_ai_chatbot_system_prompt($page_url = '', $page_title = '', $site_lang = 'fr') {
+    $default_prompt = "Tu es un assistant virtuel poli et concis pour un site web. 
+Tu dois répondre uniquement sur les sujets liés au site et ses services. 
+Si l'utilisateur pose une question hors-sujet, redirige-le poliment vers la page de contact.
+Sois utile, professionnel et amical. Réponds en français sauf indication contraire.
+Réponds de manière concise (maximum 3-4 phrases).";
+    
+    // Get custom prompt from options
+    $custom_prompt = get_option('ai_chatbot_system_prompt', '');
+    
+    if (!empty($custom_prompt)) {
+        $prompt = $custom_prompt;
+    } else {
+        $prompt = $default_prompt;
+    }
+    
+    // Add context about current page
+    if (!empty($page_url) || !empty($page_title)) {
+        $context = "\n\nContexte de la page actuelle :";
+        if (!empty($page_title)) {
+            $context .= "\n- Titre : " . $page_title;
+        }
+        if (!empty($page_url)) {
+            $context .= "\n- URL : " . $page_url;
+        }
+        $context .= "\n- Langue : " . $site_lang;
+        $prompt .= $context;
+    }
+    
+    return $prompt;
+}
+
+/**
+ * Rate limiting: Check if IP has exceeded request limit
+ * 
+ * @param string $ip User IP address
+ * @param int $max_requests Maximum requests allowed
+ * @param int $time_window Time window in seconds
+ * @return array Array with 'allowed' (bool) and 'remaining' (int)
+ */
+function check_rate_limit($ip, $max_requests = 20, $time_window = 600) {
+    $transient_key = 'ai_chatbot_rate_' . md5($ip);
+    $requests = get_transient($transient_key);
+    
+    if ($requests === false) {
+        // First request, create new transient
+        set_transient($transient_key, 1, $time_window);
+        return array('allowed' => true, 'remaining' => $max_requests - 1);
+    }
+    
+    $current_count = intval($requests);
+    
+    if ($current_count >= $max_requests) {
+        return array('allowed' => false, 'remaining' => 0);
+    }
+    
+    // Increment counter
+    set_transient($transient_key, $current_count + 1, $time_window);
+    
+    return array('allowed' => true, 'remaining' => $max_requests - ($current_count + 1));
+}
+
+/**
+ * Get user IP address (with proxy support)
+ * 
+ * @return string IP address
+ */
+function get_user_ip() {
+    $ip_keys = array(
+        'HTTP_CF_CONNECTING_IP', // Cloudflare
+        'HTTP_X_REAL_IP',
+        'HTTP_X_FORWARDED_FOR',
+        'REMOTE_ADDR'
+    );
+    
+    foreach ($ip_keys as $key) {
+        if (!empty($_SERVER[$key])) {
+            $ip = $_SERVER[$key];
+            // Handle comma-separated IPs (from proxies)
+            if (strpos($ip, ',') !== false) {
+                $ip = trim(explode(',', $ip)[0]);
+            }
+            if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
+                return $ip;
+            }
+        }
+    }
+    
+    // Fallback to REMOTE_ADDR
+    return isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '0.0.0.0';
+}
+
+/**
+ * Call AI API with messages
+ * 
+ * @param array $messages Array of message objects with 'role' and 'content'
+ * @return array|WP_Error Response array with 'reply' or WP_Error on failure
+ */
+function call_ai_api($messages) {
+    $api_key = get_ai_api_key();
+    $api_url = get_ai_api_url();
+    
+    if (!$api_key) {
+        return new WP_Error('no_api_key', 'Clé API non configurée. Veuillez contacter l\'administrateur.');
+    }
+    
+    if (!$api_url) {
+        return new WP_Error('no_api_url', 'URL de l\'API non configurée.');
+    }
+    
+    // Prepare request body
+    // NOTE: Adaptez ce payload selon l'API que vous utilisez
+    // Exemple pour OpenAI GPT
+    $body = array(
+        'model' => defined('AI_API_MODEL') ? AI_API_MODEL : 'gpt-3.5-turbo',
+        'messages' => $messages,
+        'temperature' => 0.7,
+        'max_tokens' => 500
+    );
+    
+    // Headers
+    $headers = array(
+        'Content-Type' => 'application/json',
+        'Authorization' => 'Bearer ' . $api_key
+    );
+    
+    // Log request (only if WP_DEBUG is enabled, and without sensitive data)
+    if (defined('WP_DEBUG') && WP_DEBUG && defined('WP_DEBUG_LOG') && WP_DEBUG_LOG) {
+        error_log('AI Chatbot: API request to ' . $api_url);
+    }
+    
+    // Make API request
+    $response = wp_remote_post($api_url, array(
+        'method' => 'POST',
+        'timeout' => 30,
+        'headers' => $headers,
+        'body' => json_encode($body),
+        'sslverify' => true
+    ));
+    
+    // Handle errors
+    if (is_wp_error($response)) {
+        if (defined('WP_DEBUG') && WP_DEBUG && defined('WP_DEBUG_LOG') && WP_DEBUG_LOG) {
+            error_log('AI Chatbot: API error - ' . $response->get_error_message());
+        }
+        return $response;
+    }
+    
+    $response_code = wp_remote_retrieve_response_code($response);
+    $response_body = wp_remote_retrieve_body($response);
+    
+    // Log response code (without body for security)
+    if (defined('WP_DEBUG') && WP_DEBUG && defined('WP_DEBUG_LOG') && WP_DEBUG_LOG) {
+        error_log('AI Chatbot: API response code - ' . $response_code);
+    }
+    
+    // Handle HTTP errors
+    if ($response_code !== 200) {
+        $error_message = 'Erreur API (' . $response_code . ')';
+        
+        // Try to parse error from response
+        $error_data = json_decode($response_body, true);
+        if (isset($error_data['error']['message'])) {
+            $error_message = $error_data['error']['message'];
+        }
+        
+        return new WP_Error('api_error', $error_message, array('status' => $response_code));
+    }
+    
+    // Parse response
+    $data = json_decode($response_body, true);
+    
+    if (!$data || !isset($data['choices'][0]['message']['content'])) {
+        return new WP_Error('invalid_response', 'Réponse invalide de l\'API.');
+    }
+    
+    $reply = trim($data['choices'][0]['message']['content']);
+    
+    return array('reply' => $reply);
+}
+
+/**
+ * AJAX Handler: Send message to AI chatbot
+ */
+function ajax_ai_chatbot_send() {
+    // Verify nonce
+    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'ai_chatbot_nonce')) {
+        wp_send_json_error(array('error' => 'Erreur de sécurité. Veuillez rafraîchir la page.'));
+        return;
+    }
+    
+    // Get and sanitize input
+    $message = isset($_POST['message']) ? sanitize_text_field(trim($_POST['message'])) : '';
+    $page_url = isset($_POST['page_url']) ? esc_url_raw($_POST['page_url']) : '';
+    $page_title = isset($_POST['page_title']) ? sanitize_text_field($_POST['page_title']) : '';
+    $site_lang = isset($_POST['site_lang']) ? sanitize_text_field($_POST['site_lang']) : 'fr';
+    $history_json = isset($_POST['history']) ? $_POST['history'] : '[]';
+    
+    // Validate message
+    if (empty($message)) {
+        wp_send_json_error(array('error' => 'Le message ne peut pas être vide.'));
+        return;
+    }
+    
+    // Check message length (800 characters max)
+    if (strlen($message) > 800) {
+        wp_send_json_error(array('error' => 'Le message est trop long (maximum 800 caractères).'));
+        return;
+    }
+    
+    // Rate limiting
+    $user_ip = get_user_ip();
+    $rate_limit = check_rate_limit($user_ip, 20, 600); // 20 requests per 10 minutes
+    
+    if (!$rate_limit['allowed']) {
+        wp_send_json_error(array(
+            'error' => 'Trop de requêtes. Veuillez patienter quelques instants avant de réessayer.',
+            'code' => 'rate_limit_exceeded'
+        ));
+        return;
+    }
+    
+    // Anti-spam: Check for suspicious patterns
+    $spam_patterns = array(
+        '/http[s]?:\/\/[^\s]+/i', // URLs
+        '/[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/i', // Email addresses
+        '/\b\d{4}[\s-]?\d{4}[\s-]?\d{4}[\s-]?\d{4}\b/', // Credit card patterns
+    );
+    
+    $spam_score = 0;
+    foreach ($spam_patterns as $pattern) {
+        if (preg_match($pattern, $message)) {
+            $spam_score++;
+        }
+    }
+    
+    // If message contains multiple spam indicators, reject
+    if ($spam_score >= 2) {
+        wp_send_json_error(array('error' => 'Message rejeté pour des raisons de sécurité.'));
+        return;
+    }
+    
+    // Get system prompt
+    $system_prompt = get_ai_chatbot_system_prompt($page_url, $page_title, $site_lang);
+    
+    // Build messages array for API
+    $messages = array();
+    
+    // Add system message
+    $messages[] = array(
+        'role' => 'system',
+        'content' => $system_prompt
+    );
+    
+    // Parse and add conversation history (last 10 messages)
+    try {
+        $history = json_decode(stripslashes($history_json), true);
+        if (is_array($history)) {
+            foreach ($history as $msg) {
+                if (isset($msg['type']) && isset($msg['content'])) {
+                    $role = ($msg['type'] === 'user') ? 'user' : 'assistant';
+                    $messages[] = array(
+                        'role' => $role,
+                        'content' => sanitize_text_field($msg['content'])
+                    );
+                }
+            }
+        }
+    } catch (Exception $e) {
+        // If history parsing fails, continue without it
+        if (defined('WP_DEBUG') && WP_DEBUG && defined('WP_DEBUG_LOG') && WP_DEBUG_LOG) {
+            error_log('AI Chatbot: Error parsing history - ' . $e->getMessage());
+        }
+    }
+    
+    // Add current user message
+    $messages[] = array(
+        'role' => 'user',
+        'content' => $message
+    );
+    
+    // Call AI API
+    $api_response = call_ai_api($messages);
+    
+    if (is_wp_error($api_response)) {
+        $error_message = $api_response->get_error_message();
+        
+        // Don't expose internal errors to users
+        if (strpos($error_message, 'Clé API') !== false || strpos($error_message, 'configurée') !== false) {
+            $error_message = 'Service temporairement indisponible. Veuillez réessayer plus tard.';
+        }
+        
+        wp_send_json_error(array('error' => $error_message));
+        return;
+    }
+    
+    // Sanitize and escape the reply
+    $reply = isset($api_response['reply']) ? $api_response['reply'] : '';
+    $reply = wp_kses_post($reply); // Allow safe HTML
+    $reply = trim($reply);
+    
+    if (empty($reply)) {
+        wp_send_json_error(array('error' => 'Aucune réponse reçue de l\'assistant.'));
+        return;
+    }
+    
+    // Success response
+    wp_send_json_success(array('reply' => $reply));
+}
+add_action('wp_ajax_ai_chatbot_send', 'ajax_ai_chatbot_send');
+add_action('wp_ajax_nopriv_ai_chatbot_send', 'ajax_ai_chatbot_send');
 

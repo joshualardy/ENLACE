@@ -10,7 +10,7 @@ get_header();
         <div class="hero-tagline-wrapper">
             <p class="hero-tagline">Là où la musique rencontre ceux qui la font</p>
             <?php if (!is_user_logged_in()) : ?>
-                <a href="<?php echo esc_url(home_url('/signup')); ?>" class="hero-inscription-btn">Rejoindre ENLACE</a>
+                <a href="<?php echo esc_url(home_url('/signup')); ?>" class="btn hero-inscription-btn" aria-label="Rejoindre ENLACE - Page d'inscription">Rejoindre ENLACE</a>
             <?php endif; ?>
         </div>
         <h1 class="hero-title" id="hero-title-enlace">ENLACE</h1>
@@ -164,7 +164,7 @@ get_header();
         <div class="cta-final-content">
             <h2 class="cta-final-title">PRÊT À REJOINDRE LA SCÈNE ?</h2>
             <p class="cta-final-text">Rejoins ENLACE et connecte-toi à celles et ceux qui font bouger la musique.</p>
-            <a href="<?php echo esc_url(home_url('/signup')); ?>" class="cta-final-btn">Rejoindre ENLACE</a>
+                <a href="<?php echo esc_url(home_url('/signup')); ?>" class="btn cta-final-btn" aria-label="Rejoindre ENLACE - Page d'inscription">Rejoindre ENLACE</a>
         </div>
     </div>
 </section>

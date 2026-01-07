@@ -30,28 +30,22 @@ $annonces_query = new WP_Query($args);
         <?php endif; ?>
 
         <!-- Success/Error Messages -->
-        <?php if (isset($_GET['success']) && $_GET['success'] === 'annonce_created') : ?>
-            <div class="alert alert-success">Votre annonce a été créée avec succès !</div>
-        <?php endif; ?>
-        <?php if (isset($_GET['error'])) : ?>
-            <div class="alert alert-danger">
-                <?php
-                switch ($_GET['error']) {
-                    case 'not_logged_in':
-                        echo 'Vous devez être connecté pour créer une annonce.';
-                        break;
-                    case 'missing_fields':
-                        echo 'Veuillez remplir tous les champs requis.';
-                        break;
-                    case 'creation_failed':
-                        echo 'Erreur lors de la création de l\'annonce. Veuillez réessayer.';
-                        break;
-                    default:
-                        echo 'Une erreur est survenue.';
-                }
-                ?>
-            </div>
-        <?php endif; ?>
+        <?php 
+        if (isset($_GET['success']) && $_GET['success'] === 'annonce_created') {
+            echo display_alert_message('success', 'Votre annonce a été créée avec succès !');
+        }
+        if (isset($_GET['error'])) {
+            $error_messages = array(
+                'not_logged_in' => 'Vous devez être connecté pour créer une annonce.',
+                'missing_fields' => 'Veuillez remplir tous les champs requis.',
+                'creation_failed' => 'Erreur lors de la création de l\'annonce. Veuillez réessayer.'
+            );
+            $error_message = isset($error_messages[$_GET['error']]) 
+                ? $error_messages[$_GET['error']] 
+                : 'Une erreur est survenue.';
+            echo display_alert_message('error', $error_message);
+        }
+        ?>
 
         <!-- Add Announcement Form (Hidden by default) -->
         <?php if (is_user_logged_in()) : ?>
